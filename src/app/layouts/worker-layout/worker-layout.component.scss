@@ -1,0 +1,11 @@
+// Tema del área de trabajador: navegación sobre verde pálido, enlace activo sobre superficie.
+@use 'tokens';
+
+:host {
+  --panel-sidebar-bg: #{tokens.$color-primary-pale};
+  --nav-link-hover-bg: #{tokens.$color-surface};
+  --nav-link-active-bg: #{tokens.$color-surface};
+  --nav-link-active-color: #{tokens.$color-primary-dark};
+
+  display: block;
+}

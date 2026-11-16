@@ -1,0 +1,52 @@
+<a class="skip-link" href="#contenido-principal" (click)="skipToContent($event)">
+  Saltar al contenido principal
+</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__brand" routerLink="/">ArreglaloYA</a>
+
+    <button
+      type="button"
+      class="site-header__toggle"
+      [attr.aria-expanded]="menuOpen()"
+      [attr.aria-controls]="menuId"
+      (click)="toggleMenu()"
+    >
+      Menú
+    </button>
+
+    <div class="site-header__menu" [id]="menuId" [class.is-open]="menuOpen()">
+      <nav class="site-header__nav" aria-label="Principal">
+        <app-nav-list orientation="horizontal" [items]="mainNav" (itemSelected)="closeMenu()" />
+      </nav>
+
+      <div class="site-header__actions">
+        @if (isAuthenticated()) {
+          <app-user-menu />
+        } @else {
+          <nav aria-label="Cuenta">
+            <app-nav-list orientation="horizontal" [items]="accountNav" />
+          </nav>
+        }
+
+        <!-- CTA principal: se habilitará con la publicación de pedidos (área de cliente). -->
+        <span class="cta cta--pending">
+          Solicitar un servicio
+          <span class="cta__note">(próximamente)</span>
+        </span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main #main id="contenido-principal" class="site-main" tabindex="-1">
+  <router-outlet />
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span class="site-footer__brand">ArreglaloYA</span>
+    <span>Contratación de servicios técnicos del hogar.</span>
+  </div>
+</footer>

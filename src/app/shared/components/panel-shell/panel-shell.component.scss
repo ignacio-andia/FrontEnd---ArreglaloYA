@@ -1,0 +1,122 @@
+@use 'tokens';
+@use 'mixins';
+
+:host {
+  display: block;
+  min-height: 100dvh;
+  background-color: var(--color-background);
+}
+
+.skip-link {
+  position: absolute;
+  top: tokens.$space-2;
+  left: tokens.$space-4;
+  z-index: 100;
+  padding: tokens.$space-2 tokens.$space-4;
+  border-radius: tokens.$radius-md;
+  background-color: var(--color-primary-dark);
+  color: #fff;
+  transform: translateY(-200%);
+
+  &:focus {
+    transform: none;
+  }
+}
+
+.shell {
+  display: grid;
+  grid-template-areas: 'header' 'sidebar' 'content';
+  grid-template-rows: auto auto 1fr;
+  min-height: 100dvh;
+
+  @include mixins.respond-up(lg) {
+    grid-template-areas: 'header header' 'sidebar content';
+    grid-template-columns: 16rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+}
+
+.shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  grid-area: header;
+  align-items: center;
+  gap: tokens.$space-3;
+  min-height: 4rem;
+  padding: tokens.$space-2 tokens.$space-4;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.shell__menu-toggle {
+  min-height: 2.75rem;
+  padding: tokens.$space-2 tokens.$space-3;
+  border: 1px solid var(--color-text-secondary);
+  border-radius: tokens.$radius-md;
+  background-color: var(--color-surface);
+  font-weight: tokens.$font-weight-medium;
+  cursor: pointer;
+
+  @include mixins.respond-up(lg) {
+    display: none;
+  }
+}
+
+.shell__brand {
+  color: var(--color-primary-dark);
+  font-weight: tokens.$font-weight-bold;
+  text-decoration: none;
+}
+
+.shell__area {
+  display: none;
+  padding-left: tokens.$space-3;
+  border-left: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+
+  @include mixins.respond-up(sm) {
+    display: inline;
+  }
+}
+
+.shell__user {
+  margin-left: auto;
+}
+
+.shell__sidebar {
+  // Sin `--panel-sidebar-focus-ring` definido, el indicador usa el color de foco global.
+  --focus-ring-color: var(--panel-sidebar-focus-ring);
+
+  display: none;
+  grid-area: sidebar;
+  padding: tokens.$space-4 tokens.$space-3;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--panel-sidebar-bg, var(--color-surface));
+
+  &.is-open {
+    display: block;
+  }
+
+  @include mixins.respond-up(lg) {
+    display: block;
+    border-right: 1px solid var(--color-border);
+    border-bottom: 0;
+  }
+}
+
+.shell__content {
+  grid-area: content;
+  min-width: 0;
+  padding: tokens.$space-6 tokens.$space-4;
+
+  &:focus {
+    outline: none;
+  }
+
+  @include mixins.respond-up(lg) {
+    padding: tokens.$space-8;
+  }
+}

@@ -1,0 +1,44 @@
+@if (user(); as user) {
+  <button
+    #trigger
+    type="button"
+    class="user-menu__trigger"
+    [attr.aria-expanded]="open()"
+    [attr.aria-controls]="panelId"
+    (click)="toggle()"
+  >
+    <span class="user-menu__avatar" aria-hidden="true">{{ initials() }}</span>
+    <span class="user-menu__name">{{ fullName() }}</span>
+    <span class="sr-only">, menú de sesión</span>
+  </button>
+
+  <div class="user-menu__panel" [id]="panelId" [hidden]="!open()">
+    <p class="user-menu__identity">
+      <span class="user-menu__full-name">{{ fullName() }}</span>
+      <span class="user-menu__email">{{ user.email }}</span>
+    </p>
+
+    @if (areas().length > 0) {
+      <nav class="user-menu__areas" aria-label="Mis áreas">
+        <ul>
+          @for (area of areas(); track area.role) {
+            <li>
+              <a
+                class="user-menu__item"
+                [routerLink]="area.path"
+                routerLinkActive="is-active"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+                >{{ area.label }}</a
+              >
+            </li>
+          }
+        </ul>
+      </nav>
+    }
+
+    <button type="button" class="user-menu__item user-menu__logout" (click)="logout()">
+      Cerrar sesión
+    </button>
+  </div>
+}

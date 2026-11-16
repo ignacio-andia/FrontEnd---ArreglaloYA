@@ -1,0 +1,29 @@
+<section class="categories" aria-labelledby="categories-title">
+  <header class="categories__header">
+    <h1 id="categories-title" class="categories__title">Categorías de servicios</h1>
+    <p class="categories__intro">
+      Estas son las categorías de servicios técnicos del hogar disponibles en la plataforma.
+    </p>
+  </header>
+
+  @if (categories.isLoading()) {
+    <p class="categories__state" role="status">Cargando categorías…</p>
+  } @else if (errorMessage(); as message) {
+    <div class="categories__error" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" class="categories__retry" (click)="retry()">Reintentar</button>
+    </div>
+  } @else if (categories.hasValue()) {
+    @if (categories.value().length === 0) {
+      <p class="categories__state">Todavía no hay categorías disponibles.</p>
+    } @else {
+      <ul class="categories__list">
+        @for (category of categories.value(); track category.id) {
+          <li>
+            <app-category-card [category]="category" />
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

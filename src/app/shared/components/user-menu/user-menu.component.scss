@@ -1,0 +1,125 @@
+@use 'tokens';
+@use 'mixins';
+
+:host {
+  position: relative;
+  display: inline-block;
+}
+
+.sr-only {
+  @include mixins.visually-hidden;
+}
+
+.user-menu__trigger {
+  display: flex;
+  align-items: center;
+  gap: tokens.$space-2;
+  min-height: 2.75rem;
+  padding: tokens.$space-1 tokens.$space-2;
+  border: 1px solid transparent;
+  border-radius: tokens.$radius-md;
+  background: none;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    border-color: var(--color-border);
+    background-color: var(--color-surface);
+  }
+}
+
+.user-menu__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.user-menu__name {
+  @include mixins.visually-hidden;
+
+  @include mixins.respond-up(sm) {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    font-weight: tokens.$font-weight-medium;
+  }
+}
+
+.user-menu__panel {
+  position: absolute;
+  top: calc(100% + #{tokens.$space-2});
+  right: 0;
+  z-index: 20;
+  width: min(18rem, calc(100vw - #{tokens.$space-8}));
+  padding: tokens.$space-2;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+  box-shadow: 0 8px 24px rgb(32 43 39 / 12%);
+}
+
+.user-menu__identity {
+  display: grid;
+  gap: tokens.$space-1;
+  padding: tokens.$space-2 tokens.$space-3 tokens.$space-3;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.user-menu__full-name {
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.user-menu__email {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.user-menu__areas {
+  padding: tokens.$space-2 0;
+  border-bottom: 1px solid var(--color-border);
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.user-menu__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: tokens.$space-2 tokens.$space-3;
+  border: 0;
+  border-radius: tokens.$radius-md;
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--color-primary-pale);
+    color: var(--color-text);
+  }
+
+  &.is-active {
+    color: var(--color-primary-dark);
+    font-weight: tokens.$font-weight-semibold;
+  }
+}
+
+.user-menu__logout {
+  margin-top: tokens.$space-2;
+}

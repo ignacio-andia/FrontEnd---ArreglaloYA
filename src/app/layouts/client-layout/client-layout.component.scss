@@ -1,0 +1,11 @@
+// Tema del área de cliente: navegación sobre superficie blanca.
+@use 'tokens';
+
+:host {
+  --panel-sidebar-bg: #{tokens.$color-surface};
+  --nav-link-hover-bg: #{tokens.$color-primary-pale};
+  --nav-link-active-bg: #{tokens.$color-primary-pale};
+  --nav-link-active-color: #{tokens.$color-primary-dark};
+
+  display: block;
+}

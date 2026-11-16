@@ -1,0 +1,101 @@
+// Estilos globales mínimos: propiedades CSS de la identidad visual y base de
+// elementos HTML. Las reglas de páginas o componentes van en su propio archivo.
+@use 'tokens';
+@use 'mixins';
+
+:root {
+  --color-primary: #{tokens.$color-primary};
+  --color-primary-dark: #{tokens.$color-primary-dark};
+  --color-primary-pale: #{tokens.$color-primary-pale};
+  --color-background: #{tokens.$color-background};
+  --color-surface: #{tokens.$color-surface};
+  --color-text: #{tokens.$color-text};
+  --color-text-secondary: #{tokens.$color-text-secondary};
+  --color-border: #{tokens.$color-border};
+  --color-danger: #{tokens.$color-danger};
+  --color-control-border: #{tokens.$color-control-border};
+  --font-family-base: #{tokens.$font-family-base};
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-family-base);
+  font-size: 100%;
+  line-height: tokens.$line-height-base;
+  color: var(--color-text);
+  background-color: var(--color-background);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  font-size: tokens.$font-size-base;
+  font-weight: tokens.$font-weight-regular;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: tokens.$font-weight-semibold;
+  line-height: 1.25;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+
+  &:hover {
+    color: var(--color-primary-dark);
+  }
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  @include mixins.focus-ring;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

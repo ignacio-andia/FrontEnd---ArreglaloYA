@@ -1,0 +1,16 @@
+// Tema de administración: navegación oscura (verde oscuro) para distinguir el área.
+// Contrastes: blanco sobre #145C46 = 7.9:1; blanco sobre #117A59 = 5.3:1.
+@use 'tokens';
+
+:host {
+  --panel-sidebar-bg: #{tokens.$color-primary-dark};
+  --panel-sidebar-focus-ring: #fff;
+  --nav-link-color: #fff;
+  --nav-link-hover-bg: rgb(255 255 255 / 12%);
+  --nav-link-active-bg: #{tokens.$color-primary};
+  --nav-link-active-color: #fff;
+  --nav-link-active-indicator: #fff;
+  --nav-badge-color: #{tokens.$color-primary-pale};
+
+  display: block;
+}

@@ -1,0 +1,27 @@
+@use 'tokens';
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.category-card {
+  height: 100%;
+  padding: tokens.$space-6;
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-primary);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+}
+
+.category-card__name {
+  color: var(--color-primary-dark);
+  font-size: 1.125rem;
+  overflow-wrap: anywhere;
+}
+
+.category-card__description {
+  margin-top: tokens.$space-2;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
