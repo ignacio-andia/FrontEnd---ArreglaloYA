@@ -9,3 +9,23 @@ export const WORKER_PROFILE_STATUSES = [
 ] as const;
 
 export type WorkerProfileStatus = (typeof WORKER_PROFILE_STATUSES)[number];
+
+/** Texto visible de cada estado. Solo traduce el literal; el valor enviado y recibido no cambia. */
+export const WORKER_PROFILE_STATUS_LABELS: Readonly<Record<WorkerProfileStatus, string>> = {
+  BORRADOR: 'Borrador',
+  PENDIENTE: 'Pendiente de revisión',
+  OBSERVADO: 'Observado',
+  APROBADO: 'Aprobado',
+  RECHAZADO: 'Rechazado',
+  SUSPENDIDO: 'Suspendido',
+};
+
+/** Significado de cada estado según el contrato (04-enums-and-states). */
+export const WORKER_PROFILE_STATUS_DESCRIPTIONS: Readonly<Record<WorkerProfileStatus, string>> = {
+  BORRADOR: 'El perfil fue creado y aún no se envió a revisión.',
+  PENDIENTE: 'El perfil fue enviado a revisión.',
+  OBSERVADO: 'El perfil tiene observaciones que corregir.',
+  APROBADO: 'El perfil está habilitado.',
+  RECHAZADO: 'El perfil fue rechazado.',
+  SUSPENDIDO: 'El perfil está suspendido.',
+};

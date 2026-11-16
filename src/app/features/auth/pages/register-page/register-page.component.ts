@@ -24,12 +24,11 @@ import {
   NAME_MAX_LENGTH,
   PASSWORD_MAX_BYTES,
   PASSWORD_MIN_LENGTH,
-  optionalPhone,
   passwordPolicy,
   trimmedEmail,
-  trimmedMaxLength,
-  trimmedRequired,
 } from '../../validators/auth.validators';
+import { optionalPhone } from '../../../../shared/validators/phone.validators';
+import { trimmedMaxLength, trimmedRequired } from '../../../../shared/validators/text.validators';
 
 type RegisterField = keyof RegisterRequest;
 

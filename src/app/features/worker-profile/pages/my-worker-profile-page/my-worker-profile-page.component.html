@@ -1,0 +1,47 @@
+<section class="my-profile" aria-labelledby="my-profile-title">
+  <h1 id="my-profile-title" class="my-profile__title">Mi perfil de trabajador</h1>
+
+  @if (profile.isLoading()) {
+    <p class="my-profile__state" role="status">Consultando su perfil…</p>
+  } @else if (noProfile()) {
+    <p class="form-notice my-profile__block">
+      Aún no tiene un perfil de trabajador.
+      @if (isClient) {
+        <a routerLink="/cliente/ofrecer-servicios">Crear mi perfil de trabajador</a>
+      }
+    </p>
+  } @else if (profileError(); as message) {
+    <div class="form-alert" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" class="my-profile__retry" (click)="retry()">Reintentar</button>
+    </div>
+  } @else if (profile.hasValue()) {
+    <section class="my-profile__eligibility" aria-labelledby="my-profile-eligibility-title">
+      <h2 id="my-profile-eligibility-title" class="my-profile__subtitle">
+        Funciones de trabajador
+      </h2>
+      @if (eligibility.isLoading()) {
+        <p role="status">Consultando…</p>
+      } @else if (eligibilityError(); as message) {
+        <p class="my-profile__error">{{ message }}</p>
+      } @else if (eligibility.hasValue()) {
+        <p
+          class="my-profile__eligibility-message"
+          [class.my-profile__eligibility-message--enabled]="eligibility.value().eligible"
+        >
+          {{ eligibility.value().message }}
+        </p>
+        @if (eligibility.value().reason; as reason) {
+          <p class="my-profile__reason">Motivo: {{ reason }}</p>
+        }
+      }
+    </section>
+
+    <app-worker-profile-summary class="my-profile__block" [profile]="profile.value()" />
+
+    <p class="field__hint my-profile__block">
+      La edición del perfil, los horarios, los documentos y el envío a revisión se habilitarán
+      próximamente.
+    </p>
+  }
+</section>

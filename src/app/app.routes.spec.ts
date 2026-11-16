@@ -13,6 +13,8 @@ import { RoleName } from './core/models/role.model';
 import { apiUrl } from './core/http/api-url';
 import { LoginPageComponent } from './features/auth/pages/login-page/login-page.component';
 import { CategoriesPageComponent } from './features/catalogs/pages/categories-page/categories-page.component';
+import { BecomeWorkerPageComponent } from './features/worker-profile/pages/become-worker-page/become-worker-page.component';
+import { AccountPageComponent } from './features/users/pages/account-page/account-page.component';
 import { RegisterPageComponent } from './features/auth/pages/register-page/register-page.component';
 import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
 import { ClientLayoutComponent } from './layouts/client-layout/client-layout.component';
@@ -202,6 +204,77 @@ describe('app routes', () => {
     await harness.navigateByUrl('/trabajador', WorkerLayoutComponent);
 
     httpTesting.expectNone(() => true);
+  });
+
+  it('lets a CLIENTE without the TRABAJADOR role open «Quiero ofrecer mis servicios»', async () => {
+    signIn(['CLIENTE']);
+    const harness = await RouterTestingHarness.create();
+
+    const navigation = harness.navigateByUrl('/cliente/ofrecer-servicios', ClientLayoutComponent);
+    // La página carga los catálogos públicos para el formulario de creación.
+    (await vi.waitFor(() => httpTesting.expectOne(apiUrl('catalogs', 'zones')))).flush([]);
+    (await vi.waitFor(() => httpTesting.expectOne(apiUrl('catalogs', 'categories')))).flush([]);
+    await navigation;
+
+    expect(currentPath()).toBe('/cliente/ofrecer-servicios');
+    expect(TestBed.inject(Title).getTitle()).toBe('Ofrecer mis servicios | ArreglaloYA');
+    expect(
+      harness.routeDebugElement?.query(
+        (node) => node.componentInstance instanceof BecomeWorkerPageComponent,
+      ),
+    ).not.toBeNull();
+  });
+
+  it('opens «Mi cuenta» in the client area', async () => {
+    signIn(['CLIENTE']);
+    const harness = await RouterTestingHarness.create();
+
+    const navigation = harness.navigateByUrl('/cliente/mi-cuenta', ClientLayoutComponent);
+    (await vi.waitFor(() => httpTesting.expectOne(apiUrl('auth', 'me')))).flush(
+      userWithRoles(['CLIENTE']),
+    );
+    await navigation;
+
+    expect(currentPath()).toBe('/cliente/mi-cuenta');
+    expect(TestBed.inject(Title).getTitle()).toBe('Mi cuenta | ArreglaloYA');
+    expect(
+      harness.routeDebugElement?.query(
+        (node) => node.componentInstance instanceof AccountPageComponent,
+      ),
+    ).not.toBeNull();
+  });
+
+  it('keeps «Mi perfil» of the worker area closed for a CLIENTE-only account', async () => {
+    signIn(['CLIENTE']);
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/trabajador/perfil');
+
+    expect(currentPath()).toBe('/');
+    httpTesting.expectNone(apiUrl('worker-profile', 'me'));
+  });
+
+  it('opens «Mi perfil» for the TRABAJADOR role without requiring approval', async () => {
+    signIn(['CLIENTE', 'TRABAJADOR']);
+    const harness = await RouterTestingHarness.create();
+
+    const navigation = harness.navigateByUrl('/trabajador/perfil', WorkerLayoutComponent);
+    (await vi.waitFor(() => httpTesting.expectOne(apiUrl('worker-profile', 'me')))).flush(
+      { statusCode: 404, message: 'Aún no tiene un perfil de trabajador', error: 'Not Found' },
+      { status: 404, statusText: 'Not Found' },
+    );
+    (
+      await vi.waitFor(() => httpTesting.expectOne(apiUrl('worker-profile', 'me', 'eligibility')))
+    ).flush({
+      eligible: false,
+      status: null,
+      message: 'No tiene un perfil de trabajador.',
+      reason: null,
+    });
+    await navigation;
+
+    expect(currentPath()).toBe('/trabajador/perfil');
+    expect(TestBed.inject(Title).getTitle()).toBe('Mi perfil de trabajador | ArreglaloYA');
   });
 
   it('opens the admin area for an ADMINISTRADOR account', async () => {

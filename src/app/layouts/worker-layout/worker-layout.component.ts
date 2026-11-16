@@ -22,7 +22,7 @@ export class WorkerLayoutComponent {
   protected readonly navItems: readonly NavItem[] = [
     { label: 'Resumen', path: '/trabajador', exact: true },
     { label: 'Solicitudes disponibles', path: null },
-    { label: 'Mi perfil', path: null },
+    { label: 'Mi perfil', path: '/trabajador/perfil' },
     { label: 'Mi cuenta', path: null },
   ];
 }

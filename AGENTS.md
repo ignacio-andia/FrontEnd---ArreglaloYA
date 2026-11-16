@@ -105,6 +105,7 @@ The reference document is `Arquitectura_Frontend_Angular22_Integracion_Backend.d
 
 - SCSS only. Global entry `src/styles.scss`; tokens, mixins and global base rules in `src/styles/` (`_tokens.scss`, `_mixins.scss`, `_global.scss`).
 - In component styles use `@use 'tokens';` and `@use 'mixins';` (`src/styles` is in `includePaths`). Global styles must not contain page- or component-specific rules.
+- Form controls (`.field*`, `.form-alert`, `.form-notice`, `.form-submit`) live in the Sass module `src/styles/_form-controls.scss`. It is NOT part of the global styles: components with forms include it with `@use 'form-controls';`.
 
 ## Quality Checks
 

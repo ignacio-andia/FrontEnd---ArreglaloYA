@@ -1,0 +1,104 @@
+@use 'tokens';
+@use 'mixins';
+@use 'form-controls';
+
+:host {
+  display: block;
+}
+
+.account {
+  max-width: 48rem;
+}
+
+.account__title {
+  color: var(--color-primary-dark);
+  font-size: 1.75rem;
+}
+
+.account__intro {
+  margin-top: tokens.$space-2;
+  color: var(--color-text-secondary);
+}
+
+.account__state {
+  margin-top: tokens.$space-6;
+  color: var(--color-text-secondary);
+}
+
+.account__card {
+  margin-top: tokens.$space-6;
+  padding: tokens.$space-6 tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+
+  @include mixins.respond-up(sm) {
+    padding: tokens.$space-8;
+  }
+}
+
+.account__readonly {
+  margin: 0;
+
+  dt {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  dd {
+    margin: tokens.$space-1 0 0;
+    font-weight: tokens.$font-weight-semibold;
+    overflow-wrap: anywhere;
+  }
+}
+
+.account__form {
+  display: grid;
+  gap: tokens.$space-4;
+  margin-top: tokens.$space-6;
+}
+
+.account__row {
+  display: grid;
+  gap: tokens.$space-4;
+
+  @include mixins.respond-up(sm) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.account__phone {
+  max-width: 18rem;
+}
+
+.account__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tokens.$space-4;
+
+  .form-submit {
+    margin-top: 0;
+  }
+}
+
+.account__status {
+  color: var(--color-primary-dark);
+  font-weight: tokens.$font-weight-medium;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.account__retry {
+  min-height: 2.75rem;
+  margin-top: tokens.$space-2;
+  padding: tokens.$space-2 tokens.$space-4;
+  border: 0;
+  border-radius: tokens.$radius-md;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: tokens.$font-weight-semibold;
+  cursor: pointer;
+}

@@ -1,0 +1,71 @@
+@use 'tokens';
+@use 'form-controls';
+
+:host {
+  display: block;
+}
+
+.my-profile {
+  max-width: 48rem;
+}
+
+.my-profile__title {
+  color: var(--color-primary-dark);
+  font-size: 1.75rem;
+}
+
+.my-profile__subtitle {
+  font-size: 1rem;
+}
+
+.my-profile__state {
+  margin-top: tokens.$space-6;
+  color: var(--color-text-secondary);
+}
+
+.my-profile__block {
+  display: block;
+  margin-top: tokens.$space-6;
+}
+
+.my-profile__eligibility {
+  margin-top: tokens.$space-6;
+  padding: tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+}
+
+.my-profile__eligibility-message {
+  margin-top: tokens.$space-2;
+  padding-left: tokens.$space-3;
+  border-left: 4px solid var(--color-control-border);
+}
+
+.my-profile__eligibility-message--enabled {
+  border-left-color: var(--color-primary);
+  color: var(--color-primary-dark);
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.my-profile__reason {
+  margin-top: tokens.$space-2;
+  color: var(--color-text-secondary);
+}
+
+.my-profile__error {
+  margin-top: tokens.$space-2;
+  color: var(--color-danger);
+}
+
+.my-profile__retry {
+  min-height: 2.75rem;
+  margin-top: tokens.$space-2;
+  padding: tokens.$space-2 tokens.$space-4;
+  border: 0;
+  border-radius: tokens.$radius-md;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: tokens.$font-weight-semibold;
+  cursor: pointer;
+}

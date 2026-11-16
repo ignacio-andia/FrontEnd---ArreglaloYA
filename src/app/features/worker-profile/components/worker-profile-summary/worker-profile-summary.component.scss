@@ -1,0 +1,133 @@
+@use 'tokens';
+@use 'mixins';
+
+:host {
+  display: block;
+}
+
+.summary {
+  padding: tokens.$space-6 tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+
+  @include mixins.respond-up(sm) {
+    padding: tokens.$space-8;
+  }
+}
+
+.summary__title {
+  color: var(--color-primary-dark);
+  font-size: 1.25rem;
+}
+
+.summary__status {
+  margin-top: tokens.$space-3;
+  font-weight: tokens.$font-weight-medium;
+}
+
+.summary__status-description {
+  margin-top: tokens.$space-1;
+  color: var(--color-text-secondary);
+}
+
+// Insignias de estado: contraste ≥ 4.5:1 en todas las combinaciones.
+.status-badge {
+  display: inline-block;
+  padding: 0 tokens.$space-2;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.status-badge--aprobado {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+.status-badge--pendiente,
+.status-badge--borrador {
+  background-color: var(--color-primary-pale);
+  color: var(--color-primary-dark);
+}
+
+.status-badge--observado,
+.status-badge--rechazado,
+.status-badge--suspendido {
+  color: var(--color-danger);
+}
+
+.summary__data {
+  display: grid;
+  gap: tokens.$space-4;
+  margin: tokens.$space-6 0 0;
+
+  @include mixins.respond-up(sm) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.summary__item {
+  dt {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  dd {
+    margin: tokens.$space-1 0 0;
+    font-weight: tokens.$font-weight-medium;
+  }
+}
+
+.summary__item--wide {
+  @include mixins.respond-up(sm) {
+    grid-column: 1 / -1;
+  }
+}
+
+.summary__description {
+  font-weight: tokens.$font-weight-regular;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.summary__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.summary__tag {
+  padding: tokens.$space-1 tokens.$space-3;
+  border-radius: 999px;
+  background-color: var(--color-primary-pale);
+  color: var(--color-primary-dark);
+}
+
+.summary__inactive {
+  color: var(--color-danger);
+  font-size: 0.875rem;
+}
+
+.summary__pending {
+  margin-top: tokens.$space-6;
+  padding: tokens.$space-4;
+  border-left: 4px solid var(--color-primary);
+  border-radius: tokens.$radius-sm;
+  background-color: var(--color-primary-pale);
+
+  ul {
+    margin: tokens.$space-2 0 0;
+    padding-left: tokens.$space-6;
+  }
+}
+
+.summary__pending-title {
+  font-size: 1rem;
+}

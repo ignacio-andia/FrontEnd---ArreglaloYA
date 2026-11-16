@@ -8,3 +8,13 @@ export interface CatalogOption {
   name: string;
   description: string | null;
 }
+
+/**
+ * Referencia a un elemento de catálogo embebida en perfiles, pedidos y solicitudes
+ * (`CatalogRef` del backend). `isActive` permite señalar una zona o especialidad desactivada.
+ */
+export interface CatalogRef {
+  id: string;
+  name: string;
+  isActive: boolean;
+}

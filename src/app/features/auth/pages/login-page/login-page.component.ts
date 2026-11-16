@@ -19,12 +19,8 @@ import {
   SERVER_FIELD_MESSAGE,
   applyServerValidationErrors,
 } from '../../../../shared/utils/server-validation';
-import {
-  EMAIL_MAX_LENGTH,
-  trimmedEmail,
-  trimmedMaxLength,
-  trimmedRequired,
-} from '../../validators/auth.validators';
+import { EMAIL_MAX_LENGTH, trimmedEmail } from '../../validators/auth.validators';
+import { trimmedMaxLength, trimmedRequired } from '../../../../shared/validators/text.validators';
 
 type LoginField = keyof LoginRequest;
 

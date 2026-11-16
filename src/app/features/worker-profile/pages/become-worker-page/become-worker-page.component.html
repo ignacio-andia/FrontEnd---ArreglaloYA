@@ -1,0 +1,190 @@
+<section class="become" aria-labelledby="become-title">
+  <h1 id="become-title" class="become__title">Quiero ofrecer mis servicios</h1>
+  <p class="become__intro">
+    Cree su perfil de trabajador con su misma cuenta. El perfil queda en borrador hasta que lo envíe
+    a revisión; mientras no esté aprobado no podrá recibir pedidos.
+  </p>
+
+  @if (missingPhone()) {
+    <p class="form-notice become__notice">
+      Para enviar el perfil a revisión necesitará un teléfono de contacto en su cuenta.
+      <a routerLink="/cliente/mi-cuenta">Registrar mi teléfono en Mi cuenta</a>
+    </p>
+  }
+
+  @if (checkingProfile()) {
+    <p class="become__state" role="status">Consultando su perfil de trabajador…</p>
+  } @else if (profileError(); as message) {
+    <div class="form-alert" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" class="become__retry" (click)="retryProfile()">Reintentar</button>
+    </div>
+  } @else if (profile(); as profile) {
+    @if (roleNotConfirmed()) {
+      <p class="form-notice become__notice" role="status">
+        Su perfil se creó, pero no se pudo actualizar su sesión. Vuelva a iniciar sesión para
+        acceder al área de trabajador.
+      </p>
+    } @else {
+      <p class="form-notice become__notice">
+        Su cuenta ya tiene un perfil de trabajador.
+        <a routerLink="/trabajador/perfil">Ir a mi perfil en el área de trabajador</a>
+      </p>
+    }
+    <app-worker-profile-summary class="become__summary" [profile]="profile" />
+  } @else if (showForm()) {
+    <div class="become__card">
+      @if (formErrors().length > 0) {
+        <div id="worker-error-summary" class="form-alert" role="alert" tabindex="-1">
+          @if (formErrors().length === 1) {
+            <p>{{ formErrors()[0] }}</p>
+          } @else {
+            <p>{{ formErrors()[0] }}</p>
+            <ul>
+              @for (message of formErrors().slice(1); track $index) {
+                <li>{{ message }}</li>
+              }
+            </ul>
+          }
+          @if (duplicateProfile()) {
+            <p><a routerLink="/trabajador/perfil">Ver mi perfil de trabajador</a></p>
+          }
+        </div>
+      }
+
+      @if (catalogsLoading()) {
+        <p class="become__state" role="status">Cargando zonas y especialidades…</p>
+      } @else if (catalogsError(); as message) {
+        <div class="form-alert" role="alert">
+          <p>{{ message }}</p>
+          <button type="button" class="become__retry" (click)="retryCatalogs()">Reintentar</button>
+        </div>
+      } @else {
+        <form class="become__form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div class="field">
+            <label class="field__label" for="worker-yearsOfExperience">Años de experiencia</label>
+            <input
+              id="worker-yearsOfExperience"
+              class="field__input become__years"
+              type="number"
+              inputmode="numeric"
+              formControlName="yearsOfExperience"
+              [min]="limits.minYears"
+              [max]="limits.maxYears"
+              step="1"
+              required
+              [attr.aria-invalid]="errorFor('yearsOfExperience') ? 'true' : null"
+              [attr.aria-describedby]="describedBy('yearsOfExperience', true)"
+            />
+            <p id="worker-yearsOfExperience-hint" class="field__hint">
+              Número entero entre {{ limits.minYears }} y {{ limits.maxYears }}.
+            </p>
+            @if (errorFor('yearsOfExperience'); as error) {
+              <p id="worker-yearsOfExperience-error" class="field__error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="worker-zoneId">Zona de trabajo</label>
+            @if (noZones()) {
+              <p id="worker-no-zones" class="form-notice">
+                Por ahora no hay zonas de trabajo habilitadas en la plataforma, por lo que todavía
+                no es posible crear el perfil. Inténtelo más adelante.
+              </p>
+            } @else {
+              <select
+                id="worker-zoneId"
+                class="field__input"
+                formControlName="zoneId"
+                required
+                [attr.aria-invalid]="errorFor('zoneId') ? 'true' : null"
+                [attr.aria-describedby]="describedBy('zoneId', true)"
+              >
+                <option value="">Seleccione una zona</option>
+                @for (zone of zoneOptions(); track zone.id) {
+                  <option [value]="zone.id">{{ zone.name }}</option>
+                }
+              </select>
+              <p id="worker-zoneId-hint" class="field__hint">
+                Zona donde atenderá pedidos. Después de enviar el perfil a revisión, cambiarla
+                requiere una solicitud.
+              </p>
+              @if (errorFor('zoneId'); as error) {
+                <p id="worker-zoneId-error" class="field__error">{{ error }}</p>
+              }
+            }
+          </div>
+
+          <fieldset
+            class="field"
+            [attr.aria-invalid]="errorFor('categoryIds') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('categoryIds', true)"
+            tabindex="-1"
+          >
+            <legend class="field__label">Especialidades</legend>
+            <p id="worker-categoryIds-hint" class="field__hint">
+              Seleccione entre {{ limits.minSpecialties }} y {{ limits.maxSpecialties }}.
+            </p>
+            @if (noCategories()) {
+              <p class="form-notice">
+                Por ahora no hay especialidades habilitadas en la plataforma, por lo que todavía no
+                es posible crear el perfil.
+              </p>
+            } @else {
+              <ul class="field__checks">
+                @for (category of categoryOptions(); track category.id) {
+                  <li>
+                    <label class="field__check">
+                      <input
+                        type="checkbox"
+                        [checked]="isSelected(category.id)"
+                        (change)="onCategoryChange(category.id, $event)"
+                      />
+                      {{ category.name }}
+                    </label>
+                  </li>
+                }
+              </ul>
+            }
+            @if (errorFor('categoryIds'); as error) {
+              <p id="worker-categoryIds-error" class="field__error">{{ error }}</p>
+            }
+          </fieldset>
+
+          <div class="field">
+            <label class="field__label" for="worker-description">
+              Descripción <span class="field__optional">(opcional)</span>
+            </label>
+            <textarea
+              id="worker-description"
+              class="field__input"
+              formControlName="description"
+              [attr.aria-invalid]="errorFor('description') ? 'true' : null"
+              [attr.aria-describedby]="describedBy('description', true)"
+            ></textarea>
+            <p id="worker-description-hint" class="field__hint">
+              Presente su experiencia. Máximo {{ limits.maxDescription }} caracteres.
+            </p>
+            @if (errorFor('description'); as error) {
+              <p id="worker-description-error" class="field__error">{{ error }}</p>
+            }
+          </div>
+
+          <button
+            type="submit"
+            class="form-submit"
+            [disabled]="submitting() || !catalogsReady()"
+            [attr.aria-describedby]="catalogsReady() ? null : 'worker-submit-blocked'"
+          >
+            {{ submitting() ? 'Creando perfil…' : 'Crear mi perfil de trabajador' }}
+          </button>
+          @if (!catalogsReady()) {
+            <p id="worker-submit-blocked" class="field__hint">
+              No se puede enviar el formulario hasta que existan zonas y especialidades activas.
+            </p>
+          }
+        </form>
+      }
+    </div>
+  }
+</section>

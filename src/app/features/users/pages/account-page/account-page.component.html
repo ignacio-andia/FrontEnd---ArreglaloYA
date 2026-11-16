@@ -1,0 +1,104 @@
+<section class="account" aria-labelledby="account-title">
+  <h1 id="account-title" class="account__title">Mi cuenta</h1>
+  <p class="account__intro">Consulte y actualice los datos personales de su cuenta.</p>
+
+  @if (account.isLoading() && !account.hasValue()) {
+    <p class="account__state" role="status">Cargando los datos de su cuenta…</p>
+  } @else if (loadError(); as message) {
+    <div class="form-alert" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" class="account__retry" (click)="retry()">Reintentar</button>
+    </div>
+  } @else if (user(); as user) {
+    <div class="account__card">
+      <dl class="account__readonly">
+        <div>
+          <dt>Correo electrónico</dt>
+          <dd>{{ user.email }}</dd>
+        </div>
+      </dl>
+      <p class="field__hint">El correo electrónico no se puede modificar.</p>
+
+      @if (formErrors().length > 0) {
+        <div id="account-error-summary" class="form-alert" role="alert" tabindex="-1">
+          <p>{{ formErrors()[0] }}</p>
+          @if (formErrors().length > 1) {
+            <ul>
+              @for (message of formErrors().slice(1); track $index) {
+                <li>{{ message }}</li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      <form class="account__form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="account__row">
+          <div class="field">
+            <label class="field__label" for="account-firstName">Nombre</label>
+            <input
+              id="account-firstName"
+              class="field__input"
+              type="text"
+              formControlName="firstName"
+              autocomplete="given-name"
+              required
+              [attr.aria-invalid]="errorFor('firstName') ? 'true' : null"
+              [attr.aria-describedby]="describedBy('firstName')"
+            />
+            @if (errorFor('firstName'); as error) {
+              <p id="account-firstName-error" class="field__error">{{ error }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="account-lastName">Apellido</label>
+            <input
+              id="account-lastName"
+              class="field__input"
+              type="text"
+              formControlName="lastName"
+              autocomplete="family-name"
+              required
+              [attr.aria-invalid]="errorFor('lastName') ? 'true' : null"
+              [attr.aria-describedby]="describedBy('lastName')"
+            />
+            @if (errorFor('lastName'); as error) {
+              <p id="account-lastName-error" class="field__error">{{ error }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="account-phone">
+            Teléfono <span class="field__optional">(opcional)</span>
+          </label>
+          <input
+            id="account-phone"
+            class="field__input account__phone"
+            type="tel"
+            formControlName="phone"
+            autocomplete="tel"
+            inputmode="tel"
+            [attr.aria-invalid]="errorFor('phone') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('phone', true)"
+          />
+          <p id="account-phone-hint" class="field__hint">
+            Entre 7 y 15 dígitos, sin espacios ni guiones. Puede empezar con +. Es necesario para
+            enviar un perfil de trabajador a revisión. Deje el campo vacío para eliminarlo.
+          </p>
+          @if (errorFor('phone'); as error) {
+            <p id="account-phone-error" class="field__error">{{ error }}</p>
+          }
+        </div>
+
+        <div class="account__actions">
+          <button type="submit" class="form-submit" [disabled]="submitting()">
+            {{ submitting() ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+          <p class="account__status" role="status">{{ statusMessage() }}</p>
+        </div>
+      </form>
+    </div>
+  }
+</section>

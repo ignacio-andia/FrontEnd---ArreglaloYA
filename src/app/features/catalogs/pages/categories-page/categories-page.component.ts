@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { isNormalizedApiError } from '../../../../core/models/api-error.model';
+import { apiErrorMessages } from '../../../../shared/utils/api-error-message';
 import { CategoryCardComponent } from '../../components/category-card/category-card.component';
 import { CatalogsApiService } from '../../services/catalogs-api.service';
 
@@ -20,18 +20,14 @@ export class CategoriesPageComponent {
     stream: () => this.catalogsApi.getCategories(),
   });
 
-  /**
-   * Mensaje del error de carga. El resource envuelve los valores que no son `Error`
-   * (como el `NormalizedApiError` del interceptor) y los deja en `cause`.
-   */
+  /** Mensaje del error de carga, o `null` si no hay error. */
   protected readonly errorMessage = computed(() => {
     const error = this.categories.error();
     if (error === undefined) {
       return null;
     }
 
-    const cause: unknown = error.cause ?? error;
-    return isNormalizedApiError(cause) ? cause.messages.join(' ') : LOAD_ERROR_MESSAGE;
+    return apiErrorMessages(error, LOAD_ERROR_MESSAGE).join(' ');
   });
 
   protected retry(): void {

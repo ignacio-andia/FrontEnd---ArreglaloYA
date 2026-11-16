@@ -11,7 +11,7 @@ interface LayoutCase {
   name: string;
   component: Type<unknown>;
   area: string;
-  root: string;
+  links: [string, string][];
   pending: string[];
 }
 
@@ -20,26 +20,33 @@ const cases: LayoutCase[] = [
     name: 'ClientLayoutComponent',
     component: ClientLayoutComponent,
     area: 'Área de cliente',
-    root: '/cliente',
-    pending: ['Mis pedidos', 'Publicar pedido', 'Mi cuenta'],
+    links: [
+      ['Resumen', '/cliente'],
+      ['Mi cuenta', '/cliente/mi-cuenta'],
+      ['Quiero ofrecer mis servicios', '/cliente/ofrecer-servicios'],
+    ],
+    pending: ['Mis pedidos', 'Publicar pedido'],
   },
   {
     name: 'WorkerLayoutComponent',
     component: WorkerLayoutComponent,
     area: 'Área de trabajador',
-    root: '/trabajador',
-    pending: ['Solicitudes disponibles', 'Mi perfil', 'Mi cuenta'],
+    links: [
+      ['Resumen', '/trabajador'],
+      ['Mi perfil', '/trabajador/perfil'],
+    ],
+    pending: ['Solicitudes disponibles', 'Mi cuenta'],
   },
   {
     name: 'AdminLayoutComponent',
     component: AdminLayoutComponent,
     area: 'Administración',
-    root: '/admin',
+    links: [['Resumen', '/admin']],
     pending: ['Categorías', 'Zonas', 'Usuarios', 'Bitácora'],
   },
 ];
 
-describe.each(cases)('$name', ({ component, area, root, pending }) => {
+describe.each(cases)('$name', ({ component, area, links, pending }) => {
   function render(): HTMLElement {
     TestBed.configureTestingModule({
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
@@ -57,13 +64,13 @@ describe.each(cases)('$name', ({ component, area, root, pending }) => {
     expect(render().querySelector('.shell__area')?.textContent).toBe(area);
   });
 
-  it('links only Resumen and shows the other sections as pending', () => {
+  it('links the sections with a page and shows the others as pending', () => {
     const nav = render().querySelector('nav.shell__sidebar');
 
-    const links = Array.from(nav?.querySelectorAll('a') ?? []);
-    expect(links.map((link) => [link.textContent?.trim(), link.getAttribute('href')])).toEqual([
-      ['Resumen', root],
-    ]);
+    const anchors = Array.from(nav?.querySelectorAll('a') ?? []);
+    expect(
+      anchors.map((anchor) => [anchor.textContent?.trim(), anchor.getAttribute('href')]),
+    ).toEqual(links);
 
     const pendingLabels = Array.from(nav?.querySelectorAll('.nav-link--pending') ?? []).map(
       (item) => item.firstChild?.textContent?.trim(),

@@ -19,6 +19,7 @@ export class ClientLayoutComponent {
     { label: 'Resumen', path: '/cliente', exact: true },
     { label: 'Mis pedidos', path: null },
     { label: 'Publicar pedido', path: null },
-    { label: 'Mi cuenta', path: null },
+    { label: 'Mi cuenta', path: '/cliente/mi-cuenta' },
+    { label: 'Quiero ofrecer mis servicios', path: '/cliente/ofrecer-servicios' },
   ];
 }

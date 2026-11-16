@@ -1,0 +1,62 @@
+<article class="summary" aria-labelledby="worker-profile-summary-title">
+  <header class="summary__header">
+    <h2 id="worker-profile-summary-title" class="summary__title">Perfil de trabajador</h2>
+    <p class="summary__status">
+      Estado: <span [class]="statusClass()">{{ statusLabel() }}</span>
+    </p>
+    <p class="summary__status-description">{{ statusDescription() }}</p>
+  </header>
+
+  <dl class="summary__data">
+    <div class="summary__item">
+      <dt>Años de experiencia</dt>
+      <dd>{{ profile().yearsOfExperience }}</dd>
+    </div>
+
+    <div class="summary__item">
+      <dt>Zona de trabajo</dt>
+      <dd>
+        {{ profile().zone.name }}
+        @if (profile().zoneRequiresChange) {
+          <span class="summary__inactive">(zona desactivada)</span>
+        }
+      </dd>
+    </div>
+
+    <div class="summary__item summary__item--wide">
+      <dt>Especialidades</dt>
+      <dd>
+        <ul class="summary__tags">
+          @for (specialty of profile().specialties; track specialty.id) {
+            <li class="summary__tag">
+              {{ specialty.name }}
+              @if (!specialty.isActive) {
+                <span class="summary__inactive">(desactivada)</span>
+              }
+            </li>
+          }
+        </ul>
+      </dd>
+    </div>
+
+    @if (profile().description; as description) {
+      <div class="summary__item summary__item--wide">
+        <dt>Descripción</dt>
+        <dd class="summary__description">{{ description }}</dd>
+      </div>
+    }
+  </dl>
+
+  @if (profile().pendingRequirements.length > 0) {
+    <section class="summary__pending" aria-labelledby="worker-profile-pending-title">
+      <h3 id="worker-profile-pending-title" class="summary__pending-title">
+        Requisitos pendientes para enviar el perfil a revisión
+      </h3>
+      <ul>
+        @for (requirement of profile().pendingRequirements; track requirement.field) {
+          <li>{{ requirement.message }}</li>
+        }
+      </ul>
+    </section>
+  }
+</article>

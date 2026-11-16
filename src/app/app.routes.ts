@@ -38,7 +38,19 @@ export const routes: Routes = [
     title: 'Área de cliente | ArreglaloYA',
     component: ClientLayoutComponent,
     canActivate: [authGuard, roleGuard(['CLIENTE'])],
-    children: [],
+    children: [
+      {
+        path: 'mi-cuenta',
+        loadChildren: () => import('./features/users/users.routes').then((m) => m.ACCOUNT_ROUTES),
+      },
+      {
+        path: 'ofrecer-servicios',
+        loadChildren: () =>
+          import('./features/worker-profile/worker-profile.routes').then(
+            (m) => m.BECOME_WORKER_ROUTES,
+          ),
+      },
+    ],
   },
   {
     path: 'trabajador',
@@ -48,7 +60,15 @@ export const routes: Routes = [
     // (por ejemplo, solicitudes disponibles) añadirán `canActivate: [approvedWorkerGuard]`
     // en su propia ruta hija. La raíz `/trabajador` nunca debe llevarlo (destino del guard).
     canActivate: [authGuard, roleGuard(['TRABAJADOR'])],
-    children: [],
+    children: [
+      {
+        path: 'perfil',
+        loadChildren: () =>
+          import('./features/worker-profile/worker-profile.routes').then(
+            (m) => m.WORKER_PROFILE_ROUTES,
+          ),
+      },
+    ],
   },
   {
     path: 'admin',
