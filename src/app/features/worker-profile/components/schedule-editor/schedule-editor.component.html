@@ -1,0 +1,99 @@
+@if (schedules().length === 0) {
+  <p class="schedules__empty">No hay horarios registrados.</p>
+} @else {
+  <ol class="schedules__list">
+    @for (group of schedules().controls; track group; let i = $index) {
+      <li>
+        <fieldset
+          class="schedule"
+          [formGroup]="group"
+          [disabled]="disabled()"
+          tabindex="-1"
+          [attr.aria-invalid]="rowErrors(group).length > 0 ? 'true' : null"
+          [attr.aria-describedby]="rowErrors(group).length > 0 ? idPrefix() + '-error-' + i : null"
+        >
+          <legend class="schedule__legend">Horario {{ i + 1 }}</legend>
+
+          <div class="schedule__fields">
+            <div class="field">
+              <label class="field__label" [for]="idPrefix() + '-day-' + i">Día</label>
+              <select
+                [id]="idPrefix() + '-day-' + i"
+                class="field__input"
+                formControlName="dayOfWeek"
+              >
+                <option value="">Elija un día</option>
+                @for (day of weekDays; track day) {
+                  <option [value]="day">{{ dayLabels[day] }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field__label" [for]="idPrefix() + '-start-' + i">Desde</label>
+              <input
+                [id]="idPrefix() + '-start-' + i"
+                class="field__input"
+                type="time"
+                formControlName="startTime"
+              />
+            </div>
+
+            <div class="field">
+              <label class="field__label" [for]="idPrefix() + '-end-' + i">Hasta</label>
+              <input
+                [id]="idPrefix() + '-end-' + i"
+                class="field__input"
+                type="time"
+                formControlName="endTime"
+              />
+            </div>
+
+            <label class="schedule__active">
+              <input type="checkbox" formControlName="isActive" />
+              Activo
+            </label>
+
+            <button
+              type="button"
+              class="schedule__remove"
+              [disabled]="disabled()"
+              (click)="remove(i)"
+            >
+              Quitar<span class="sr-only"> el horario {{ i + 1 }}</span>
+            </button>
+          </div>
+
+          @if (rowErrors(group); as errors) {
+            @if (errors.length > 0) {
+              <ul [id]="idPrefix() + '-error-' + i" class="schedule__errors">
+                @for (message of errors; track message) {
+                  <li class="field__error">{{ message }}</li>
+                }
+              </ul>
+            }
+          }
+        </fieldset>
+      </li>
+    }
+  </ol>
+}
+
+@if (setErrors(); as errors) {
+  @if (errors.length > 0) {
+    <ul class="schedules__errors" role="alert">
+      @for (message of errors; track message) {
+        <li class="field__error">{{ message }}</li>
+      }
+    </ul>
+  }
+}
+
+<button
+  type="button"
+  class="schedules__add"
+  [disabled]="disabled() || schedules().length >= maxSchedules"
+  (click)="add()"
+>
+  Agregar horario
+</button>

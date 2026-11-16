@@ -11,12 +11,21 @@ import { apiUrl } from '../../../../core/http/api-url';
 import { apiErrorInterceptor } from '../../../../core/interceptors/api-error.interceptor';
 import { authInterceptor } from '../../../../core/interceptors/auth.interceptor';
 import { RoleName } from '../../../../core/models/role.model';
-import { WorkerEligibility } from '../../models/worker-profile.model';
-import { userWithRoles, workerProfile } from '../../testing/worker-profile.fixtures';
+import { WorkerEligibility, WorkerProfile, WorkerStatus } from '../../models/worker-profile.model';
+import {
+  CATEGORIES,
+  ZONE,
+  userWithRoles,
+  workerProfile,
+} from '../../testing/worker-profile.fixtures';
 import { MyWorkerProfilePageComponent } from './my-worker-profile-page.component';
 
 const PROFILE_URL = apiUrl('worker-profile', 'me');
 const ELIGIBILITY_URL = apiUrl('worker-profile', 'me', 'eligibility');
+const STATUS_URL = apiUrl('worker-profile', 'me', 'status');
+const DOCUMENTS_URL = apiUrl('worker-profile', 'me', 'documents');
+const ZONES_URL = apiUrl('catalogs', 'zones');
+const CATEGORIES_URL = apiUrl('catalogs', 'categories');
 
 const notEligible: WorkerEligibility = {
   eligible: false,
@@ -24,6 +33,23 @@ const notEligible: WorkerEligibility = {
   message: 'Su perfil de trabajador aún no fue enviado a revisión.',
   reason: null,
 };
+
+function statusOf(profile: WorkerProfile, reason: string | null = null): WorkerStatus {
+  return {
+    status: profile.status,
+    statusReason: reason,
+    history: [
+      {
+        id: 'h1',
+        fromStatus: null,
+        toStatus: 'BORRADOR',
+        reason: null,
+        createdAt: '2026-11-15T14:30:00.000Z',
+        changedBy: 'TRABAJADOR',
+      },
+    ],
+  };
+}
 
 describe('MyWorkerProfilePageComponent', () => {
   let fixture: ComponentFixture<MyWorkerProfilePageComponent>;
@@ -65,33 +91,119 @@ describe('MyWorkerProfilePageComponent', () => {
     fixture.detectChanges();
   }
 
-  it('shows the profile and the effective eligibility reported by the backend', async () => {
-    render();
-    (await pending(PROFILE_URL)).flush(workerProfile());
-    (await pending(ELIGIBILITY_URL)).flush(notEligible);
+  /** Responde todas las consultas que hace la página con un perfil existente. */
+  async function load(
+    profile: WorkerProfile,
+    eligibility: WorkerEligibility = notEligible,
+    reason: string | null = null,
+  ): Promise<void> {
+    (await pending(PROFILE_URL)).flush(profile);
+    (await pending(ELIGIBILITY_URL)).flush(eligibility);
+    (await pending(STATUS_URL)).flush(statusOf(profile, reason));
+    (await pending(DOCUMENTS_URL)).flush([]);
+    if (profile.canEdit) {
+      (await pending(ZONES_URL)).flush([ZONE]);
+      (await pending(CATEGORIES_URL)).flush(CATEGORIES);
+    }
     await settle();
+  }
+
+  it('shows the profile, its history and the eligibility reported by the backend', async () => {
+    render();
+    await load(workerProfile());
 
     expect(element.querySelector('.status-badge')?.textContent).toBe('Borrador');
     expect(element.querySelector('.my-profile__eligibility-message')?.textContent?.trim()).toBe(
       'Su perfil de trabajador aún no fue enviado a revisión.',
     );
     expect(element.querySelector('.my-profile__eligibility-message--enabled')).toBeNull();
+    expect(element.querySelector('.my-profile__history')?.textContent).toContain('Borrador');
+  });
+
+  it('shows every editable section for a BORRADOR profile', async () => {
+    render();
+    await load(workerProfile({ status: 'BORRADOR', canEdit: true }));
+
+    expect(element.querySelector('app-profile-details-form')).not.toBeNull();
+    expect(element.querySelector('app-specialties-form')).not.toBeNull();
+    expect(element.querySelector('app-schedules-form')).not.toBeNull();
+    expect(element.querySelector('app-worker-documents-panel app-file-dropzone')).not.toBeNull();
+    expect(element.querySelector('app-submit-review')).not.toBeNull();
+  });
+
+  it('keeps a PENDIENTE profile read-only except for the schedules', async () => {
+    render();
+    await load(
+      workerProfile({
+        status: 'PENDIENTE',
+        canEdit: false,
+        canSubmit: false,
+        pendingRequirements: [],
+      }),
+      { ...notEligible, status: 'PENDIENTE', message: 'Su perfil está pendiente de revisión.' },
+    );
+
+    expect(element.querySelector('app-profile-details-form')).toBeNull();
+    expect(element.querySelector('app-specialties-form')).toBeNull();
+    expect(element.querySelector('app-submit-review')).toBeNull();
+    expect(element.querySelector('app-schedules-form')).not.toBeNull();
+    expect(element.querySelector('app-file-dropzone')).toBeNull();
+    expect(element.textContent).toContain('Con el perfil en estado Pendiente de revisión');
   });
 
   it('shows the reason registered by the administrator', async () => {
     render();
-    (await pending(PROFILE_URL)).flush(workerProfile({ status: 'OBSERVADO' }));
-    (await pending(ELIGIBILITY_URL)).flush({
+    await load(workerProfile({ status: 'OBSERVADO' }), {
       ...notEligible,
       status: 'OBSERVADO',
       message: 'Su perfil de trabajador tiene observaciones.',
       reason: 'Falta el certificado de antecedentes.',
-    } satisfies WorkerEligibility);
-    await settle();
+    });
 
     expect(element.querySelector('.my-profile__reason')?.textContent).toBe(
       'Motivo: Falta el certificado de antecedentes.',
     );
+  });
+
+  it('submits the profile for review and shows that it is not approved yet', async () => {
+    render();
+    await load(workerProfile({ canSubmit: true, pendingRequirements: [] }));
+
+    const submitButton = Array.from(element.querySelectorAll('app-submit-review button')).find(
+      (button) => button.textContent?.includes('Enviar a revisión'),
+    ) as HTMLButtonElement;
+    submitButton.click();
+    fixture.detectChanges();
+    (
+      Array.from(element.querySelectorAll('app-submit-review button')).find((button) =>
+        button.textContent?.includes('Confirmar envío'),
+      ) as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+
+    const submit = await pending(apiUrl('worker-profile', 'me', 'submit'));
+    expect(submit.request.method).toBe('POST');
+    submit.flush(
+      workerProfile({
+        status: 'PENDIENTE',
+        canEdit: false,
+        canSubmit: false,
+        pendingRequirements: [],
+      }),
+    );
+    (await pending(STATUS_URL)).flush(statusOf(workerProfile({ status: 'PENDIENTE' })));
+    (await pending(ELIGIBILITY_URL)).flush({
+      ...notEligible,
+      status: 'PENDIENTE',
+      message: 'Su perfil de trabajador está pendiente de revisión.',
+    });
+    await settle();
+
+    const message = element.querySelector('#my-profile-submitted')?.textContent;
+    expect(message).toContain('Pendiente de revisión');
+    expect(message).toContain('Todavía no está aprobado');
+    expect(element.querySelector('.status-badge')?.textContent).toBe('Pendiente de revisión');
+    expect(element.querySelector('app-submit-review')).toBeNull();
   });
 
   it('offers to create the profile when the account has the role but no profile (404)', async () => {
@@ -119,9 +231,7 @@ describe('MyWorkerProfilePageComponent', () => {
 
     alert?.querySelector('button')?.click();
     fixture.detectChanges();
-    (await pending(PROFILE_URL)).flush(workerProfile());
-    (await pending(ELIGIBILITY_URL)).flush(notEligible);
-    await settle();
+    await load(workerProfile({ canEdit: false }));
 
     expect(element.querySelector('app-worker-profile-summary')).not.toBeNull();
   });

@@ -1,6 +1,7 @@
 import { User } from '../../../core/auth/auth.models';
 import { RoleName } from '../../../core/models/role.model';
 import { CatalogOption } from '../../catalogs/models/catalog.model';
+import { WorkerDocument } from '../models/worker-document.model';
 import { WorkerProfile } from '../models/worker-profile.model';
 
 /**
@@ -54,4 +55,23 @@ export function workerProfile(overrides: Partial<WorkerProfile> = {}): WorkerPro
     canSubmit: false,
     ...overrides,
   };
+}
+
+export function workerDocument(overrides: Partial<WorkerDocument> = {}): WorkerDocument {
+  return {
+    id: 'd4e5f6a7-b8c9-4d0e-8f1a-2b3c4d5e6f7a',
+    type: 'IDENTIDAD',
+    originalName: 'cedula.pdf',
+    mimeType: 'application/pdf',
+    sizeBytes: 183402,
+    uploadedAt: '2026-11-15T14:35:00.000Z',
+    replacedAt: null,
+    replacedById: null,
+    ...overrides,
+  };
+}
+
+/** Archivo local de prueba con el tamaño indicado (contenido de relleno). */
+export function localFile(name: string, type: string, size = 1024): File {
+  return new File([new Uint8Array(size)], name, { type });
 }

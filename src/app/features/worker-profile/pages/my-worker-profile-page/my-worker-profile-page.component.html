@@ -1,7 +1,7 @@
 <section class="my-profile" aria-labelledby="my-profile-title">
   <h1 id="my-profile-title" class="my-profile__title">Mi perfil de trabajador</h1>
 
-  @if (profile.isLoading()) {
+  @if (profile.isLoading() && !profile.hasValue()) {
     <p class="my-profile__state" role="status">Consultando su perfil…</p>
   } @else if (noProfile()) {
     <p class="form-notice my-profile__block">
@@ -16,6 +16,17 @@
       <button type="button" class="my-profile__retry" (click)="retry()">Reintentar</button>
     </div>
   } @else if (profile.hasValue()) {
+    @if (submittedMessage(); as message) {
+      <p
+        id="my-profile-submitted"
+        class="form-notice my-profile__block"
+        role="status"
+        tabindex="-1"
+      >
+        {{ message }}
+      </p>
+    }
+
     <section class="my-profile__eligibility" aria-labelledby="my-profile-eligibility-title">
       <h2 id="my-profile-eligibility-title" class="my-profile__subtitle">
         Funciones de trabajador
@@ -37,11 +48,83 @@
       }
     </section>
 
-    <app-worker-profile-summary class="my-profile__block" [profile]="profile.value()" />
+    <app-worker-profile-summary
+      class="my-profile__block"
+      [profile]="profile.value()"
+      [showPending]="false"
+    />
 
-    <p class="field__hint my-profile__block">
-      La edición del perfil, los horarios, los documentos y el envío a revisión se habilitarán
-      próximamente.
-    </p>
+    @if (status.hasValue() && status.value().history.length > 0) {
+      <details class="my-profile__history">
+        <summary>Historial de estados</summary>
+        <ol>
+          @for (entry of status.value().history; track entry.id) {
+            <li>
+              <span class="my-profile__history-date">
+                {{ entry.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+              </span>
+              {{ entry.fromStatus ? statusLabels[entry.fromStatus] + ' → ' : ''
+              }}{{ statusLabels[entry.toStatus] }} ({{
+                entry.changedBy === 'TRABAJADOR' ? 'usted' : 'equipo de revisión'
+              }})
+              @if (entry.reason) {
+                <span class="my-profile__reason">Motivo: {{ entry.reason }}</span>
+              }
+            </li>
+          }
+        </ol>
+      </details>
+    }
+
+    @if (canEdit()) {
+      @if (zones.isLoading() && !(zones.hasValue() && categories.hasValue())) {
+        <p class="my-profile__state" role="status">Cargando zonas y especialidades…</p>
+      } @else if (catalogsError(); as message) {
+        <div class="form-alert my-profile__block" role="alert">
+          <p>{{ message }}</p>
+          <button type="button" class="my-profile__retry" (click)="retryCatalogs()">
+            Reintentar
+          </button>
+        </div>
+      } @else if (zones.hasValue() && categories.hasValue()) {
+        <app-profile-details-form
+          class="my-profile__block"
+          [profile]="profile.value()"
+          [zones]="zones.value()"
+          (saved)="onSaved($event)"
+        />
+        <app-specialties-form
+          class="my-profile__block"
+          [profile]="profile.value()"
+          [categories]="categories.value()"
+          (saved)="onSaved($event)"
+        />
+      }
+    } @else {
+      <p class="form-notice my-profile__block">
+        Con el perfil en estado {{ statusLabel() }} no se pueden modificar los datos, las
+        especialidades ni los documentos. Los horarios sí se pueden actualizar.
+      </p>
+    }
+
+    <app-schedules-form
+      class="my-profile__block"
+      [profile]="profile.value()"
+      (saved)="onSaved($event)"
+    />
+
+    <app-worker-documents-panel
+      class="my-profile__block"
+      [canEdit]="canEdit()"
+      [statusLabel]="statusLabel()"
+    />
+
+    @if (canEdit()) {
+      <app-submit-review
+        class="my-profile__block"
+        [profile]="profile.value()"
+        (submitted)="onSubmitted($event)"
+      />
+    }
   }
 </section>

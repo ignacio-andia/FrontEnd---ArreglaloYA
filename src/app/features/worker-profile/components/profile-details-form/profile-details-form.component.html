@@ -1,0 +1,91 @@
+<section class="section" aria-labelledby="details-title">
+  <h2 id="details-title" class="section__title">Datos del perfil</h2>
+
+  @if (errors().length > 0) {
+    <div class="form-alert" role="alert">
+      @for (message of errors(); track $index) {
+        <p>{{ message }}</p>
+      }
+    </div>
+  }
+
+  <form class="section__form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="field">
+      <label class="field__label" for="details-years">Años de experiencia</label>
+      <input
+        id="details-years"
+        class="field__input section__years"
+        type="number"
+        inputmode="numeric"
+        formControlName="yearsOfExperience"
+        [min]="limits.minYears"
+        [max]="limits.maxYears"
+        step="1"
+        required
+        [attr.aria-invalid]="errorFor('yearsOfExperience') ? 'true' : null"
+        [attr.aria-describedby]="errorFor('yearsOfExperience') ? 'details-years-error' : null"
+      />
+      @if (errorFor('yearsOfExperience'); as error) {
+        <p id="details-years-error" class="field__error">{{ error }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="details-description">
+        Descripción <span class="field__optional">(opcional)</span>
+      </label>
+      <textarea
+        id="details-description"
+        class="field__input"
+        formControlName="description"
+        [attr.aria-invalid]="errorFor('description') ? 'true' : null"
+        aria-describedby="details-description-hint"
+      ></textarea>
+      <p id="details-description-hint" class="field__hint">
+        Máximo {{ limits.maxDescription }} caracteres. Déjela vacía para eliminarla.
+      </p>
+      @if (errorFor('description'); as error) {
+        <p class="field__error">{{ error }}</p>
+      }
+    </div>
+
+    <div class="field">
+      @if (canChangeZone()) {
+        <label class="field__label" for="details-zone">Zona de trabajo</label>
+        <select
+          id="details-zone"
+          class="field__input"
+          formControlName="zoneId"
+          required
+          [attr.aria-invalid]="errorFor('zoneId') ? 'true' : null"
+          aria-describedby="details-zone-hint"
+        >
+          <option value="">Seleccione una zona</option>
+          @for (zone of zones(); track zone.id) {
+            <option [value]="zone.id">{{ zone.name }}</option>
+          }
+        </select>
+        <p id="details-zone-hint" class="field__hint">
+          Puede cambiarla mientras el perfil esté en borrador. Después de enviarlo a revisión, la
+          zona queda fija.
+        </p>
+        @if (errorFor('zoneId'); as error) {
+          <p class="field__error">{{ error }}</p>
+        }
+      } @else {
+        <span class="field__label">Zona de trabajo</span>
+        <p>{{ profile().zone.name }}</p>
+        <p class="field__hint">
+          La zona es fija después del primer envío a revisión; su cambio requiere una solicitud.
+        </p>
+      }
+    </div>
+
+    <div class="section__actions">
+      <button type="submit" class="form-submit" [disabled]="saving()">
+        {{ saving() ? 'Guardando…' : 'Guardar datos' }}
+      </button>
+      <p class="section__status" role="status">{{ statusMessage() }}</p>
+    </div>
+  </form>
+</section>

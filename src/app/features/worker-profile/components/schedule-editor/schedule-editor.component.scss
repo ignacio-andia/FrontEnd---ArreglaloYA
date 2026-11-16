@@ -1,0 +1,99 @@
+@use 'tokens';
+@use 'mixins';
+@use 'form-controls';
+
+@include form-controls.base;
+
+:host {
+  display: grid;
+  gap: tokens.$space-3;
+}
+
+.schedules__empty {
+  color: var(--color-text-secondary);
+}
+
+.schedules__list {
+  display: grid;
+  gap: tokens.$space-3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.schedule {
+  margin: 0;
+  padding: tokens.$space-3 tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-md;
+  background-color: var(--color-background);
+
+  &[aria-invalid='true'] {
+    border-color: var(--color-danger);
+  }
+}
+
+.schedule__legend {
+  padding: 0 tokens.$space-1;
+  font-size: 0.875rem;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.schedule__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: tokens.$space-3;
+
+  .field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  @include mixins.respond-up(md) {
+    grid-template-columns: 1.4fr 1fr 1fr auto auto;
+
+    .field:first-child {
+      grid-column: auto;
+    }
+  }
+}
+
+.schedule__active {
+  display: flex;
+  align-items: center;
+  gap: tokens.$space-2;
+  min-height: 2.75rem;
+
+  input {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: var(--color-primary);
+  }
+}
+
+.schedule__remove,
+.schedules__add {
+  min-height: 2.75rem;
+  padding: tokens.$space-2 tokens.$space-3;
+  border: 1px solid var(--color-control-border);
+  border-radius: tokens.$radius-md;
+  background-color: var(--color-surface);
+  color: var(--color-primary-dark);
+  font-weight: tokens.$font-weight-medium;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.schedules__add {
+  justify-self: start;
+}
+
+.schedule__errors,
+.schedules__errors {
+  margin: tokens.$space-2 0 0;
+  padding-left: tokens.$space-4;
+}

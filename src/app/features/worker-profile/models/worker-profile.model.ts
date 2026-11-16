@@ -55,13 +55,52 @@ export interface WorkerProfile {
 }
 
 /**
+ * Horario de atención que se envía (`ScheduleItemDto`). Horas `HH:mm` en 24 horas; el backend
+ * admite `"24:00"` solo como fin. `isActive` es opcional (por defecto `true`).
+ */
+export interface ScheduleItemRequest {
+  dayOfWeek: WeekDay;
+  startTime: string;
+  endTime: string;
+  isActive?: boolean;
+}
+
+/**
  * Cuerpo de `POST /worker-profile` (`CreateWorkerProfileDto`).
- * `description` se puede omitir; el DTO también admite `schedules`, que se incorporará con la
- * gestión de horarios (hoy el perfil se crea sin horarios).
+ * `description` y `schedules` se pueden omitir. Nombre, correo, teléfono y estado no van aquí.
  */
 export interface CreateWorkerProfileRequest {
   yearsOfExperience: number;
   description?: string;
   zoneId: string;
   categoryIds: string[];
+  schedules?: ScheduleItemRequest[];
+}
+
+/**
+ * Cuerpo de `PATCH /worker-profile/me` (`UpdateWorkerProfileDto`): al menos una propiedad.
+ * Solo en BORRADOR u OBSERVADO; `zoneId` solo puede cambiar en BORRADOR (403 en otro estado).
+ * `description: null` (o vacía) borra la descripción.
+ */
+export interface UpdateWorkerProfileRequest {
+  yearsOfExperience?: number;
+  description?: string | null;
+  zoneId?: string;
+}
+
+/** Entrada del historial de estados (`StatusHistoryEntry`). */
+export interface WorkerStatusHistoryEntry {
+  id: string;
+  fromStatus: WorkerProfileStatus | null;
+  toStatus: WorkerProfileStatus;
+  reason: string | null;
+  createdAt: string;
+  changedBy: 'TRABAJADOR' | 'ADMINISTRADOR';
+}
+
+/** Respuesta de `GET /worker-profile/me/status` (`WorkerStatusView`). */
+export interface WorkerStatus {
+  status: WorkerProfileStatus;
+  statusReason: string | null;
+  history: WorkerStatusHistoryEntry[];
 }

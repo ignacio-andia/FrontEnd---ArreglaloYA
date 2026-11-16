@@ -185,6 +185,43 @@ describe('BecomeWorkerPageComponent', () => {
       expect(errorText('description')).toBe('Use como máximo 1000 caracteres.');
     });
 
+    it('sends the optional schedules with the profile', async () => {
+      await fillValidForm();
+      const add = Array.from(element.querySelectorAll('button')).find((button) =>
+        button.textContent?.includes('Agregar horario'),
+      );
+      add?.click();
+      fixture.detectChanges();
+      setValue('#worker-schedule-day-0', 'SABADO');
+      setValue('#worker-schedule-start-0', '09:00');
+      setValue('#worker-schedule-end-0', '13:00');
+      await submit();
+
+      const create = httpTesting.expectOne(CREATE_URL);
+      expect(create.request.body.schedules).toEqual([
+        { dayOfWeek: 'SABADO', startTime: '09:00', endTime: '13:00', isActive: true },
+      ]);
+      create.flush(workerProfile(), { status: 201, statusText: 'Created' });
+      (await pending(ME_URL)).flush(userWithRoles(['CLIENTE', 'TRABAJADOR']));
+      await settle();
+    });
+
+    it('does not submit invalid schedules', async () => {
+      await fillValidForm();
+      const add = Array.from(element.querySelectorAll('button')).find((button) =>
+        button.textContent?.includes('Agregar horario'),
+      );
+      add?.click();
+      fixture.detectChanges();
+      setValue('#worker-schedule-day-0', 'LUNES');
+      setValue('#worker-schedule-start-0', '12:00');
+      setValue('#worker-schedule-end-0', '08:00');
+      await submit();
+
+      httpTesting.expectNone(CREATE_URL);
+      expect(element.textContent).toContain('La hora de fin debe ser posterior a la de inicio.');
+    });
+
     it('creates the profile, confirms the TRABAJADOR role and opens the worker area', async () => {
       await fillValidForm();
       await submit();
@@ -202,7 +239,7 @@ describe('BecomeWorkerPageComponent', () => {
       await settle();
 
       expect(TestBed.inject(SessionStore).user()?.roles).toEqual(['CLIENTE', 'TRABAJADOR']);
-      expect(navigate).toHaveBeenCalledWith('/trabajador/perfil');
+      expect(navigate).toHaveBeenCalledWith('/trabajador');
     });
 
     it('does not assume the role when /auth/me does not confirm it', async () => {

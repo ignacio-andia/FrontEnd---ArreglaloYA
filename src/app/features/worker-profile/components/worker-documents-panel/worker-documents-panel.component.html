@@ -1,0 +1,241 @@
+<section class="documents" aria-labelledby="documents-title">
+  <h2 id="documents-title" class="documents__title">Documentos de respaldo</h2>
+  <p class="documents__intro">
+    Adjunte documentos que respalden su identidad y su experiencia: identidad, antecedentes,
+    certificados o referencias. Solo usted y el equipo de revisión pueden verlos.
+  </p>
+
+  @if (canEdit()) {
+    <div class="documents__upload">
+      <app-file-dropzone
+        [accept]="accept"
+        [disabled]="uploading()"
+        hintId="documents-dropzone-hint"
+        (filesSelected)="addFiles($event)"
+      >
+        PDF, JPG o PNG, hasta {{ maxBytes | fileSize }} por archivo. Puede elegir varios.
+      </app-file-dropzone>
+
+      @if (rejected().length > 0) {
+        <div class="form-alert" role="alert">
+          <p>Estos archivos no se agregaron:</p>
+          <ul>
+            @for (item of rejected(); track $index) {
+              <li>{{ item.name }}: {{ item.reason }}</li>
+            }
+          </ul>
+        </div>
+      }
+
+      <h3 class="documents__subtitle">Archivos por enviar</h3>
+      @if (queue().length === 0) {
+        <p class="documents__empty">No hay archivos seleccionados.</p>
+      } @else {
+        <ul class="queue" [attr.aria-busy]="uploading()">
+          @for (item of queue(); track item.id) {
+            <li class="queue__item" [class.queue__item--failed]="item.status === 'failed'">
+              <div class="queue__file">
+                <span class="queue__name">{{ item.file.name }}</span>
+                <span class="queue__meta">
+                  {{ formatLabel(item.file) }} · {{ item.file.size | fileSize }}
+                </span>
+              </div>
+
+              <div class="queue__controls">
+                <label class="sr-only" [for]="'queue-type-' + item.id">
+                  Tipo de documento de {{ item.file.name }}
+                </label>
+                <select
+                  [id]="'queue-type-' + item.id"
+                  class="field__input queue__type"
+                  [disabled]="uploading()"
+                  [attr.aria-invalid]="confirmAttempted() && item.type === '' ? 'true' : null"
+                  (change)="setType(item.id, $event)"
+                >
+                  <option value="" [selected]="item.type === ''">Tipo de documento</option>
+                  @for (type of documentTypes; track type) {
+                    <option [value]="type" [selected]="item.type === type">
+                      {{ typeLabels[type] }}
+                    </option>
+                  }
+                </select>
+
+                <button
+                  type="button"
+                  class="documents__secondary"
+                  [disabled]="uploading()"
+                  (click)="removeFromQueue(item.id)"
+                >
+                  Quitar<span class="sr-only"> {{ item.file.name }}</span>
+                </button>
+              </div>
+
+              @if (item.status === 'uploading') {
+                <p class="queue__status">Enviando…</p>
+              } @else if (item.status === 'failed') {
+                <p class="field__error">No se subió: {{ item.error }}</p>
+              } @else if (confirmAttempted() && item.type === '') {
+                <p class="field__error">Elija el tipo de documento.</p>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <p class="field__hint">
+        Los documentos enviados no se pueden eliminar; mientras el perfil sea editable podrá
+        reemplazarlos por una versión nueva.
+      </p>
+
+      <div class="documents__actions">
+        <button
+          type="button"
+          class="form-submit"
+          [disabled]="uploading() || queue().length === 0"
+          (click)="sendAll()"
+        >
+          @if (uploading()) {
+            Enviando documentación…
+          } @else {
+            Enviar documentación
+            @if (queue().length > 0) {
+              ({{ queue().length }})
+            }
+          }
+        </button>
+      </div>
+
+      @if (resultMessage(); as message) {
+        <p
+          id="documents-upload-result"
+          tabindex="-1"
+          [class]="uploadResult()?.failed?.length ? 'form-alert' : 'form-notice'"
+          [attr.role]="uploadResult()?.failed?.length ? 'alert' : 'status'"
+        >
+          {{ message }}
+        </p>
+      }
+    </div>
+  } @else {
+    <p class="form-notice">
+      Con el perfil en estado {{ statusLabel() || 'actual' }} no se pueden subir ni reemplazar
+      documentos. Puede consultarlos y descargarlos.
+    </p>
+  }
+
+  <h3 class="documents__subtitle">Documentos registrados</h3>
+
+  @if (replaceMessage(); as message) {
+    <p class="form-notice" role="status">{{ message }}</p>
+  }
+
+  @if (documents.isLoading() && !documents.hasValue()) {
+    <p class="documents__empty" role="status">Cargando sus documentos…</p>
+  } @else if (documentsError(); as message) {
+    <div class="form-alert" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" class="documents__secondary" (click)="retryList()">Reintentar</button>
+    </div>
+  } @else if (documents.hasValue()) {
+    @if (documents.value().length === 0) {
+      <p class="documents__empty">Todavía no registró documentos.</p>
+    } @else {
+      <ul class="registered">
+        @for (document of documents.value(); track document.id) {
+          <li class="registered__item">
+            <div class="registered__info">
+              <span class="registered__type">{{ typeLabels[document.type] }}</span>
+              <span class="registered__name">{{ document.originalName }}</span>
+              <span class="registered__meta">
+                {{ formatLabel(document) }} · {{ document.sizeBytes | fileSize }} · Subido el
+                {{ document.uploadedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+              </span>
+              @if (document.replacedById) {
+                <span class="registered__badge registered__badge--replaced">
+                  Reemplazado el {{ document.replacedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+                </span>
+              } @else {
+                <span class="registered__badge">Vigente</span>
+              }
+            </div>
+
+            <div class="registered__actions">
+              <button
+                type="button"
+                class="documents__secondary"
+                [disabled]="downloadingId() !== null"
+                (click)="download(document)"
+              >
+                @if (downloadingId() === document.id) {
+                  Descargando…
+                } @else {
+                  Descargar<span class="sr-only"> {{ document.originalName }}</span>
+                }
+              </button>
+              @if (canEdit() && !document.replacedById) {
+                <button
+                  type="button"
+                  class="documents__secondary"
+                  [disabled]="replacingId() !== null || uploading()"
+                  (click)="chooseReplacement(document)"
+                >
+                  Reemplazar<span class="sr-only"> {{ document.originalName }}</span>
+                </button>
+              }
+            </div>
+
+            @if (replaceTarget(); as target) {
+              @if (target.document.id === document.id) {
+                <div class="registered__replace">
+                  <p>
+                    Nuevo archivo: <strong>{{ target.file.name }}</strong> ({{
+                      formatLabel(target.file)
+                    }}
+                    · {{ target.file.size | fileSize }})
+                  </p>
+                  <div class="registered__actions">
+                    <button
+                      type="button"
+                      class="form-submit"
+                      [disabled]="replacingId() !== null"
+                      (click)="confirmReplace()"
+                    >
+                      {{ replacingId() === document.id ? 'Reemplazando…' : 'Confirmar reemplazo' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="documents__secondary"
+                      [disabled]="replacingId() !== null"
+                      (click)="cancelReplace()"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              }
+            }
+
+            @if (downloadError(); as error) {
+              @if (error.documentId === document.id) {
+                <p class="field__error" role="alert">{{ error.message }}</p>
+              }
+            }
+            @if (replaceError(); as error) {
+              @if (error.documentId === document.id) {
+                <p class="field__error" role="alert">{{ error.message }}</p>
+              }
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+
+  <input
+    #replacePicker
+    type="file"
+    hidden
+    [accept]="accept"
+    (change)="onReplacementPicked($event)"
+  />
+</section>

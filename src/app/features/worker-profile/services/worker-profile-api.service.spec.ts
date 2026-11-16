@@ -108,4 +108,66 @@ describe('WorkerProfileApiService', () => {
       error: 'Conflict',
     });
   });
+
+  it('includes the optional schedules in CreateWorkerProfileDto', () => {
+    service
+      .createProfile({
+        yearsOfExperience: 3,
+        zoneId: ZONE.id,
+        categoryIds: [CATEGORIES[0].id],
+        schedules: [{ dayOfWeek: 'LUNES', startTime: '08:00', endTime: '12:00', isActive: true }],
+      })
+      .subscribe();
+
+    const req = httpTesting.expectOne(apiUrl('worker-profile'));
+    expect(req.request.body).toEqual({
+      yearsOfExperience: 3,
+      zoneId: ZONE.id,
+      categoryIds: [CATEGORIES[0].id],
+      schedules: [{ dayOfWeek: 'LUNES', startTime: '08:00', endTime: '12:00', isActive: true }],
+    });
+    req.flush(workerProfile(), { status: 201, statusText: 'Created' });
+  });
+
+  it('patches only the given UpdateWorkerProfileDto properties', () => {
+    service.updateProfile({ description: null }).subscribe();
+
+    const req = httpTesting.expectOne(apiUrl('worker-profile', 'me'));
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ description: null });
+    req.flush(workerProfile());
+  });
+
+  it('replaces the specialties and the schedules', () => {
+    service.replaceSpecialties([CATEGORIES[1].id]).subscribe();
+    const specialties = httpTesting.expectOne(apiUrl('worker-profile', 'me', 'specialties'));
+    expect(specialties.request.method).toBe('PUT');
+    expect(specialties.request.body).toEqual({ categoryIds: [CATEGORIES[1].id] });
+    specialties.flush(workerProfile());
+
+    service.replaceSchedules([]).subscribe();
+    const schedules = httpTesting.expectOne(apiUrl('worker-profile', 'me', 'schedules'));
+    expect(schedules.request.method).toBe('PUT');
+    expect(schedules.request.body).toEqual({ schedules: [] });
+    schedules.flush(workerProfile());
+  });
+
+  it('submits the profile for review without a body', () => {
+    service.submitForReview().subscribe();
+
+    const req = httpTesting.expectOne(apiUrl('worker-profile', 'me', 'submit'));
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toBeNull();
+    req.flush(workerProfile({ status: 'PENDIENTE', canEdit: false }));
+  });
+
+  it('gets the status with its history', async () => {
+    const result = firstValueFrom(service.getStatus());
+
+    httpTesting
+      .expectOne(apiUrl('worker-profile', 'me', 'status'))
+      .flush({ status: 'BORRADOR', statusReason: null, history: [] });
+
+    expect((await result).status).toBe('BORRADOR');
+  });
 });

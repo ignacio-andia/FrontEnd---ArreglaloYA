@@ -2,6 +2,10 @@
 @use 'mixins';
 @use 'form-controls';
 
+@include form-controls.base;
+@include form-controls.alerts;
+@include form-controls.submit;
+
 :host {
   display: block;
 }

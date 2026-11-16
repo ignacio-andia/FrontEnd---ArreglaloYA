@@ -16,6 +16,8 @@ import { WorkerProfile } from '../../models/worker-profile.model';
 })
 export class WorkerProfileSummaryComponent {
   readonly profile = input.required<WorkerProfile>();
+  /** Muestra los requisitos pendientes (la página de «Mi perfil» los muestra junto al envío). */
+  readonly showPending = input(true);
 
   protected readonly statusLabel = computed(
     () => WORKER_PROFILE_STATUS_LABELS[this.profile().status],

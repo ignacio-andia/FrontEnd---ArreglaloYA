@@ -35,11 +35,16 @@ import {
   integer,
   selectionCount,
 } from '../../validators/worker-profile.validators';
+import { ScheduleEditorComponent } from '../../components/schedule-editor/schedule-editor.component';
+import {
+  createScheduleArray,
+  toScheduleRequests,
+} from '../../components/schedule-editor/schedule-form';
 
 type FormField = 'yearsOfExperience' | 'zoneId' | 'categoryIds' | 'description';
 
-/** Área de trabajador donde el perfil recién creado se puede consultar. */
-const WORKER_PROFILE_PATH = '/trabajador/perfil';
+/** Raíz del área de trabajador (sin approvedWorkerGuard): destino tras crear el perfil. */
+const WORKER_AREA_PATH = '/trabajador';
 
 const CATALOG_ERROR = 'No se pudieron cargar las zonas o las especialidades.';
 const PROFILE_ERROR = 'No se pudo consultar su perfil de trabajador.';
@@ -59,7 +64,12 @@ const UNEXPECTED_MESSAGE = 'Ocurrió un error inesperado. Inténtelo de nuevo m�
  */
 @Component({
   selector: 'app-become-worker-page',
-  imports: [ReactiveFormsModule, RouterLink, WorkerProfileSummaryComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    ScheduleEditorComponent,
+    WorkerProfileSummaryComponent,
+  ],
   templateUrl: './become-worker-page.component.html',
   styleUrl: './become-worker-page.component.scss',
 })
@@ -179,6 +189,8 @@ export class BecomeWorkerPageComponent {
     zoneId: this.fb.control('', [Validators.required]),
     categoryIds: this.fb.control<string[]>([], [selectionCount(MIN_SPECIALTIES, MAX_SPECIALTIES)]),
     description: this.fb.control('', [trimmedMaxLength(MAX_DESCRIPTION_LENGTH)]),
+    /** Horarios opcionales (RF-29); también se pueden registrar después desde «Mi perfil». */
+    schedules: createScheduleArray(this.fb),
   });
 
   protected readonly submitting = signal(false);
@@ -287,7 +299,7 @@ export class BecomeWorkerPageComponent {
       });
   }
 
-  /** Cuerpo con las propiedades del DTO; la descripción vacía se omite. */
+  /** Cuerpo con las propiedades del DTO; la descripción vacía y la lista de horarios vacía se omiten. */
   private buildRequest(): CreateWorkerProfileRequest {
     const { yearsOfExperience, zoneId, categoryIds, description } = this.form.getRawValue();
     const request: CreateWorkerProfileRequest = {
@@ -300,12 +312,17 @@ export class BecomeWorkerPageComponent {
     if (trimmedDescription !== '') {
       request.description = trimmedDescription;
     }
+
+    const schedules = toScheduleRequests(this.form.controls.schedules);
+    if (schedules.length > 0) {
+      request.schedules = schedules;
+    }
     return request;
   }
 
   private onCreated(profile: WorkerProfile, user: User | null): void {
     if (user?.roles.includes('TRABAJADOR')) {
-      void this.router.navigateByUrl(WORKER_PROFILE_PATH);
+      void this.router.navigateByUrl(WORKER_AREA_PATH);
       return;
     }
 

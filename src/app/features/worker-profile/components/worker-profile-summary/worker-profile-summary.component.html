@@ -47,7 +47,7 @@
     }
   </dl>
 
-  @if (profile().pendingRequirements.length > 0) {
+  @if (showPending() && profile().pendingRequirements.length > 0) {
     <section class="summary__pending" aria-labelledby="worker-profile-pending-title">
       <h3 id="worker-profile-pending-title" class="summary__pending-title">
         Requisitos pendientes para enviar el perfil a revisión

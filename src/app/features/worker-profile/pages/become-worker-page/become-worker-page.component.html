@@ -170,6 +170,22 @@
             }
           </div>
 
+          <fieldset class="field" aria-describedby="worker-schedules-hint">
+            <legend class="field__label">
+              Horarios de atención <span class="field__optional">(opcional)</span>
+            </legend>
+            <p id="worker-schedules-hint" class="field__hint">
+              Días y horas en que atiende. Los horarios de un mismo día no pueden superponerse.
+              Puede registrarlos ahora o después desde su perfil; para enviar el perfil a revisión
+              necesitará al menos uno activo.
+            </p>
+            <app-schedule-editor
+              [schedules]="form.controls.schedules"
+              [submitted]="submitted()"
+              idPrefix="worker-schedule"
+            />
+          </fieldset>
+
           <button
             type="submit"
             class="form-submit"
