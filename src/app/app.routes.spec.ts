@@ -13,6 +13,7 @@ import { RoleName } from './core/models/role.model';
 import { apiUrl } from './core/http/api-url';
 import { LoginPageComponent } from './features/auth/pages/login-page/login-page.component';
 import { CategoriesPageComponent } from './features/catalogs/pages/categories-page/categories-page.component';
+import { PublishOrderPageComponent } from './features/orders/pages/publish-order-page/publish-order-page.component';
 import { BecomeWorkerPageComponent } from './features/worker-profile/pages/become-worker-page/become-worker-page.component';
 import { AccountPageComponent } from './features/users/pages/account-page/account-page.component';
 import { RegisterPageComponent } from './features/auth/pages/register-page/register-page.component';
@@ -225,6 +226,33 @@ describe('app routes', () => {
     ).not.toBeNull();
   });
 
+  it('opens «Publicar pedido» in the client area', async () => {
+    signIn(['CLIENTE']);
+    const harness = await RouterTestingHarness.create();
+
+    const navigation = harness.navigateByUrl('/cliente/publicar-pedido', ClientLayoutComponent);
+    (await vi.waitFor(() => httpTesting.expectOne(apiUrl('catalogs', 'categories')))).flush([]);
+    (await vi.waitFor(() => httpTesting.expectOne(apiUrl('catalogs', 'zones')))).flush([]);
+    await navigation;
+
+    expect(currentPath()).toBe('/cliente/publicar-pedido');
+    expect(TestBed.inject(Title).getTitle()).toBe('Publicar pedido | ArreglaloYA');
+    expect(
+      harness.routeDebugElement?.query(
+        (node) => node.componentInstance instanceof PublishOrderPageComponent,
+      ),
+    ).not.toBeNull();
+  });
+
+  it('keeps «Publicar pedido» closed for an account without the CLIENTE role', async () => {
+    signIn(['TRABAJADOR']);
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/cliente/publicar-pedido');
+
+    expect(currentPath()).toBe('/');
+  });
+
   it('opens «Mi cuenta» in the client area', async () => {
     signIn(['CLIENTE']);
     const harness = await RouterTestingHarness.create();
@@ -270,6 +298,8 @@ describe('app routes', () => {
       status: null,
       message: 'No tiene un perfil de trabajador.',
       reason: null,
+      pendingZoneChangeRequest: null,
+      canTakeNewWork: false,
     });
     await navigation;
 

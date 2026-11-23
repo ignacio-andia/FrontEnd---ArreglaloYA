@@ -5,8 +5,9 @@ import { PanelShellComponent } from '../../shared/components/panel-shell/panel-s
 
 /**
  * Layout del área de trabajador (`/trabajador`). El área exige el rol TRABAJADOR, no un perfil
- * aprobado: las páginas que requieran aprobación (por ejemplo, solicitudes disponibles) añadirán
- * approvedWorkerGuard en su propia ruta.
+ * aprobado: las páginas que requieran aprobación (pedidos disponibles y creación de ofertas)
+ * añadirán approvedWorkerGuard en su propia ruta. Las ofertas propias y los trabajos asignados
+ * pertenecen a esta área.
  */
 @Component({
   selector: 'app-worker-layout',
@@ -21,7 +22,9 @@ import { PanelShellComponent } from '../../shared/components/panel-shell/panel-s
 export class WorkerLayoutComponent {
   protected readonly navItems: readonly NavItem[] = [
     { label: 'Resumen', path: '/trabajador', exact: true },
-    { label: 'Solicitudes disponibles', path: null },
+    { label: 'Pedidos disponibles', path: null },
+    { label: 'Mis ofertas', path: null },
+    { label: 'Trabajos asignados', path: null },
     { label: 'Mi perfil', path: '/trabajador/perfil' },
     { label: 'Mi cuenta', path: null },
   ];

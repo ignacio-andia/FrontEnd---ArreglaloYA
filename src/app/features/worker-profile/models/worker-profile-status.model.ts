@@ -20,12 +20,16 @@ export const WORKER_PROFILE_STATUS_LABELS: Readonly<Record<WorkerProfileStatus, 
   SUSPENDIDO: 'Suspendido',
 };
 
-/** Significado de cada estado según el contrato (04-enums-and-states). */
+/**
+ * Significado de cada estado según el contrato (04-enums-and-states). Solo describe: qué se puede
+ * editar o enviar lo deciden `canEdit` y `canSubmit` del backend.
+ */
 export const WORKER_PROFILE_STATUS_DESCRIPTIONS: Readonly<Record<WorkerProfileStatus, string>> = {
   BORRADOR: 'El perfil fue creado y aún no se envió a revisión.',
   PENDIENTE: 'El perfil fue enviado a revisión.',
-  OBSERVADO: 'El perfil tiene observaciones que corregir.',
+  OBSERVADO: 'El perfil tiene observaciones: puede corregirlo y volver a enviarlo a revisión.',
   APROBADO: 'El perfil está habilitado.',
-  RECHAZADO: 'El perfil fue rechazado.',
-  SUSPENDIDO: 'El perfil está suspendido.',
+  RECHAZADO: 'El perfil fue rechazado: puede corregirlo y volver a enviarlo a revisión.',
+  SUSPENDIDO:
+    'El perfil está suspendido: puede regularizar sus datos, pero no enviarlo a revisión. Solo el equipo de revisión puede reactivarlo.',
 };

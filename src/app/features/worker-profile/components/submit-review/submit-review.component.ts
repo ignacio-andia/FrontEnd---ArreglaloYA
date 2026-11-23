@@ -1,14 +1,17 @@
-import { Component, DestroyRef, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { apiErrorMessages, apiErrorStatus } from '../../../../shared/utils/api-error-message';
+import { WORKER_PROFILE_STATUS_LABELS } from '../../models/worker-profile-status.model';
 import { WorkerProfile } from '../../models/worker-profile.model';
 import { WorkerProfileApiService } from '../../services/worker-profile-api.service';
 
 /**
- * Envío del perfil a revisión (`POST /worker-profile/me/submit`): BORRADOR u OBSERVADO pasan a
- * PENDIENTE. Los requisitos los calcula el backend (`pendingRequirements` y `canSubmit`);
- * no se agregan requisitos documentales propios. Enviar no aprueba el perfil.
+ * Envío del perfil a revisión (`POST /worker-profile/me/submit`): BORRADOR, OBSERVADO o
+ * RECHAZADO pasan a PENDIENTE. Los requisitos y el estado los evalúa el backend
+ * (`pendingRequirements` y `canSubmit`); no se agregan requisitos documentales propios. Si
+ * `canSubmit` es falso sin requisitos pendientes, el estado actual no admite el envío (por
+ * ejemplo, SUSPENDIDO). Enviar no aprueba el perfil.
  */
 @Component({
   selector: 'app-submit-review',
@@ -29,6 +32,10 @@ import { WorkerProfileApiService } from '../../services/worker-profile-api.servi
             }
           </ul>
         </div>
+      } @else if (!profile().canSubmit) {
+        <p class="form-notice" id="submit-pending">
+          Con el perfil en estado {{ statusLabel() }} no se puede enviar a revisión.
+        </p>
       }
 
       @if (errors().length > 0) {
@@ -79,6 +86,10 @@ export class SubmitReviewComponent {
 
   readonly profile = input.required<WorkerProfile>();
   readonly submitted = output<WorkerProfile>();
+
+  protected readonly statusLabel = computed(
+    () => WORKER_PROFILE_STATUS_LABELS[this.profile().status],
+  );
 
   protected readonly confirming = signal(false);
   protected readonly submitting = signal(false);

@@ -4,13 +4,15 @@ Documentación técnica de los contratos **reales** entre el backend NestJS de S
 
 > **Fuente de verdad:** el código del backend. Si esta documentación y el código difieren, manda el código y hay que actualizar este documento.
 >
-> **Versión inspeccionada:** commit `207f2cb` (rama `main`). Ese commit, que incluye OrdersModule, las solicitudes de cambio de zona, la cola de borrado de archivos y las migraciones `20261114000000` y `20261115000000`, **todavía no está en `origin/main`**: quien clone el repositorio remoto antes del push no tendrá los endpoints de pedidos.
+> **Versión inspeccionada:** rama `main` del backend en el commit `5dd3cf5` (merge de `feature/ofertas`, PR #1, 2026-11-23): Auth, Users, Catalogs, Audit, WorkerProfile (con verificación y cambio de zona), Orders, Offers y Notifications.
+>
+> **Copia del frontend:** esta carpeta es la copia de `backend/docs/frontend-api-contracts` usada por Angular. La sección [Sincronización con el frontend](#sincronización-con-el-frontend) registra las correcciones locales y las discrepancias encontradas.
 
 ## Índice
 
 | Archivo | Contenido |
 |---|---|
-| [01-endpoints-inventory.md](01-endpoints-inventory.md) | Inventario completo de los 54 endpoints existentes |
+| [01-endpoints-inventory.md](01-endpoints-inventory.md) | Inventario completo de los 81 endpoints existentes |
 | [02-request-dtos.md](02-request-dtos.md) | DTOs de entrada, validaciones y ejemplos |
 | [03-response-models.md](03-response-models.md) | Modelos de respuesta reales y ejemplos JSON |
 | [04-enums-and-states.md](04-enums-and-states.md) | Enumeraciones, estados y transiciones comprobadas |
@@ -50,7 +52,7 @@ Documentación técnica de los contratos **reales** entre el backend NestJS de S
 | Montos | `budgetAmount` se **envía** como string (también acepta un número JSON) y se **recibe** como string con 2 decimales, por ejemplo `"150.50"` |
 | Identificadores | UUID. Los parámetros de ruta pasan por `ParseUUIDPipe`: un id que no es UUID responde 400 |
 | Horas | `"HH:mm"` en 24 horas (los horarios de atención admiten `"24:00"` como fin) |
-| Paginación | `{ data: T[], meta: { page, limit, total, totalPages } }`. Solo en usuarios, bitácora, pedidos y solicitudes de cambio de zona del administrador; los demás listados devuelven un arreglo simple |
+| Paginación | `{ data: T[], meta: { page, limit, total, totalPages } }`. En usuarios, bitácora, solicitudes de cambio de zona y perfiles del administrador, pedidos (propios, disponibles y del administrador), ofertas (propias y recibidas) y notificaciones; los demás listados devuelven un arreglo simple |
 | Propiedades extra | El `ValidationPipe` global usa `whitelist`, `forbidNonWhitelisted` y `transform`. **Cualquier propiedad no declarada en el DTO responde 400**: no reenvíe objetos de respuesta completos en un PATCH |
 | Strings de entrada | La mayoría de los textos pasan por `@Trim()`: se recortan los espacios antes de validar |
 | Errores | `{ statusCode: number, message: string \| string[], error?: string }`. `message` es un **arreglo** en los errores de validación y en algunos errores de negocio (ver 03 y 09) |
@@ -67,3 +69,26 @@ Documentación técnica de los contratos **reales** entre el backend NestJS de S
 | `@ValidateIf(value !== undefined)` | ✅ | ❌ 400 (null se valida y falla) | `UpdateUserDto.firstName` |
 
 En 02 se indica para cada propiedad cuál de los tres casos aplica.
+
+## Sincronización con el frontend
+
+Última sincronización: 2026-11-23, contra el commit `5dd3cf5` del backend. Se contrastó con el código (controllers, services, vistas y DTO) y con el documento de transferencia `FRONTEND_HANDOFF.md`. Donde difieren, manda el código.
+
+**Correcciones aplicadas solo en esta copia** (el código del backend ya se comporta así; la documentación del backend todavía no lo refleja):
+
+| Archivo | Corrección | Comprobado en |
+|---|---|---|
+| README | Versión inspeccionada, total de 81 endpoints y listados paginados | `*.controller.ts` (81 rutas) |
+| 03 | Ejemplo de `OwnerOrderView`: `expiresAt` a 7 días de `publishedAt` (T5.1) y propiedad `anonymizedAt` | `orders/order-views.ts`, `orders.config.ts` |
+| 05 | `ApprovedWorkerGuard` también protege `POST /offers/orders/:orderId` (#69) | `offers/offers.controller.ts` (`@UseGuards(ApprovedWorkerGuard)`) |
+| 01, 03, 08 | Los enlaces a `src/modules/offers/README.md` apuntan al repositorio del backend: se dejaron como texto | — |
+
+**Discrepancias entre `FRONTEND_HANDOFF.md` y el código:**
+
+| # | Documento de transferencia | Código real | Qué usa Angular |
+|---|---|---|---|
+| S1 | Sugiere `apiUrl: 'http://localhost:3000/api'` en `environment.ts` | El backend acepta CORS desde `http://localhost:4200`, pero el frontend ya usa `/api` con el proxy de `proxy.conf.json` | Se mantiene `environment.apiBaseUrl = '/api'` con el proxy (decisión de arquitectura del frontend) |
+| S2 | Cita `06-business-rules.md` | El archivo es `06-file-contracts.md` (el propio documento lo indica en D1) | 04, 05 y el README de Offers del backend |
+| S3 | El cambio de zona "siempre se bloquea" | Confirmado: la fuente `OFERTAS` de `WorkerActiveWorkRegistry` no se registra (`offers.module.ts`), así que #37 responde 409 `VERIFICACION_NO_DISPONIBLE` | `pendingZoneChangeRequest` se tipifica y se muestra si llega, pero en la práctica será `null` |
+| S4 | `WorkerEligibility` no aparece en la sección de modelos | Incluye `pendingZoneChangeRequest` y `canTakeNewWork` (`worker-profile.service.ts`) | Ver 07 y `worker-profile.model.ts` |
+

@@ -11,7 +11,7 @@
   - `prop?: T`: se puede omitir, pero no enviar `null`.
   - `prop?: T | null`: se puede omitir o enviar `null`.
 - **`null` en la respuesta:** `prop: T | null`. Las propiedades de respuesta **siempre** están presentes; ninguna es opcional, salvo `OrderWarning.orderIds`.
-- Los tipos que **no existen** en el backend (ofertas, pagos, agenda, reclamos, calificaciones) **no** se incluyen.
+- Los tipos que **no existen** en el backend (pagos, agenda, reclamos, calificaciones) **no** se incluyen.
 
 ```ts
 // =====================================================================
@@ -36,7 +36,9 @@ export type WeekDay = (typeof WEEK_DAYS)[number];
 export const WORKER_DOCUMENT_TYPES = ['IDENTIDAD', 'ANTECEDENTES', 'CERTIFICADO', 'REFERENCIA'] as const;
 export type WorkerDocumentType = (typeof WORKER_DOCUMENT_TYPES)[number];
 
-export const ZONE_CHANGE_REQUEST_STATUSES = ['PENDIENTE', 'APROBADA', 'RECHAZADA'] as const;
+export const ZONE_CHANGE_REQUEST_STATUSES = ['PENDIENTE', 'APROBADA', 'RECHAZADA', 'CANCELADA'] as const;
+export type ZoneChangeCancellationCause =
+  | 'SUSPENSION_PERFIL' | 'SUSPENSION_CUENTA' | 'RETIRO_TRABAJADOR';
 export type ZoneChangeRequestStatus = (typeof ZONE_CHANGE_REQUEST_STATUSES)[number];
 
 export const ORDER_STATUSES = [
@@ -47,7 +49,8 @@ export const ORDER_STATUSES = [
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export type AuditAction =
-  | 'CREACION' | 'EDICION' | 'DESACTIVACION' | 'CAMBIO_ESTADO' | 'APROBACION' | 'RECHAZO';
+  | 'CREACION' | 'EDICION' | 'DESACTIVACION' | 'CAMBIO_ESTADO' | 'APROBACION' | 'RECHAZO'
+  | 'CONSULTA_DOCUMENTOS' | 'VISUALIZACION_DOCUMENTO' | 'DESCARGA_DOCUMENTO';
 export type AuditEntityType =
   | 'CATEGORIA_SERVICIO' | 'ZONA' | 'PERFIL_TRABAJADOR' | 'SOLICITUD_CAMBIO_ZONA';
 
@@ -85,8 +88,12 @@ export interface RegisterRequest {
   lastName: string;
   email: string;
   password: string;
-  phone?: string | null;
+  phone?: string | null; // '' o solo espacios = sin telefono (se guarda null)
 }
+// El formulario puede tener confirmPassword, pero NO se envia: el backend
+// responde 400 a cualquier propiedad no declarada. Ejemplo:
+//   const { confirmPassword, ...body } = form.getRawValue();
+//   this.http.post<AuthResponse>('/api/auth/register', body);
 export interface LoginRequest {
   email: string;
   password: string;
@@ -110,7 +117,7 @@ export interface AuthResponse {
 export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
-  phone?: string | null; // null borra el telefono
+  phone?: string | null; // null, '' o solo espacios borran el telefono; omitirlo no lo cambia
 }
 export interface UpdateUserStatusRequest {
   status: UserStatus;
@@ -194,6 +201,80 @@ export interface UpdateSpecialtiesRequest {
 export interface UpdateSchedulesRequest {
   schedules: ScheduleItemRequest[];
 }
+// Solo administradores: GET /worker-profile/admin/profiles y /:profileId
+export interface AdminWorkerProfilesQuery extends PageQuery {
+  status?: WorkerProfileStatus;
+  zoneId?: string;
+  categoryId?: string;
+}
+export interface AdminAccountSummary {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  status: UserStatus;
+}
+export interface AdminWorkerProfileSummary {
+  id: string;
+  userId: string;
+  status: WorkerProfileStatus;
+  account: AdminAccountSummary;
+  zone: CatalogRef;
+  specialties: CatalogRef[];
+  submittedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface AdminStatusHistoryEntry extends WorkerStatusHistoryEntry {
+  changedByUser: { id: string; firstName: string; lastName: string };
+}
+export interface AdminWorkerProfileView {
+  profile: WorkerProfile;
+  account: AdminAccountSummary & { roles: RoleName[] };
+  statusReason: string | null;
+  history: AdminStatusHistoryEntry[];
+  allowedDecisions: WorkerProfileStatus[];
+}
+// Solo administradores: PATCH /worker-profile/admin/profiles/:profileId/status
+export type AdminProfileDecision = 'APROBADO' | 'OBSERVADO' | 'RECHAZADO' | 'SUSPENDIDO';
+export interface ChangeWorkerProfileStatusRequest {
+  status: AdminProfileDecision;
+  reason?: string; // obligatorio y no vacio salvo APROBADO; no admite null
+}
+// Solo administradores: PATCH /worker-profile/admin/profiles/:profileId/zone (T4.4).
+// Perfil RECHAZADO, OBSERVADO, PENDIENTE o SUSPENDIDO con la zona actual inactiva; conserva
+// su estado. Responde AdminWorkerProfileView.
+export interface ReassignRejectedProfileZoneRequest {
+  zoneId: string;
+  justification: string; // obligatoria y no vacia
+}
+
+// Notificaciones internas (#61-#64). Se llama AppNotification para no chocar
+// con el tipo global Notification del navegador.
+export type NotificationType =
+  | 'PERFIL_APROBADO' | 'PERFIL_OBSERVADO' | 'PERFIL_RECHAZADO' | 'PERFIL_SUSPENDIDO'
+  | 'PERFIL_REACTIVADO' | 'VERIFICACION_SOLICITADA'
+  | 'VERIFICACION_REENVIADA_OBSERVACION' | 'VERIFICACION_REENVIADA_RECHAZO'
+  | 'SOLICITUD_ZONA_APROBADA' | 'SOLICITUD_ZONA_RECHAZADA' | 'SOLICITUD_ZONA_CANCELADA'
+  | 'SOLICITUD_ZONA_RETIRADA' | 'ZONA_REASIGNADA' | 'BORRADO_ARCHIVO_ESCALADO';
+export type NotificationResourceType = 'PERFIL_TRABAJADOR' | 'SOLICITUD_CAMBIO_ZONA';
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  resourceType: NotificationResourceType | null;
+  resourceId: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+export interface ListNotificationsQuery {
+  unread?: boolean;
+  page?: number;
+  limit?: number; // 1 a 100, por defecto 20
+}
+export interface UnreadNotificationsCount { unread: number; }
+export interface MarkAllNotificationsReadResponse { updated: number; }
 
 export interface Schedule {
   id: string;
@@ -241,6 +322,9 @@ export interface WorkerEligibility {
   status: WorkerProfileStatus | null;
   message: string;
   reason: string | null;
+  // T4-F4: solicitud de cambio de zona pendiente y si puede asumir trabajos nuevos.
+  pendingZoneChangeRequest: { id: string; toZone: CatalogRef; createdAt: string } | null;
+  canTakeNewWork: boolean; // eligible y sin solicitud pendiente
 }
 export interface WorkerDocument {
   id: string;
@@ -272,7 +356,8 @@ export interface ZoneChangeRequest {
   toZone: CatalogRef;
   createdAt: string;
   decidedAt: string | null;
-  decisionComment: string | null;
+  decisionComment: string | null; // siempre presente en RECHAZADA
+  cancellationCause: ZoneChangeCancellationCause | null; // solo en CANCELADA
 }
 export interface ZoneStatus {
   currentZone: CatalogRef;
@@ -301,7 +386,7 @@ export interface AdminZoneChangeRequest extends ZoneChangeRequest {
 }
 export interface DecideZoneChangeRequestRequest {
   decision: 'APROBADA' | 'RECHAZADA';
-  comment?: string | null;
+  comment?: string | null; // obligatorio y no vacio al rechazar
 }
 export interface AdminZoneChangeRequestQuery extends PageQuery {
   status?: ZoneChangeRequestStatus;
@@ -329,6 +414,7 @@ export interface CreateOrderFields {
   addressReference?: string;
 }
 export interface UpdateOrderRequest {
+  categoryId?: string; // T5.2: la zona no se edita
   description?: string;
   budgetAmount?: string;
   addressLine?: string;
@@ -373,10 +459,43 @@ export interface WorkerOrder {     // WorkerOrderView (trabajador aprobado)
 export interface OwnerOrder extends WorkerOrder { // OwnerOrderView (cliente duenio)
   address: { addressLine: string; reference: string | null } | null;
   cancelledAt: string | null;
+  anonymizedAt: string | null; // T5.4: sin direccion ni fotos; descripcion fija
   createdAt: string;
   updatedAt: string;
   canEdit: boolean;
   canCancel: boolean;
+}
+// Solo administradores (T5.4): registro minimo, sin direccion, fotos ni descripcion.
+export interface AdminOrderSummary {
+  id: string;
+  status: OrderStatus;
+  category: CatalogRef;
+  zone: CatalogRef;
+  budgetAmount: string;
+  revision: number;
+  publishedAt: string;
+  expiresAt: string;
+  lastEditedAt: string | null;
+  cancelledAt: string | null;
+  anonymizedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  clientId: string;
+  client: { id: string; firstName: string; lastName: string } | null; // null si anonimizado
+  assignedWorkerId: string | null;
+  imageCount: number;
+}
+export interface AdminOrderView extends AdminOrderSummary {
+  history: {
+    fromStatus: OrderStatus | null;
+    toStatus: OrderStatus;
+    actorType: 'USUARIO' | 'SISTEMA';
+    changedById: string | null;
+    actorRole: RoleName | null;
+    systemProcess: string | null;
+    reason: string | null; // null si anonimizado
+    createdAt: string;
+  }[];
 }
 export type OrderWarning =
   | { code: 'POSIBLE_DUPLICADO'; message: string; orderIds: string[] }
@@ -388,6 +507,81 @@ export interface OrderWithWarnings {
 export interface DuplicateCheckResponse {
   warnings: OrderWarning[];
 }
+
+// Pedido acordado para el trabajador asignado (#80, G2).
+export interface AssignedOrder extends WorkerOrder {
+  address: { addressLine: string; reference: string | null } | null;
+  client: { firstName: string; lastName: string };
+}
+
+// ---------------------------------------------------------------- Ofertas
+export const OFFER_STATUSES = ['VIGENTE', 'ACEPTADA', 'RECHAZADA', 'RETIRADA', 'VENCIDA', 'SIN_EFECTO'] as const;
+export type OfferStatus = (typeof OFFER_STATUSES)[number];
+export type OfferParty = 'CLIENTE' | 'TRABAJADOR';
+export type OfferEventType =
+  | 'PROPUESTA' | 'CONTRAOFERTA' | 'ACEPTADA' | 'RECHAZADA' | 'RETIRADA' | 'VENCIDA' | 'SIN_EFECTO';
+
+export interface CreateOfferRequest {
+  amount: string;
+  requiresVisit: boolean;
+  visitCost?: string; // obligatorio si requiresVisit; prohibido si no
+  materialsIncluded: boolean;
+  proposedStartAt: string; // ISO 8601 con zona horaria (ej. '2026-11-30T10:00:00-04:00')
+  estimatedDurationMinutes: number;
+}
+export interface CounterOfferRequest {
+  amount: string;
+}
+export interface ListOffersQuery {
+  status?: OfferStatus;
+  page?: number;
+  limit?: number;
+}
+export interface ListReceivedOffersQuery extends ListOffersQuery {
+  orderId?: string;
+}
+
+export interface Offer {
+  id: string;
+  orderId: string;
+  status: OfferStatus; // estado efectivo
+  round: number;
+  amount: string;
+  turn: OfferParty;
+  requiresVisit: boolean;
+  visitCost: string | null;
+  materialsIncluded: boolean;
+  proposedStartAt: string;
+  estimatedDurationMinutes: number;
+  expiresAt: string;
+  closedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface ReceivedOffer extends Offer {
+  worker: { id: string; firstName: string; lastName: string };
+}
+export interface OfferEvent {
+  type: OfferEventType;
+  round: number;
+  amount: string | null;
+  actorType: 'USUARIO' | 'SISTEMA';
+  actorRole: RoleName | null; // sin id de usuario (G4)
+  systemProcess: string | null;
+  reason: string | null;
+  createdAt: string;
+}
+export type OfferDetail<T extends Offer = Offer> = T & { history: OfferEvent[] };
+
+export type WhatsAppContact =
+  | { available: true; channel: 'WHATSAPP'; contactRole: OfferParty; url: string }
+  | {
+      available: false;
+      channel: 'WHATSAPP';
+      contactRole: OfferParty;
+      url: null;
+      reason: 'TELEFONO_NO_REGISTRADO' | 'TELEFONO_INVALIDO';
+    };
 ```
 
 ## Tabla de correspondencia (backend → Angular)
@@ -405,8 +599,14 @@ export interface DuplicateCheckResponse {
 | `WorkerDocumentView` | `WorkerDocument` |
 | `ZoneStatusView`, `ZoneChangeRequestView`, `AdminZoneChangeRequestView` | `ZoneStatus`, `ZoneChangeRequest`, `AdminZoneChangeRequest` |
 | `WorkerOrderView`, `OwnerOrderView`, `OrderImageView` | `WorkerOrder`, `OwnerOrder`, `OrderImage` |
-| `PaginatedOrders<T>`, `PaginatedUsers`, `PaginatedAuditLogs`, `PaginatedZoneChangeRequests` | `PaginatedResponse<T>` (misma forma) |
+| `AssignedOrderView` | `AssignedOrder` |
+| `NotificationView` | `AppNotification` (evita el `Notification` global del navegador) |
+| `CreateOfferDto`, `CounterOfferDto` | `CreateOfferRequest`, `CounterOfferRequest` |
+| `ListOffersQueryDto`, `ListReceivedOffersQueryDto` | `ListOffersQuery`, `ListReceivedOffersQuery` |
+| `OfferView`, `ReceivedOfferView`, `OfferEventView`, `OfferDetail<T>` | `Offer`, `ReceivedOffer`, `OfferEvent`, `OfferDetail<T>` |
+| `WhatsAppContact` | Mismo nombre |
+| `PaginatedOrders<T>`, `PaginatedOffers<T>`, `PaginatedUsers`, `PaginatedAuditLogs`, `PaginatedZoneChangeRequests`, `PaginatedNotifications` | `PaginatedResponse<T>` (misma forma) |
 
 ## Tipos que no deben crearse todavía
 
-`Offer`, `Negotiation`, `Visit`, `AdditionalBudget`, `Schedule` de agenda (no confundir con el horario de atención), `Claim`, `Payment`, `Receipt`, `Rating`, `Notification`, `PublicWorkerProfile`, `OrderTimeline`/historial de pedido, `AdminOrder`. **No tienen contrato** (ver 09).
+`Negotiation` (la negociación vive en `Offer` y su `history`), `Visit`, `AdditionalBudget`, `Schedule` de agenda (no confundir con el horario de atención), `Claim`, `Payment`, `Receipt`, `Rating`, `PublicWorkerProfile`, `OrderTimeline`/historial de pedido, `AdminOrder`. **No tienen contrato** (ver 09).

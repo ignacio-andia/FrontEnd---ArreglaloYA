@@ -23,6 +23,10 @@ export interface WorkerEligibilityNavigationState {
 /**
  * Permite el acceso solo si `GET /worker-profile/me/eligibility` responde `eligible: true`.
  * No decide por el rol TRABAJADOR ni por el estado del perfil: solo por la elegibilidad efectiva.
+ * Tampoco usa `canTakeNewWork`: con una solicitud de cambio de zona pendiente el trabajador
+ * sigue accediendo a las funciones de trabajador (por ejemplo, ver pedidos disponibles); las
+ * acciones que asumen trabajo nuevo (ofertar) deben consultarlo en su propia pantalla, y el
+ * backend responde 409 en cualquier caso.
  *
  * - No elegible: redirige al inicio del área de trabajador con la respuesta completa
  *   (`status`, `message`, `reason`) en el estado de navegación para mostrar el motivo.

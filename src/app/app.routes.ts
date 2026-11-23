@@ -44,6 +44,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/users/users.routes').then((m) => m.ACCOUNT_ROUTES),
       },
       {
+        path: 'publicar-pedido',
+        loadChildren: () =>
+          import('./features/orders/orders.routes').then((m) => m.PUBLISH_ORDER_ROUTES),
+      },
+      {
         path: 'ofrecer-servicios',
         loadChildren: () =>
           import('./features/worker-profile/worker-profile.routes').then(

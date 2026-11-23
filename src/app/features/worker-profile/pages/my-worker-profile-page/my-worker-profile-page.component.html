@@ -45,6 +45,18 @@
         @if (eligibility.value().reason; as reason) {
           <p class="my-profile__reason">Motivo: {{ reason }}</p>
         }
+        @if (eligibility.value().pendingZoneChangeRequest; as pending) {
+          <p class="my-profile__reason">
+            Solicitud de cambio de zona pendiente: {{ pending.toZone.name }}, enviada el
+            {{ pending.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}.
+          </p>
+        }
+        @if (eligibility.value().eligible && !eligibility.value().canTakeNewWork) {
+          <p class="my-profile__eligibility-message" id="my-profile-new-work">
+            Mientras la solicitud de cambio de zona esté pendiente no puede ofertar ni tomar
+            trabajos nuevos. Los trabajos que ya tiene no se ven afectados.
+          </p>
+        }
       }
     </section>
 

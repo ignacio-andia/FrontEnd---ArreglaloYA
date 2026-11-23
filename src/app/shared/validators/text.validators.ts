@@ -23,3 +23,16 @@ export function trimmedMaxLength(maxLength: number): ValidatorFn {
       : null;
   };
 }
+
+/**
+ * Longitud mínima tras recortar espacios (`@Trim` + `@MinLength`). Un valor vacío no es error
+ * aquí: la obligatoriedad la indica `trimmedRequired`.
+ */
+export function trimmedMinLength(minLength: number): ValidatorFn {
+  return (control) => {
+    const length = trimmedValue(control).length;
+    return length > 0 && length < minLength
+      ? { minlength: { requiredLength: minLength, actualLength: length } }
+      : null;
+  };
+}

@@ -77,6 +77,26 @@ describe('approvedWorkerGuard', () => {
       status: 'APROBADO',
       message: 'Su perfil está aprobado.',
       reason: null,
+      pendingZoneChangeRequest: null,
+      canTakeNewWork: true,
+    } satisfies WorkerEligibility);
+
+    expect(await result).toBe(true);
+  });
+
+  it('allows an eligible worker with a pending zone change (canTakeNewWork: false)', async () => {
+    const result = runGuard(approvedWorkerGuard, '/trabajador/pedidos-disponibles');
+    httpTesting.expectOne(ELIGIBILITY_URL).flush({
+      eligible: true,
+      status: 'APROBADO',
+      message: 'Su perfil de trabajador está aprobado.',
+      reason: null,
+      pendingZoneChangeRequest: {
+        id: 'e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b',
+        toZone: { id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', name: 'Zona Sur', isActive: true },
+        createdAt: '2026-11-20T14:00:00.000Z',
+      },
+      canTakeNewWork: false,
     } satisfies WorkerEligibility);
 
     expect(await result).toBe(true);
@@ -88,6 +108,8 @@ describe('approvedWorkerGuard', () => {
       status: 'OBSERVADO',
       message: 'Su perfil de trabajador tiene observaciones.',
       reason: 'Falta el certificado de antecedentes.',
+      pendingZoneChangeRequest: null,
+      canTakeNewWork: false,
     };
 
     const result = runGuard(approvedWorkerGuard, '/trabajador/pedidos-disponibles');
@@ -108,6 +130,8 @@ describe('approvedWorkerGuard', () => {
       status: 'APROBADO',
       message: 'La cuenta no está activa.',
       reason: null,
+      pendingZoneChangeRequest: null,
+      canTakeNewWork: false,
     } satisfies WorkerEligibility);
 
     expect(await result).toBeInstanceOf(RedirectCommand);
@@ -120,6 +144,8 @@ describe('approvedWorkerGuard', () => {
       status: null,
       message: 'No tiene un perfil de trabajador.',
       reason: null,
+      pendingZoneChangeRequest: null,
+      canTakeNewWork: false,
     } satisfies WorkerEligibility);
 
     expect(await result).toBe(false);

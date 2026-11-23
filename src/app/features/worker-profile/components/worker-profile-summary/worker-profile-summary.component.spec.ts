@@ -31,6 +31,14 @@ describe('WorkerProfileSummaryComponent', () => {
     );
   });
 
+  it.each([
+    ['OBSERVADO', 'puede corregirlo y volver a enviarlo a revisión'],
+    ['RECHAZADO', 'puede corregirlo y volver a enviarlo a revisión'],
+    ['SUSPENDIDO', 'puede regularizar sus datos, pero no enviarlo a revisión'],
+  ] as const)('describes %s with the current contract rules', (status, text) => {
+    expect(render(workerProfile({ status })).textContent).toContain(text);
+  });
+
   it('shows experience, zone, specialties and pending requirements', () => {
     const element = render(workerProfile({ description: 'Instalaciones sanitarias' }));
 

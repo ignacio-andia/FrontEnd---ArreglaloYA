@@ -32,6 +32,8 @@ const notEligible: WorkerEligibility = {
   status: 'BORRADOR',
   message: 'Su perfil de trabajador aún no fue enviado a revisión.',
   reason: null,
+  pendingZoneChangeRequest: null,
+  canTakeNewWork: false,
 };
 
 function statusOf(profile: WorkerProfile, reason: string | null = null): WorkerStatus {
@@ -149,6 +151,87 @@ describe('MyWorkerProfilePageComponent', () => {
     expect(element.querySelector('app-schedules-form')).not.toBeNull();
     expect(element.querySelector('app-file-dropzone')).toBeNull();
     expect(element.textContent).toContain('Con el perfil en estado Pendiente de revisión');
+  });
+
+  it.each([
+    ['RECHAZADO', true],
+    ['SUSPENDIDO', false],
+  ] as const)(
+    'lets a %s profile be corrected when the backend reports canEdit',
+    async (status, canSubmit) => {
+      render();
+      await load(workerProfile({ status, canEdit: true, canSubmit, pendingRequirements: [] }), {
+        ...notEligible,
+        status,
+        message: 'Mensaje del backend.',
+      });
+
+      expect(element.querySelector('app-profile-details-form')).not.toBeNull();
+      expect(element.querySelector('app-specialties-form')).not.toBeNull();
+      expect(element.querySelector('app-worker-documents-panel app-file-dropzone')).not.toBeNull();
+      expect(element.querySelector('app-submit-review')).not.toBeNull();
+      expect(element.textContent).not.toContain('no se pueden modificar los datos');
+      const submit = Array.from(element.querySelectorAll('button')).find(
+        (button) => button.textContent?.trim() === 'Enviar a revisión',
+      );
+      expect(submit?.disabled).toBe(!canSubmit);
+    },
+  );
+
+  it('keeps an APROBADO profile read-only and shows that it can take new work', async () => {
+    render();
+    await load(
+      workerProfile({
+        status: 'APROBADO',
+        canEdit: false,
+        canSubmit: false,
+        pendingRequirements: [],
+      }),
+      {
+        eligible: true,
+        status: 'APROBADO',
+        message: 'Su perfil de trabajador está aprobado.',
+        reason: null,
+        pendingZoneChangeRequest: null,
+        canTakeNewWork: true,
+      },
+    );
+
+    expect(element.querySelector('.my-profile__eligibility-message--enabled')).not.toBeNull();
+    expect(element.querySelector('#my-profile-new-work')).toBeNull();
+    expect(element.querySelector('app-profile-details-form')).toBeNull();
+    expect(element.querySelector('app-submit-review')).toBeNull();
+  });
+
+  it('shows a pending zone change request and that it cannot take new work', async () => {
+    render();
+    await load(
+      workerProfile({
+        status: 'APROBADO',
+        canEdit: false,
+        canSubmit: false,
+        pendingRequirements: [],
+      }),
+      {
+        eligible: true,
+        status: 'APROBADO',
+        message: 'Su perfil de trabajador está aprobado.',
+        reason: null,
+        pendingZoneChangeRequest: {
+          id: 'e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b',
+          toZone: { id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', name: 'Zona Sur', isActive: true },
+          createdAt: '2026-11-20T14:00:00.000Z',
+        },
+        canTakeNewWork: false,
+      },
+    );
+
+    expect(element.querySelector('.my-profile__eligibility')?.textContent).toContain(
+      'Solicitud de cambio de zona pendiente: Zona Sur, enviada el 20/11/2026 10:00.',
+    );
+    expect(element.querySelector('#my-profile-new-work')?.textContent).toContain(
+      'no puede ofertar ni tomar trabajos nuevos',
+    );
   });
 
   it('shows the reason registered by the administrator', async () => {

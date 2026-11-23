@@ -82,7 +82,7 @@ export class WorkerDocumentsPanelComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly replacePicker = viewChild<ElementRef<HTMLInputElement>>('replacePicker');
 
-  /** El perfil admite subir y reemplazar (BORRADOR u OBSERVADO, `canEdit` del backend). */
+  /** El perfil admite subir y reemplazar (`canEdit` del backend). */
   readonly canEdit = input.required<boolean>();
   /** Estado visible del perfil, para explicar por qué no se puede editar. */
   readonly statusLabel = input('');

@@ -9,12 +9,26 @@ import { WorkerProfileStatus } from './worker-profile-status.model';
  * - `status`: estado del perfil; `null` si la cuenta no está activa, no tiene el rol o no tiene perfil.
  * - `message`: texto listo para mostrar al usuario.
  * - `reason`: motivo registrado por el administrador para el estado vigente.
+ * - `pendingZoneChangeRequest`: solicitud de cambio de zona `PENDIENTE`, o `null`. Siempre
+ *   `null` cuando la cuenta no está activa, no tiene el rol o no tiene perfil.
+ * - `canTakeNewWork`: puede asumir trabajos nuevos (ofertar, recibir asignaciones): `eligible` y
+ *   sin solicitud de cambio de zona pendiente. `eligible` solo indica el acceso a las funciones
+ *   de trabajador (por ejemplo, ver los pedidos disponibles).
  */
 export interface WorkerEligibility {
   eligible: boolean;
   status: WorkerProfileStatus | null;
   message: string;
   reason: string | null;
+  pendingZoneChangeRequest: PendingZoneChangeSummary | null;
+  canTakeNewWork: boolean;
+}
+
+/** Solicitud de cambio de zona pendiente, resumida en la elegibilidad (`createdAt` ISO UTC). */
+export interface PendingZoneChangeSummary {
+  id: string;
+  toZone: CatalogRef;
+  createdAt: string;
 }
 
 /** Horario de atención (`ScheduleView`). `endTime` puede ser `"24:00"`. */
@@ -79,7 +93,8 @@ export interface CreateWorkerProfileRequest {
 
 /**
  * Cuerpo de `PATCH /worker-profile/me` (`UpdateWorkerProfileDto`): al menos una propiedad.
- * Solo en BORRADOR u OBSERVADO; `zoneId` solo puede cambiar en BORRADOR (403 en otro estado).
+ * Solo con el perfil editable (BORRADOR, OBSERVADO, RECHAZADO o SUSPENDIDO); `zoneId` solo puede
+ * cambiar en BORRADOR (403 en otro estado).
  * `description: null` (o vacía) borra la descripción.
  */
 export interface UpdateWorkerProfileRequest {

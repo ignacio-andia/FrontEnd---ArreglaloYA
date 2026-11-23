@@ -147,6 +147,20 @@ describe('RegisterPageComponent', () => {
     expect(navigate).toHaveBeenCalledWith('/cliente');
   });
 
+  it('omits a phone made only of spaces and never sends confirmPassword', async () => {
+    fillValidForm('   ');
+    await submit();
+
+    const req = httpTesting.expectOne(REGISTER_URL);
+    expect(Object.keys(req.request.body as object).sort()).toEqual([
+      'email',
+      'firstName',
+      'lastName',
+      'password',
+    ]);
+    req.flush(authResponse, { status: 201, statusText: 'Created' });
+  });
+
   it('includes the phone when provided', async () => {
     fillValidForm(' +59170000000 ');
     await submit();

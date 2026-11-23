@@ -20,7 +20,7 @@ export class WorkerDocumentsApiService {
 
   /**
    * `POST /worker-profile/me/documents` con los campos `type` y `file` (201).
-   * 409 si el perfil no está en BORRADOR u OBSERVADO; 400 formato; 413 tamaño.
+   * 409 si el perfil no es editable (`canEdit`); 400 formato; 413 tamaño.
    */
   upload(type: WorkerDocumentType, file: File): Observable<WorkerDocument> {
     const form = new FormData();

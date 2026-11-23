@@ -1,0 +1,56 @@
+<app-file-dropzone
+  [accept]="accept"
+  [disabled]="disabled() || full()"
+  buttonLabel="Seleccionar fotografías"
+  [hintId]="hintId()"
+  (filesSelected)="add($event)"
+>
+  JPG, PNG o WebP, hasta {{ maxSize }} cada una. Mínimo 1 y máximo {{ max }} fotografías.
+</app-file-dropzone>
+
+<p class="photos__count" aria-live="polite">
+  {{ files().length }} de {{ max }} fotografías
+  @if (full()) {
+    <span class="photos__full">· Alcanzó el máximo; quite una para cambiarla.</span>
+  }
+</p>
+
+@if (rejected().length > 0) {
+  <div class="photos__rejected" role="alert">
+    <p>Estas fotografías no se agregaron:</p>
+    <ul>
+      @for (item of rejected(); track $index) {
+        <li>{{ item.name }}: {{ item.reason }}</li>
+      }
+    </ul>
+  </div>
+}
+
+@if (items().length > 0) {
+  <ul class="photos__grid" aria-label="Fotografías seleccionadas">
+    @for (item of items(); track item.file; let index = $index) {
+      <li class="photos__item">
+        <div class="photos__frame">
+          @if (item.url; as url) {
+            <img class="photos__image" [src]="url" [alt]="'Vista previa de ' + item.file.name" />
+          } @else {
+            <span class="photos__placeholder">Sin vista previa</span>
+          }
+          <span class="photos__position" aria-hidden="true">{{ index + 1 }}</span>
+        </div>
+        <div class="photos__info">
+          <span class="photos__name">{{ item.file.name }}</span>
+          <span class="photos__size">{{ item.file.size | fileSize }}</span>
+        </div>
+        <button
+          type="button"
+          class="photos__remove"
+          [disabled]="disabled()"
+          (click)="remove(index)"
+        >
+          Quitar<span class="sr-only"> {{ item.file.name }}</span>
+        </button>
+      </li>
+    }
+  </ul>
+}

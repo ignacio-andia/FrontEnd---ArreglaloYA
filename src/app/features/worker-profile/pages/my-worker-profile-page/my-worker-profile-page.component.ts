@@ -73,7 +73,7 @@ export class MyWorkerProfilePageComponent {
     stream: () => this.workerProfileApi.getStatus(),
   });
 
-  /** Datos, especialidades y documentos solo se editan en BORRADOR u OBSERVADO. */
+  /** Datos, especialidades y documentos solo se editan si el backend lo indica (`canEdit`). */
   protected readonly canEdit = computed(
     () => this.profile.hasValue() && this.profile.value().canEdit,
   );

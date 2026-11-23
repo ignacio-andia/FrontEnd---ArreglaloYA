@@ -1,0 +1,352 @@
+<section class="publish" aria-labelledby="publish-title">
+  <h1 id="publish-title" class="publish__title">Publicar pedido</h1>
+  <p class="publish__intro">
+    Cuente qué necesita y adjunte fotografías del problema. Los trabajadores verificados de su zona
+    y de la especialidad podrán ver el pedido y enviarle ofertas.
+  </p>
+
+  <ol class="steps" aria-label="Pasos para publicar">
+    <li
+      class="steps__item"
+      [class.steps__item--current]="step() === 'form'"
+      [attr.aria-current]="step() === 'form' ? 'step' : null"
+    >
+      <span class="steps__number" aria-hidden="true">1</span> Datos del pedido
+    </li>
+    <li
+      class="steps__item"
+      [class.steps__item--current]="step() === 'review'"
+      [attr.aria-current]="step() === 'review' ? 'step' : null"
+    >
+      <span class="steps__number" aria-hidden="true">2</span> Revisión
+    </li>
+    <li
+      class="steps__item"
+      [class.steps__item--current]="step() === 'published'"
+      [attr.aria-current]="step() === 'published' ? 'step' : null"
+    >
+      <span class="steps__number" aria-hidden="true">3</span> Publicado
+    </li>
+  </ol>
+
+  @switch (step()) {
+    @case ('form') {
+      <div class="publish__card">
+        <h2 id="publish-form-title" class="publish__subtitle" tabindex="-1">Datos del pedido</h2>
+        <p class="field__hint">
+          Todos los campos son obligatorios, salvo los indicados como opcionales.
+        </p>
+
+        @if (formErrors().length > 0) {
+          <div id="order-error-summary" class="form-alert" role="alert" tabindex="-1">
+            <p>{{ formErrors()[0] }}</p>
+            @if (formErrors().length > 1) {
+              <ul>
+                @for (message of formErrors().slice(1); track $index) {
+                  <li>{{ message }}</li>
+                }
+              </ul>
+            }
+          </div>
+        }
+
+        @if (catalogsLoading()) {
+          <p class="publish__state" role="status">Cargando categorías y zonas…</p>
+        } @else if (catalogsError(); as message) {
+          <div class="form-alert" role="alert">
+            <p>{{ message }}</p>
+            <button type="button" class="publish__secondary" (click)="retryCatalogs()">
+              Reintentar
+            </button>
+          </div>
+        } @else {
+          <form class="publish__form" [formGroup]="form" (ngSubmit)="continueToReview()" novalidate>
+            <fieldset class="publish__group">
+              <legend class="publish__legend">Servicio</legend>
+              <div class="publish__row">
+                <div class="field">
+                  <label class="field__label" for="order-categoryId">Categoría</label>
+                  @if (noCategories()) {
+                    <p class="form-notice">
+                      Por ahora no hay categorías de servicio habilitadas. Inténtelo más adelante.
+                    </p>
+                  } @else {
+                    <select
+                      id="order-categoryId"
+                      class="field__input"
+                      formControlName="categoryId"
+                      required
+                      [attr.aria-invalid]="errorFor('categoryId') ? 'true' : null"
+                      [attr.aria-describedby]="describedBy('categoryId')"
+                    >
+                      <option value="">Seleccione una categoría</option>
+                      @for (category of categoryOptions(); track category.id) {
+                        <option [value]="category.id">{{ category.name }}</option>
+                      }
+                    </select>
+                    @if (errorFor('categoryId'); as error) {
+                      <p id="order-categoryId-error" class="field__error">{{ error }}</p>
+                    }
+                  }
+                </div>
+
+                <div class="field">
+                  <label class="field__label" for="order-zoneId">Zona</label>
+                  @if (noZones()) {
+                    <p class="form-notice">
+                      Por ahora no hay zonas habilitadas en la plataforma, por lo que todavía no es
+                      posible publicar pedidos. Inténtelo más adelante.
+                    </p>
+                  } @else {
+                    <select
+                      id="order-zoneId"
+                      class="field__input"
+                      formControlName="zoneId"
+                      required
+                      [attr.aria-invalid]="errorFor('zoneId') ? 'true' : null"
+                      [attr.aria-describedby]="describedBy('zoneId', true)"
+                    >
+                      <option value="">Seleccione una zona</option>
+                      @for (zone of zoneOptions(); track zone.id) {
+                        <option [value]="zone.id">{{ zone.name }}</option>
+                      }
+                    </select>
+                    <p id="order-zoneId-hint" class="field__hint">
+                      Zona donde se realizará el trabajo. Después de publicar no se puede cambiar.
+                    </p>
+                    @if (errorFor('zoneId'); as error) {
+                      <p id="order-zoneId-error" class="field__error">{{ error }}</p>
+                    }
+                  }
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="publish__group">
+              <legend class="publish__legend">Problema y presupuesto</legend>
+              <div class="field">
+                <label class="field__label" for="order-description">Descripción</label>
+                <textarea
+                  id="order-description"
+                  class="field__input"
+                  formControlName="description"
+                  required
+                  [attr.maxlength]="limits.maxDescription"
+                  [attr.aria-invalid]="errorFor('description') ? 'true' : null"
+                  [attr.aria-describedby]="describedBy('description', true)"
+                ></textarea>
+                <p id="order-description-hint" class="field__hint publish__counter">
+                  <span>
+                    Explique el problema con detalle, entre {{ limits.minDescription }} y
+                    {{ limits.maxDescription }} caracteres. No incluya su teléfono ni su correo.
+                  </span>
+                  <span aria-hidden="true"
+                    >{{ descriptionLength() }} / {{ limits.maxDescription }}</span
+                  >
+                </p>
+                @if (errorFor('description'); as error) {
+                  <p id="order-description-error" class="field__error">{{ error }}</p>
+                }
+              </div>
+
+              <div class="field publish__budget">
+                <label class="field__label" for="order-budgetAmount">Presupuesto (Bs)</label>
+                <input
+                  id="order-budgetAmount"
+                  class="field__input"
+                  type="text"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  formControlName="budgetAmount"
+                  required
+                  [attr.aria-invalid]="errorFor('budgetAmount') ? 'true' : null"
+                  [attr.aria-describedby]="describedBy('budgetAmount', true)"
+                />
+                <p id="order-budgetAmount-hint" class="field__hint">
+                  Monto que está dispuesto a pagar, mayor que 0 y con hasta 2 decimales. Ejemplo:
+                  150.50
+                </p>
+                @if (errorFor('budgetAmount'); as error) {
+                  <p id="order-budgetAmount-error" class="field__error">{{ error }}</p>
+                }
+              </div>
+            </fieldset>
+
+            <fieldset class="publish__group">
+              <legend class="publish__legend">Dirección</legend>
+              <div class="field">
+                <label class="field__label" for="order-addressLine">Dirección exacta</label>
+                <input
+                  id="order-addressLine"
+                  class="field__input"
+                  type="text"
+                  autocomplete="street-address"
+                  formControlName="addressLine"
+                  required
+                  [attr.maxlength]="limits.maxAddress"
+                  [attr.aria-invalid]="errorFor('addressLine') ? 'true' : null"
+                  [attr.aria-describedby]="describedBy('addressLine', true)"
+                />
+                <p id="order-addressLine-hint" class="field__hint">
+                  Es privada: los trabajadores no la ven al consultar el pedido.
+                </p>
+                @if (errorFor('addressLine'); as error) {
+                  <p id="order-addressLine-error" class="field__error">{{ error }}</p>
+                }
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="order-addressReference">
+                  Referencia <span class="field__optional">(opcional)</span>
+                </label>
+                <input
+                  id="order-addressReference"
+                  class="field__input"
+                  type="text"
+                  formControlName="addressReference"
+                  [attr.maxlength]="limits.maxAddress"
+                  [attr.aria-invalid]="errorFor('addressReference') ? 'true' : null"
+                  [attr.aria-describedby]="describedBy('addressReference', true)"
+                />
+                <p id="order-addressReference-hint" class="field__hint">
+                  Un dato para llegar, por ejemplo «portón verde» o «frente a la plaza».
+                </p>
+                @if (errorFor('addressReference'); as error) {
+                  <p id="order-addressReference-error" class="field__error">{{ error }}</p>
+                }
+              </div>
+            </fieldset>
+
+            <fieldset
+              class="publish__group"
+              tabindex="-1"
+              [attr.aria-invalid]="errorFor('images') ? 'true' : null"
+              [attr.aria-describedby]="describedBy('images')"
+            >
+              <legend class="publish__legend">Fotografías</legend>
+              <app-order-photos-picker formControlName="images" hintId="order-images-hint" />
+              @if (errorFor('images'); as error) {
+                <p id="order-images-error" class="field__error">{{ error }}</p>
+              }
+            </fieldset>
+
+            <div class="publish__actions">
+              <button
+                type="submit"
+                class="form-submit"
+                [disabled]="checking() || !catalogsReady()"
+                [attr.aria-describedby]="catalogsReady() ? null : 'order-submit-blocked'"
+              >
+                {{ checking() ? 'Comprobando…' : 'Continuar a la revisión' }}
+              </button>
+              @if (!catalogsReady()) {
+                <p id="order-submit-blocked" class="field__hint">
+                  No se puede continuar hasta que existan categorías y zonas activas.
+                </p>
+              }
+            </div>
+          </form>
+        }
+      </div>
+    }
+
+    @case ('review') {
+      <div class="publish__card">
+        <h2 id="publish-review-title" class="publish__subtitle" tabindex="-1">Revise su pedido</h2>
+
+        @if (warnings().length > 0) {
+          <app-order-warnings [warnings]="warnings()" headingId="publish-review-warnings" />
+          <p class="field__hint">
+            Los avisos son orientativos: puede volver a modificar los datos o publicar el pedido
+            igualmente.
+          </p>
+        } @else if (checkFailed()) {
+          <p class="form-notice">
+            No se pudo comprobar si tiene pedidos parecidos. Puede publicar el pedido igualmente.
+          </p>
+        }
+
+        @if (draft(); as draft) {
+          <app-order-review [draft]="draft" />
+        }
+
+        @if (publishErrors().length > 0) {
+          <div id="publish-error" class="form-alert" role="alert" tabindex="-1">
+            @for (message of publishErrors(); track $index) {
+              <p>{{ message }}</p>
+            }
+          </div>
+        }
+
+        <div class="publish__actions">
+          <button
+            type="button"
+            class="publish__secondary"
+            [disabled]="publishing()"
+            (click)="backToForm()"
+          >
+            Modificar datos
+          </button>
+          <button type="button" class="form-submit" [disabled]="publishing()" (click)="publish()">
+            {{ publishing() ? 'Publicando…' : 'Publicar pedido' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    @case ('published') {
+      @if (result(); as result) {
+        <div class="publish__card">
+          <h2 id="publish-done-title" class="publish__subtitle" tabindex="-1">
+            <span aria-hidden="true">✓ </span>Su pedido fue publicado
+          </h2>
+          <p class="form-notice" role="status">
+            Ya está visible para los trabajadores verificados de la zona y la especialidad.
+          </p>
+
+          <dl class="publish__summary">
+            <div>
+              <dt>Estado</dt>
+              <dd>{{ statusLabels[result.order.status] }}</dd>
+            </div>
+            <div>
+              <dt>Categoría</dt>
+              <dd>{{ result.order.category.name }}</dd>
+            </div>
+            <div>
+              <dt>Zona</dt>
+              <dd>{{ result.order.zone.name }}</dd>
+            </div>
+            <div>
+              <dt>Presupuesto</dt>
+              <dd>Bs {{ result.order.budgetAmount }}</dd>
+            </div>
+            <div>
+              <dt>Fotografías</dt>
+              <dd>{{ result.order.images.length }}</dd>
+            </div>
+            <div>
+              <dt>Vence el</dt>
+              <dd>{{ result.order.expiresAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+            </div>
+          </dl>
+
+          @if (result.warnings.length > 0) {
+            <app-order-warnings
+              [warnings]="result.warnings"
+              heading="Avisos sobre el pedido publicado"
+              headingId="publish-done-warnings"
+            />
+          }
+
+          <div class="publish__actions">
+            <button type="button" class="publish__secondary" (click)="startOver()">
+              Publicar otro pedido
+            </button>
+            <a class="publish__link" routerLink="/cliente">Volver al resumen</a>
+          </div>
+        </div>
+      }
+    }
+  }
+</section>

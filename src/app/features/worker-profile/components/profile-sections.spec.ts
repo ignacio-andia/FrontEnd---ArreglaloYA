@@ -331,6 +331,33 @@ describe('SubmitReviewComponent', () => {
     expect(submit.getAttribute('aria-describedby')).toBe('submit-pending');
   });
 
+  it('explains that a SUSPENDIDO profile cannot be submitted (canSubmit false, no requirements)', () => {
+    render(workerProfile({ status: 'SUSPENDIDO', canSubmit: false, pendingRequirements: [] }));
+
+    const submit = button(element, 'Enviar a revisión');
+    expect(submit.disabled).toBe(true);
+    expect(submit.getAttribute('aria-describedby')).toBe('submit-pending');
+    expect(element.querySelector('#submit-pending')?.textContent?.trim()).toBe(
+      'Con el perfil en estado Suspendido no se puede enviar a revisión.',
+    );
+  });
+
+  it('lets a RECHAZADO profile be submitted again when the backend allows it', async () => {
+    render(workerProfile({ status: 'RECHAZADO', canSubmit: true, pendingRequirements: [] }));
+
+    expect(element.querySelector('#submit-pending')).toBeNull();
+    button(element, 'Enviar a revisión').click();
+    fixture.detectChanges();
+    button(element, 'Confirmar envío').click();
+    fixture.detectChanges();
+    http
+      .expectOne(apiUrl('worker-profile', 'me', 'submit'))
+      .flush(workerProfile({ status: 'PENDIENTE', canEdit: false, canSubmit: false }));
+    await settle(fixture);
+
+    expect(submitted.map((profile) => profile.status)).toEqual(['PENDIENTE']);
+  });
+
   it('asks for confirmation before submitting and emits the PENDIENTE profile', async () => {
     render(workerProfile({ canSubmit: true, pendingRequirements: [] }));
 

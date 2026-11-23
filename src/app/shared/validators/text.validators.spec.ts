@@ -1,5 +1,5 @@
 import { FormControl } from '@angular/forms';
-import { trimmedMaxLength, trimmedRequired } from './text.validators';
+import { trimmedMaxLength, trimmedMinLength, trimmedRequired } from './text.validators';
 
 const control = (value: string) => new FormControl(value);
 
@@ -26,6 +26,21 @@ describe('text validators', () => {
       expect(max100(control('a'.repeat(101)))).toEqual({
         maxlength: { requiredLength: 100, actualLength: 101 },
       });
+    });
+  });
+
+  describe('trimmedMinLength', () => {
+    const min10 = trimmedMinLength(10);
+
+    it('rejects fewer characters after trimming', () => {
+      expect(min10(control(`   ${'a'.repeat(9)}   `))).toEqual({
+        minlength: { requiredLength: 10, actualLength: 9 },
+      });
+    });
+
+    it('accepts the minimum and leaves empty values to trimmedRequired', () => {
+      expect(min10(control('a'.repeat(10)))).toBeNull();
+      expect(min10(control('   '))).toBeNull();
     });
   });
 });

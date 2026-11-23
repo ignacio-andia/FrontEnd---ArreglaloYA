@@ -7,7 +7,7 @@ import { apiUrl } from '../../../core/http/api-url';
 import { apiErrorInterceptor } from '../../../core/interceptors/api-error.interceptor';
 import { authInterceptor } from '../../../core/interceptors/auth.interceptor';
 import { NormalizedApiError } from '../../../core/models/api-error.model';
-import { CreateWorkerProfileRequest } from '../models/worker-profile.model';
+import { CreateWorkerProfileRequest, WorkerEligibility } from '../models/worker-profile.model';
 import { CATEGORIES, ZONE, userWithRoles, workerProfile } from '../testing/worker-profile.fixtures';
 import { WorkerProfileApiService } from './worker-profile-api.service';
 
@@ -169,5 +169,27 @@ describe('WorkerProfileApiService', () => {
       .flush({ status: 'BORRADOR', statusReason: null, history: [] });
 
     expect((await result).status).toBe('BORRADOR');
+  });
+
+  it('gets the eligibility with the pending zone change request and canTakeNewWork', async () => {
+    const eligibility: WorkerEligibility = {
+      eligible: true,
+      status: 'APROBADO',
+      message: 'Su perfil de trabajador está aprobado.',
+      reason: null,
+      pendingZoneChangeRequest: {
+        id: 'e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b',
+        toZone: { id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', name: 'Zona Sur', isActive: true },
+        createdAt: '2026-11-20T14:00:00.000Z',
+      },
+      canTakeNewWork: false,
+    };
+    const result = firstValueFrom(service.getEligibility());
+
+    const req = httpTesting.expectOne(apiUrl('worker-profile', 'me', 'eligibility'));
+    expect(req.request.method).toBe('GET');
+    req.flush(eligibility);
+
+    expect(await result).toEqual(eligibility);
   });
 });

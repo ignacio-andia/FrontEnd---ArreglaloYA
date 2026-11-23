@@ -32,7 +32,7 @@ type DetailsField = 'yearsOfExperience' | 'description' | 'zoneId';
 
 /**
  * Experiencia, descripción y zona (`PATCH /worker-profile/me`). Solo se muestra con el perfil
- * editable (BORRADOR u OBSERVADO). La zona solo se puede cambiar en BORRADOR; después es fija y
+ * editable (`canEdit` del backend). La zona solo se puede cambiar en BORRADOR; después es fija y
  * su cambio requiere una solicitud. Envía únicamente los datos modificados.
  */
 @Component({

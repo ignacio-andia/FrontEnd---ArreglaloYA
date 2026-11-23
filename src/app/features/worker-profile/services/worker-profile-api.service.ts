@@ -47,7 +47,7 @@ export class WorkerProfileApiService {
 
   /**
    * `PATCH /worker-profile/me`: experiencia, descripción y zona (al menos una).
-   * 409 fuera de BORRADOR/OBSERVADO; 403 si cambia la zona fuera de BORRADOR.
+   * 409 si el perfil no es editable (`canEdit`); 403 si cambia la zona fuera de BORRADOR.
    */
   updateProfile(request: UpdateWorkerProfileRequest): Observable<WorkerProfile> {
     const body: UpdateWorkerProfileRequest = {};
@@ -78,7 +78,7 @@ export class WorkerProfileApiService {
   }
 
   /**
-   * `POST /worker-profile/me/submit` (sin cuerpo): BORRADOR u OBSERVADO → PENDIENTE.
+   * `POST /worker-profile/me/submit` (sin cuerpo): BORRADOR, OBSERVADO o RECHAZADO → PENDIENTE.
    * 400 con el arreglo de requisitos faltantes; 409 si el estado no lo permite.
    */
   submitForReview(): Observable<WorkerProfile> {
