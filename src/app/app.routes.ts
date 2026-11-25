@@ -164,6 +164,13 @@ export const routes: Routes = [
           import('./features/claims/claims.routes').then((m) => m.ADMIN_CLAIMS_ROUTES),
       },
       {
+        path: 'trabajadores',
+        loadChildren: () =>
+          import('./features/worker-verification/worker-verification.routes').then(
+            (m) => m.WORKER_VERIFICATION_ROUTES,
+          ),
+      },
+      {
         path: 'mi-cuenta',
         loadChildren: () => import('./features/users/users.routes').then((m) => m.ACCOUNT_ROUTES),
       },

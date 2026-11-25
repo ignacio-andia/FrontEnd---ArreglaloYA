@@ -1,0 +1,96 @@
+<section class="offers" aria-labelledby="workers-title">
+  <h1 id="workers-title" class="offers__title">Verificación de trabajadores</h1>
+  <p class="offers__intro">
+    Primero aparecen los perfiles que esperan revisión desde hace más tiempo.
+  </p>
+
+  <div class="offers__filters" [formGroup]="filters">
+    <label for="workers-status">Estado</label>
+    <select id="workers-status" formControlName="status">
+      <option [value]="all">Todos</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ labels[status] }}</option>
+      }
+    </select>
+    <label for="workers-zone">Zona</label>
+    <select id="workers-zone" formControlName="zone">
+      <option value="">Todas</option>
+      @for (zone of zoneOptions(); track zone.id) {
+        <option [value]="zone.id">{{ zone.name }}</option>
+      }
+    </select>
+    <label for="workers-category">Especialidad</label>
+    <select id="workers-category" formControlName="category">
+      <option value="">Todas</option>
+      @for (category of categoryOptions(); track category.id) {
+        <option [value]="category.id">{{ category.name }}</option>
+      }
+    </select>
+    <button
+      type="button"
+      class="offers__secondary"
+      [disabled]="profiles.isLoading()"
+      (click)="profiles.reload()"
+    >
+      Actualizar
+    </button>
+  </div>
+
+  @if (profiles.isLoading() && !profiles.hasValue()) {
+    <app-loading-state message="Cargando los perfiles…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="profiles.reload()" />
+  } @else if (items().length === 0) {
+    @if (page() > 1) {
+      <app-empty-state heading="No hay perfiles en esta página." />
+      <div class="offers__actions">
+        <button type="button" class="offers__secondary" (click)="showFirstPage()">
+          Volver a la primera página
+        </button>
+      </div>
+    } @else {
+      <app-empty-state heading="No hay perfiles con estos filtros." />
+    }
+  } @else {
+    <ul class="offers__list">
+      @for (item of items(); track item.id) {
+        <li class="worker-row">
+          <div class="worker-row__top">
+            <h2 class="worker-row__title">
+              <a [routerLink]="['/admin/trabajadores', item.id]">
+                {{ item.account.firstName }} {{ item.account.lastName }}
+              </a>
+            </h2>
+            <span class="worker-row__status">{{ labels[item.status] }}</span>
+          </div>
+          <p class="offers__muted">{{ item.account.email }}</p>
+          <p>
+            {{ item.zone.name }} ·
+            @for (specialty of item.specialties; track specialty.id) {
+              {{ specialty.name }}{{ $last ? '' : ', ' }}
+            }
+          </p>
+          <p class="offers__muted">
+            @if (item.submittedAt) {
+              Enviado el {{ item.submittedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+            } @else {
+              Nunca enviado a revisión
+            }
+          </p>
+        </li>
+      }
+    </ul>
+    @if (meta(); as current) {
+      @if (current.totalPages > 1) {
+        <app-paginator
+          label="Páginas de perfiles"
+          [page]="current.page"
+          [totalPages]="current.totalPages"
+          [total]="current.total"
+          [busy]="profiles.isLoading()"
+          (pageChange)="goToPage($event)"
+        />
+      }
+    }
+  }
+</section>

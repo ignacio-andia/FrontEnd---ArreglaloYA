@@ -297,6 +297,7 @@ Dos métricas separadas, ambas sobre 56:
 |---|---|---|
 | Inicio | 28 sin ensayar (50,0 %) | 15 (26,8 %) |
 | D0 | **35 (62,5 %)** | **20 (35,7 %)** |
+| D1 | **38 (67,9 %)** | **23 (41,1 %)** |
 
 ### D0 — Validación de lo construido
 
@@ -308,3 +309,15 @@ Dos métricas separadas, ambas sobre 56:
 - **Calidad:** 893 pruebas unitarias, build (323,85 kB iniciales), ESLint y Prettier correctos; `public` intacta.
 - **Formal completa:** se suman 02, 06, 07, 15 y 29. RF-08 se cierra cuando se vean «Observado» y «Rechazado» (D1).
 - **Pendientes anotados:** el reemplazo de documentos se comprueba en pantalla en D1; textos del backend en el historial («Oferta de el trabajador»); el 409 de horario muestra el identificador completo del otro pedido; sin aviso explícito del anticipo en «Acordado» sin visita (RF-39).
+
+### D1 — Verificación de trabajadores
+
+- **Completados (demostrables):** RF-10, RF-47 y RF-56.
+- **Fallidos:** ninguno.
+- **Pantallas:** `/admin/trabajadores` (bandeja con filtros de estado, zona y especialidad; muestra primero los pendientes) y su detalle (cuenta, datos, horarios, documentos, historial y decisiones).
+- **Endpoints integrados:** #55–#60.
+- **Evidencia en pantalla:** observar con motivo obligatorio, motivo visible para el trabajador, reemplazo de documento y reenvío, rechazar, aprobar, suspender (pierde el acceso a pedidos) y reactivar; documento visto y descargado por el administrador; un cliente recibe «Acceso no permitido».
+- **Integración:** `integracion-d1.mjs` 11/11 y regresión (E1, E2, E3.1–E3.5, D0) sin fallos.
+- **Calidad:** 908 pruebas unitarias, build, ESLint y Prettier correctos; sin desbordamiento ni infracciones de axe a 360 y 375 px, también con el diálogo abierto; `public` intacta.
+- **Formal completa:** se suman 08, 10 y 56. RF-47 queda parcial por el backend (sin búsqueda por nombre ni definición para el trabajo en curso).
+- **Pendientes:** reasignar la zona de un perfil (#66) no se implementó.

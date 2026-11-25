@@ -18,7 +18,7 @@ export class AdminLayoutComponent {
   protected readonly navItems: readonly NavItem[] = [
     { label: 'Resumen', path: '/admin', exact: true },
     { label: 'Reclamos', path: '/admin/reclamos' },
-    { label: 'Verificación de trabajadores', path: null },
+    { label: 'Verificación de trabajadores', path: '/admin/trabajadores' },
     { label: 'Pedidos', path: null },
     { label: 'Categorías', path: null },
     { label: 'Zonas', path: null },

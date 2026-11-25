@@ -1,0 +1,54 @@
+@if (options().length === 0) {
+  <p class="decision__muted">Con el estado actual no hay decisiones disponibles.</p>
+} @else {
+  <div class="decision__actions">
+    @for (option of options(); track option.decision) {
+      <button
+        type="button"
+        class="decision__button"
+        [class.decision__button--danger]="option.copy.destructive"
+        [disabled]="sending() || refreshing()"
+        (click)="ask(option.decision)"
+      >
+        {{ option.copy.action }}
+      </button>
+    }
+  </div>
+}
+
+<app-confirm-dialog
+  [heading]="dialog()?.heading ?? ''"
+  [confirmLabel]="dialog()?.confirm ?? 'Confirmar'"
+  dismissLabel="Volver"
+  titleId="profile-decision-title"
+  [tone]="dialog()?.destructive ? 'danger' : 'primary'"
+  [open]="selected() !== null"
+  [busy]="sending()"
+  (confirmed)="confirm()"
+  (cancelled)="close()"
+>
+  <p>{{ dialog()?.explanation }}</p>
+  <div class="field">
+    <label class="field__label" for="profile-decision-reason">
+      Motivo
+      @if (!reasonRequired()) {
+        <span class="field__optional">(opcional)</span>
+      }
+    </label>
+    <textarea
+      id="profile-decision-reason"
+      class="field__input"
+      rows="4"
+      [formControl]="reason"
+      [attr.aria-required]="reasonRequired() ? 'true' : null"
+      [attr.aria-invalid]="reasonError() ? 'true' : null"
+      aria-describedby="profile-decision-reason-hint"
+    ></textarea>
+    @if (reasonError(); as message) {
+      <p class="field__error" role="alert">{{ message }}</p>
+    }
+    <p id="profile-decision-reason-hint" class="field__hint">
+      Hasta {{ maxLength }} caracteres. El trabajador lo verá.
+    </p>
+  </div>
+</app-confirm-dialog>

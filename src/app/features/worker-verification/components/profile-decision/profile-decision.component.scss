@@ -1,0 +1,28 @@
+@use 'tokens';
+@use 'buttons';
+@use 'form-controls';
+
+@include form-controls.base;
+@include form-controls.textarea;
+
+:host {
+  display: block;
+}
+
+.decision__muted {
+  color: var(--color-text-secondary);
+}
+
+.decision__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-3;
+}
+
+.decision__button {
+  @include buttons.primary;
+}
+
+.decision__button--danger {
+  @include buttons.danger;
+}

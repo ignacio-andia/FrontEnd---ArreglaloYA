@@ -1,0 +1,54 @@
+@use 'tokens';
+@use 'buttons';
+
+:host {
+  display: grid;
+  gap: tokens.$space-3;
+  min-width: 0;
+}
+
+.docs__muted {
+  color: var(--color-text-secondary);
+}
+
+.docs__list {
+  display: grid;
+  gap: tokens.$space-3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docs__item,
+.docs__preview {
+  display: grid;
+  gap: tokens.$space-2;
+  min-width: 0;
+  padding: tokens.$space-3;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-md;
+  overflow-wrap: anywhere;
+}
+
+.docs__name {
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.docs__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-2;
+}
+
+.docs__button {
+  @include buttons.secondary;
+}
+
+.docs__image {
+  max-width: 100%;
+  height: auto;
+}
+
+.docs__error {
+  color: var(--color-danger);
+}

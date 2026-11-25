@@ -1,0 +1,72 @@
+@if (!requested()) {
+  <p class="docs__muted">
+    Los documentos son privados. Cada consulta, vista y descarga queda registrada en la bitácora.
+  </p>
+  <div>
+    <button type="button" class="docs__button" (click)="requested.set(true)">
+      Consultar documentos
+    </button>
+  </div>
+} @else if (documents.isLoading() && !documents.hasValue()) {
+  <app-loading-state message="Consultando los documentos…" />
+} @else if (listError(); as message) {
+  <app-error-alert [message]="message" (retry)="documents.reload()" />
+} @else if (documents.hasValue()) {
+  @if (documents.value().length === 0) {
+    <app-empty-state heading="El trabajador no registró documentos." />
+  } @else {
+    <ul class="docs__list">
+      @for (document of documents.value(); track document.id) {
+        <li class="docs__item">
+          <p class="docs__name">{{ typeLabels[document.type] }} · {{ document.originalName }}</p>
+          <p class="docs__muted">
+            {{ document.sizeBytes | fileSize }} · Subido el
+            {{ document.uploadedAt | date: 'dd/MM/yyyy HH:mm' : timezone }} ·
+            {{ document.replacedById === null ? 'Vigente' : 'Reemplazado' }}
+          </p>
+          <div class="docs__actions">
+            <button
+              type="button"
+              class="docs__button"
+              [disabled]="busy() !== null"
+              [attr.aria-label]="'Ver ' + document.originalName"
+              (click)="view(document)"
+            >
+              Ver
+            </button>
+            <button
+              type="button"
+              class="docs__button"
+              [disabled]="busy() !== null"
+              [attr.aria-label]="'Descargar ' + document.originalName"
+              (click)="download(document)"
+            >
+              Descargar
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+}
+
+@if (actionError(); as message) {
+  <p class="docs__error" role="alert">{{ message }}</p>
+}
+
+@if (preview(); as current) {
+  <div class="docs__preview" role="region" [attr.aria-label]="'Vista de ' + current.name">
+    @if (current.image) {
+      <img class="docs__image" [src]="current.url" [alt]="'Documento ' + current.name" />
+    } @else {
+      <p>
+        <a [href]="current.url" target="_blank" rel="noopener">
+          Abrir «{{ current.name }}» en una pestaña nueva
+        </a>
+      </p>
+    }
+    <div>
+      <button type="button" class="docs__button" (click)="closePreview()">Cerrar vista</button>
+    </div>
+  </div>
+}

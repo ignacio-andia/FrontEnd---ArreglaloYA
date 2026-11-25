@@ -1,0 +1,137 @@
+<section class="offers" aria-labelledby="worker-page-title">
+  <a class="offers__back" routerLink="/admin/trabajadores">
+    <span aria-hidden="true">←</span> Volver a la verificación
+  </a>
+
+  <app-action-notice [notice]="notice()" />
+
+  @if (detail.isLoading() && !current()) {
+    <h1 id="worker-page-title" class="offers__title">Perfil del trabajador</h1>
+    <app-loading-state message="Cargando el perfil…" />
+  } @else if (notFound()) {
+    <h1 id="worker-page-title" class="offers__title">Perfil no encontrado</h1>
+    <app-empty-state heading="El perfil de trabajador no existe." />
+  } @else if (errorMessage(); as message) {
+    <h1 id="worker-page-title" class="offers__title">Perfil del trabajador</h1>
+    <app-error-alert [message]="message" (retry)="reload()" />
+  } @else if (current(); as current) {
+    @let profile = current.profile;
+    <h1 id="worker-page-title" class="offers__title">
+      {{ current.account.firstName }} {{ current.account.lastName }}
+    </h1>
+    <p>
+      Estado del perfil: <strong>{{ labels[profile.status] }}</strong>
+    </p>
+    <div class="offers__actions">
+      <button type="button" class="offers__secondary" (click)="refresh()">Actualizar</button>
+    </div>
+
+    <section class="offers__card" aria-labelledby="worker-decision-title">
+      <h2 id="worker-decision-title" class="offers__subtitle">Decisión</h2>
+      @if (current.statusReason) {
+        <p class="offers__notice">Motivo registrado: {{ current.statusReason }}</p>
+      }
+      @if (profile.pendingRequirements.length > 0) {
+        <div>
+          <p>Requisitos que faltan para aprobarlo:</p>
+          <ul>
+            @for (requirement of profile.pendingRequirements; track requirement.field) {
+              <li>{{ requirement.message }}</li>
+            }
+          </ul>
+        </div>
+      }
+      <app-profile-decision
+        [profileId]="profile.id"
+        [status]="profile.status"
+        [decisions]="current.allowedDecisions"
+        [refreshing]="detail.isLoading()"
+        (changed)="onChanged($event)"
+        (failed)="onActionFailed($event)"
+        (stale)="reload()"
+      />
+    </section>
+
+    <section class="offers__card" aria-labelledby="worker-data-title">
+      <h2 id="worker-data-title" class="offers__subtitle">Datos del perfil</h2>
+      <dl class="offers__data">
+        <div>
+          <dt>Correo</dt>
+          <dd>{{ current.account.email }}</dd>
+        </div>
+        <div>
+          <dt>Teléfono</dt>
+          <dd>{{ current.account.phone ?? 'Sin registrar' }}</dd>
+        </div>
+        <div>
+          <dt>Cuenta</dt>
+          <dd>{{ current.account.status === 'ACTIVO' ? 'Activa' : 'No activa' }}</dd>
+        </div>
+        <div>
+          <dt>Zona</dt>
+          <dd>
+            {{ profile.zone.name }}
+            @if (profile.zoneRequiresChange) {
+              (zona desactivada)
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Años de experiencia</dt>
+          <dd>{{ profile.yearsOfExperience }}</dd>
+        </div>
+        <div>
+          <dt>Especialidades</dt>
+          <dd>
+            @for (specialty of profile.specialties; track specialty.id) {
+              {{ specialty.name }}{{ $last ? '' : ', ' }}
+            }
+          </dd>
+        </div>
+      </dl>
+      @if (profile.description) {
+        <p>{{ profile.description }}</p>
+      }
+      <h3>Horarios de atención</h3>
+      @if (profile.schedules.length === 0) {
+        <p class="offers__muted">No registró horarios.</p>
+      } @else {
+        <ul>
+          @for (schedule of profile.schedules; track schedule.id) {
+            <li>
+              {{ dayLabels[schedule.dayOfWeek] }}: {{ schedule.startTime }} a {{ schedule.endTime
+              }}{{ schedule.isActive ? '' : ' (inactivo)' }}
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="offers__card" aria-labelledby="worker-documents-title">
+      <h2 id="worker-documents-title" class="offers__subtitle">Documentos de respaldo</h2>
+      <app-admin-worker-documents [profileId]="profile.id" />
+    </section>
+
+    <section class="offers__card" aria-labelledby="worker-history-title">
+      <h2 id="worker-history-title" class="offers__subtitle">Historial de estados</h2>
+      @if (current.history.length === 0) {
+        <p class="offers__muted">Todavía no hay cambios de estado.</p>
+      } @else {
+        <ol>
+          @for (entry of current.history; track entry.id) {
+            <li>
+              <strong>{{ labels[entry.toStatus] }}</strong>
+              · {{ entry.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }} ·
+              {{ entry.changedByUser.firstName }} {{ entry.changedByUser.lastName }} ({{
+                entry.changedBy === 'ADMINISTRADOR' ? 'administrador' : 'trabajador'
+              }})
+              @if (entry.reason) {
+                <p class="offers__muted">Motivo: {{ entry.reason }}</p>
+              }
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  }
+</section>
