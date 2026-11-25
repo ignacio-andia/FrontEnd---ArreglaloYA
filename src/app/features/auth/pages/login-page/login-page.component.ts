@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import {
   Component,
   DestroyRef,
@@ -11,7 +12,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { homePathForRoles, safeReturnUrl } from '../../../../core/auth/auth-navigation';
+import {
+  LoginNotice,
+  homePathForRoles,
+  loginNoticeFrom,
+  safeReturnUrl,
+} from '../../../../core/auth/auth-navigation';
 import { AuthResponse, LoginRequest } from '../../../../core/auth/auth.models';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { isNormalizedApiError } from '../../../../core/models/api-error.model';
@@ -24,11 +30,20 @@ import { trimmedMaxLength, trimmedRequired } from '../../../../shared/validators
 
 type LoginField = keyof LoginRequest;
 
+const NOTICE_MESSAGES: Readonly<Record<LoginNotice, string>> = {
+  'session-expired': 'Su sesión terminó. Inicie sesión nuevamente para continuar.',
+  'account-deactivated': 'Su cuenta fue desactivada y se cerró la sesión.',
+};
+
 /** `LoginDto.password`: `@IsNotEmpty` y `@MaxLength(255)`, sin recorte ni otras reglas. */
 const PASSWORD_MAX_LENGTH = 255;
 
 const INVALID_FORM_MESSAGE = 'No se pudo iniciar sesión. Revise los campos marcados.';
 const UNEXPECTED_MESSAGE = 'Ocurrió un error inesperado. Inténtelo de nuevo más tarde.';
+
+function noticeMessage(notice: LoginNotice | null): string | null {
+  return notice === null ? null : NOTICE_MESSAGES[notice];
+}
 
 /**
  * Inicio de sesión (`POST /auth/login` mediante AuthService, que guarda la sesión).
@@ -51,6 +66,14 @@ export class LoginPageComponent {
   /** Destino solicitado antes del login; `null` si no existe o no es seguro. */
   private readonly returnUrl = safeReturnUrl(
     inject(ActivatedRoute).snapshot.queryParamMap.get('returnUrl'),
+  );
+
+  /**
+   * Aviso con el que se llegó al login (sesión terminada o cuenta desactivada). Si la página se
+   * crea cuando la navegación ya terminó, el estado se lee del historial.
+   */
+  protected readonly notice = noticeMessage(
+    loginNoticeFrom(this.router.currentNavigation()?.extras.state ?? inject(Location).getState()),
   );
 
   protected readonly form = inject(NonNullableFormBuilder).group({

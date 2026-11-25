@@ -1,0 +1,17 @@
+// Encabezado de página (título, subtítulo e introducción). No emite CSS por sí mismo.
+@use 'tokens';
+
+@mixin title {
+  color: var(--color-primary-dark);
+  font-size: 1.75rem;
+}
+
+@mixin subtitle {
+  color: var(--color-primary-dark);
+  font-size: 1.25rem;
+}
+
+@mixin intro {
+  margin-top: tokens.$space-2;
+  color: var(--color-text-secondary);
+}

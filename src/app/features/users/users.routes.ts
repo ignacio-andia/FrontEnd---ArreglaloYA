@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router';
 
 /**
- * «Mi cuenta». Hoy se monta en `/cliente/mi-cuenta`; las áreas de trabajador y administración
- * pueden montar estas mismas rutas (`loadChildren`) sin duplicar la página.
+ * «Mi cuenta», montada en `mi-cuenta` de las áreas de cliente, trabajador y administración.
  */
 export const ACCOUNT_ROUTES: Routes = [
   {

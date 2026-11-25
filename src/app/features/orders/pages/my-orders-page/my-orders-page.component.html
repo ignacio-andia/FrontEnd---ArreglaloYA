@@ -115,27 +115,14 @@
       }
 
       @if (meta.totalPages > 1) {
-        <nav class="pager" aria-label="Páginas de pedidos">
-          <button
-            type="button"
-            class="orders__secondary"
-            [disabled]="page() <= 1 || refreshing()"
-            (click)="goToPage(page() - 1)"
-          >
-            Anterior
-          </button>
-          <p class="pager__info">
-            Página {{ meta.page }} de {{ meta.totalPages }} · {{ meta.total }} resultados
-          </p>
-          <button
-            type="button"
-            class="orders__secondary"
-            [disabled]="page() >= meta.totalPages || refreshing()"
-            (click)="goToPage(page() + 1)"
-          >
-            Siguiente
-          </button>
-        </nav>
+        <app-paginator
+          label="Páginas de pedidos"
+          [page]="page()"
+          [totalPages]="meta.totalPages"
+          [total]="meta.total"
+          [busy]="refreshing()"
+          (pageChange)="goToPage($event)"
+        />
       }
     </section>
   }

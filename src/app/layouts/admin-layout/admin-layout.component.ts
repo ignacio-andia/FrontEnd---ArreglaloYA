@@ -23,5 +23,6 @@ export class AdminLayoutComponent {
     { label: 'Zonas', path: null },
     { label: 'Usuarios', path: null },
     { label: 'Bitácora', path: null },
+    { label: 'Mi cuenta', path: '/admin/mi-cuenta' },
   ];
 }

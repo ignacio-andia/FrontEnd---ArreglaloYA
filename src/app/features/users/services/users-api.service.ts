@@ -3,12 +3,13 @@ import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { User } from '../../../core/auth/auth.models';
 import { apiUrl } from '../../../core/http/api-url';
-import { UpdateUserRequest } from '../models/user-account.model';
+import { UpdateUserRequest, UpdateUserStatusRequest } from '../models/user-account.model';
 
 /**
  * Servicio API de cuentas (`/api/users`). La consulta de la cuenta propia se hace con
  * `AuthService.getCurrentUser()` (`GET /auth/me`); aquí solo está la actualización.
- * La administración de usuarios (listado, estado) no forma parte de este servicio.
+ * La administración de usuarios (listado y estado de otras cuentas) no forma parte de este
+ * servicio.
  */
 @Service()
 export class UsersApiService {
@@ -31,5 +32,14 @@ export class UsersApiService {
     }
 
     return this.http.patch<User>(apiUrl('users', id), body);
+  }
+
+  /**
+   * `PATCH /users/:id/status` con `INACTIVO` sobre la propia cuenta. La cuenta ya no puede iniciar
+   * sesión y solo un administrador la reactiva. 409 si es el único administrador activo.
+   */
+  deactivateOwnAccount(id: string): Observable<User> {
+    const body: UpdateUserStatusRequest = { status: 'INACTIVO' };
+    return this.http.patch<User>(apiUrl('users', id, 'status'), body);
   }
 }

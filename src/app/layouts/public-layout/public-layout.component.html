@@ -30,11 +30,11 @@
           </nav>
         }
 
-        <!-- CTA principal: se habilitará con la publicación de pedidos (área de cliente). -->
-        <span class="cta cta--pending">
-          Solicitar un servicio
-          <span class="cta__note">(próximamente)</span>
-        </span>
+        @if (canRequestService()) {
+          <a class="cta" routerLink="/cliente/publicar-pedido" (click)="closeMenu()">
+            Solicitar un servicio
+          </a>
+        }
       </div>
     </div>
   </div>

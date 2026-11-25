@@ -1,5 +1,6 @@
 @use 'tokens';
 @use 'mixins';
+@use 'buttons';
 
 $content-max-width: 72rem;
 
@@ -117,27 +118,9 @@ $content-max-width: 72rem;
 }
 
 .cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: tokens.$space-1;
-  min-height: 2.75rem;
-  padding: tokens.$space-2 tokens.$space-4;
-  border-radius: tokens.$radius-md;
-  font-weight: tokens.$font-weight-semibold;
+  @include buttons.primary;
+
   white-space: nowrap;
-}
-
-.cta--pending {
-  border: 1px dashed var(--color-primary);
-  background-color: var(--color-primary-pale);
-  color: var(--color-primary-dark);
-  cursor: default;
-}
-
-.cta__note {
-  font-size: 0.75rem;
-  font-weight: tokens.$font-weight-medium;
 }
 
 .site-main {

@@ -6,11 +6,8 @@ import { SessionStore } from '../auth/session.store';
 import { RoleName } from '../models/role.model';
 import { loginRedirect } from './auth.guard';
 
-/**
- * Destino cuando el usuario no tiene el rol requerido: el inicio público.
- * PROVISIONAL hasta que exista una pantalla de acceso no permitido.
- */
-export const ROLE_DENIED_PATH = '/';
+/** Destino cuando el usuario no tiene el rol requerido. */
+export const ROLE_DENIED_PATH = '/acceso-denegado';
 
 /**
  * Permite el acceso si el usuario tiene **alguno** de los roles indicados.

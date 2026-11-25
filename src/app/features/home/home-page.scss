@@ -1,0 +1,62 @@
+// Estructura común de las páginas de la feature home (inicios y avisos).
+@use 'tokens';
+@use 'mixins';
+@use 'page';
+
+:host {
+  display: block;
+}
+
+.home {
+  display: grid;
+  gap: tokens.$space-8;
+  max-width: 64rem;
+}
+
+// Variante dentro de PublicLayout, que no aporta márgenes propios.
+.home--public {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: tokens.$space-6 tokens.$space-4;
+
+  @include mixins.respond-up(md) {
+    padding-block: tokens.$space-8 * 1.5;
+  }
+}
+
+.home__title {
+  @include page.title;
+}
+
+.home__subtitle {
+  @include page.subtitle;
+}
+
+.home__intro {
+  @include page.intro;
+
+  max-width: 40rem;
+}
+
+.home__section {
+  display: grid;
+  gap: tokens.$space-4;
+}
+
+.home__grid {
+  display: grid;
+  gap: tokens.$space-4;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include mixins.respond-up(sm) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.home__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-3;
+}

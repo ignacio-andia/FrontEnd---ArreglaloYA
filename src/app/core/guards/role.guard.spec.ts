@@ -104,7 +104,7 @@ describe('roleGuard', () => {
 
     const result = await runGuard(roleGuard(['TRABAJADOR']), '/trabajador');
 
-    expect(serialize(result)).toBe('/');
+    expect(serialize(result)).toBe('/acceso-denegado');
     expect(session.isAuthenticated()).toBe(true);
     expect(session.token()).toBe('jwt-token');
   });
@@ -115,7 +115,9 @@ describe('roleGuard', () => {
 
     expect(await runGuard(roleGuard(['CLIENTE']), '/cliente/pedidos')).toBe(true);
     expect(await runGuard(roleGuard(['TRABAJADOR']), '/trabajador')).toBe(true);
-    expect(serialize(await runGuard(roleGuard(['ADMINISTRADOR']), '/admin'))).toBe('/');
+    expect(serialize(await runGuard(roleGuard(['ADMINISTRADOR']), '/admin'))).toBe(
+      '/acceso-denegado',
+    );
   });
 
   it('redirects to login with returnUrl when there is no session', async () => {

@@ -14,6 +14,23 @@ export const AREA_HOME_PATHS: Readonly<Record<RoleName, string>> = {
  */
 const ROLE_PRIORITY: readonly RoleName[] = ['ADMINISTRADOR', 'TRABAJADOR', 'CLIENTE'];
 
+/** Motivo por el que se llega al login, para explicarlo en la pantalla. */
+export type LoginNotice = 'session-expired' | 'account-deactivated';
+
+/** Estado de navegación con el que se abre el login tras cerrar una sesión. */
+export interface LoginNavigationState {
+  loginNotice: LoginNotice;
+}
+
+/** Lee el aviso de un estado de navegación; `null` si no trae uno conocido. */
+export function loginNoticeFrom(state: unknown): LoginNotice | null {
+  if (typeof state !== 'object' || state === null || !('loginNotice' in state)) {
+    return null;
+  }
+  const notice: unknown = state.loginNotice;
+  return notice === 'session-expired' || notice === 'account-deactivated' ? notice : null;
+}
+
 const PUBLIC_HOME_PATH = '/';
 const AUTH_AREA_PATH = '/auth';
 

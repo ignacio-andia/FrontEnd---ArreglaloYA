@@ -1,5 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
@@ -18,6 +19,11 @@ import { PublishOrderPageComponent } from './features/orders/pages/publish-order
 import { BecomeWorkerPageComponent } from './features/worker-profile/pages/become-worker-page/become-worker-page.component';
 import { AccountPageComponent } from './features/users/pages/account-page/account-page.component';
 import { RegisterPageComponent } from './features/auth/pages/register-page/register-page.component';
+import { PublicHomePageComponent } from './features/home/pages/public-home-page/public-home-page.component';
+import { HowItWorksPageComponent } from './features/home/pages/how-it-works-page/how-it-works-page.component';
+import { ClientHomePageComponent } from './features/home/pages/client-home-page/client-home-page.component';
+import { WorkerHomePageComponent } from './features/home/pages/worker-home-page/worker-home-page.component';
+import { AdminHomePageComponent } from './features/home/pages/admin-home-page/admin-home-page.component';
 import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
 import { ClientLayoutComponent } from './layouts/client-layout/client-layout.component';
 import { PublicLayoutComponent } from './layouts/public-layout/public-layout.component';
@@ -37,6 +43,20 @@ function userWithRoles(roles: RoleName[]): User {
   };
 }
 
+/** Respuestas vacías de las peticiones que hacen las páginas de inicio. */
+const HOME_RESPONSES: Record<string, object> = {
+  [apiUrl('catalogs', 'categories')]: [],
+  [apiUrl('orders', 'me')]: { data: [], meta: { page: 1, limit: 3, total: 0, totalPages: 0 } },
+  [apiUrl('worker-profile', 'me', 'eligibility')]: {
+    eligible: false,
+    status: 'BORRADOR',
+    message: 'Su perfil de trabajador está en borrador.',
+    reason: null,
+    pendingZoneChangeRequest: null,
+    canTakeNewWork: false,
+  },
+};
+
 describe('app routes', () => {
   let httpTesting: HttpTestingController;
   let router: Router;
@@ -55,6 +75,7 @@ describe('app routes', () => {
   });
 
   afterEach(() => {
+    flushHomeRequests();
     httpTesting.verify();
     sessionStorage.clear();
   });
@@ -67,6 +88,32 @@ describe('app routes', () => {
     });
   }
 
+  function flushHomeRequests(): void {
+    for (const request of httpTesting.match((r) => r.url in HOME_RESPONSES)) {
+      request.flush(HOME_RESPONSES[request.request.url]);
+    }
+  }
+
+  /** Responde las peticiones de las páginas de inicio mientras se completa la navegación. */
+  async function settle<T>(navigation: Promise<T>): Promise<T> {
+    let done = false;
+    const result = navigation.finally(() => (done = true));
+    while (!done) {
+      flushHomeRequests();
+      await new Promise((resolve) => setTimeout(resolve));
+    }
+    const value = await result;
+    // La página de inicio pide sus datos al mostrarse, ya terminada la navegación.
+    TestBed.tick();
+    await new Promise((resolve) => setTimeout(resolve));
+    flushHomeRequests();
+    return value;
+  }
+
+  function visit(harness: RouterTestingHarness, url: string, component?: Type<unknown>) {
+    return settle(component ? harness.navigateByUrl(url, component) : harness.navigateByUrl(url));
+  }
+
   function currentPath(): string {
     return router.url.split('?')[0];
   }
@@ -74,14 +121,14 @@ describe('app routes', () => {
   it('renders the public layout at the root', async () => {
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/', PublicLayoutComponent);
+    await visit(harness, '/', PublicLayoutComponent);
     expect(TestBed.inject(Title).getTitle()).toBe('ArreglaloYA');
   });
 
   it('renders the register page inside the public layout', async () => {
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/auth/registro', PublicLayoutComponent);
+    await visit(harness, '/auth/registro', PublicLayoutComponent);
     expect(
       harness.routeDebugElement?.query(
         (node) => node.componentInstance instanceof RegisterPageComponent,
@@ -112,18 +159,18 @@ describe('app routes', () => {
     const title = TestBed.inject(Title);
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/auth/registro');
+    await visit(harness, '/auth/registro');
     expect(title.getTitle()).toBe('Crear cuenta | ArreglaloYA');
 
     signIn(['CLIENTE']);
-    await harness.navigateByUrl('/cliente');
+    await visit(harness, '/cliente');
     expect(title.getTitle()).toBe('Área de cliente | ArreglaloYA');
   });
 
   it('redirects unknown URLs to the public root', async () => {
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/no-existe', PublicLayoutComponent);
+    await visit(harness, '/no-existe', PublicLayoutComponent);
     expect(currentPath()).toBe('/');
   });
 
@@ -131,7 +178,7 @@ describe('app routes', () => {
     const harness = await RouterTestingHarness.create();
 
     for (const url of ['/cliente', '/trabajador', '/admin']) {
-      await harness.navigateByUrl(url);
+      await visit(harness, url);
       expect(currentPath()).toBe('/auth/login');
       expect(router.parseUrl(router.url).queryParams['returnUrl']).toBe(url);
       expect(
@@ -153,7 +200,7 @@ describe('app routes', () => {
       const harness = await RouterTestingHarness.create();
 
       for (const url of ['/auth/login', '/auth/registro']) {
-        await harness.navigateByUrl(url);
+        await visit(harness, url);
         expect(currentPath()).toBe(area);
       }
       expect(TestBed.inject(SessionStore).token()).toBe('jwt-token');
@@ -168,7 +215,7 @@ describe('app routes', () => {
     // La ruta /auth se carga de forma diferida: la petición llega tras resolver el chunk.
     const me = await vi.waitFor(() => httpTesting.expectOne(apiUrl('auth', 'me')));
     me.flush(userWithRoles(['CLIENTE']));
-    await navigation;
+    await settle(navigation);
 
     expect(currentPath()).toBe('/cliente');
   });
@@ -177,17 +224,17 @@ describe('app routes', () => {
     signIn(['CLIENTE']);
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/cliente', ClientLayoutComponent);
+    await visit(harness, '/cliente', ClientLayoutComponent);
   });
 
   it('keeps a CLIENTE-only account out of the worker and admin areas', async () => {
     signIn(['CLIENTE']);
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/trabajador');
-    expect(currentPath()).toBe('/');
-    await harness.navigateByUrl('/admin');
-    expect(currentPath()).toBe('/');
+    await visit(harness, '/trabajador');
+    expect(currentPath()).toBe('/acceso-denegado');
+    await visit(harness, '/admin');
+    expect(currentPath()).toBe('/acceso-denegado');
     expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(true);
   });
 
@@ -195,17 +242,17 @@ describe('app routes', () => {
     signIn(['CLIENTE', 'TRABAJADOR']);
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/cliente', ClientLayoutComponent);
-    await harness.navigateByUrl('/trabajador', WorkerLayoutComponent);
+    await visit(harness, '/cliente', ClientLayoutComponent);
+    await visit(harness, '/trabajador', WorkerLayoutComponent);
   });
 
   it('does not require worker approval for the worker area root', async () => {
     signIn(['CLIENTE', 'TRABAJADOR']);
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/trabajador', WorkerLayoutComponent);
+    await visit(harness, '/trabajador', WorkerLayoutComponent);
 
-    httpTesting.expectNone(() => true);
+    expect(currentPath()).toBe('/trabajador');
   });
 
   it('lets a CLIENTE without the TRABAJADOR role open «Quiero ofrecer mis servicios»', async () => {
@@ -230,7 +277,7 @@ describe('app routes', () => {
   it('opens «Mis pedidos» from the client menu', async () => {
     signIn(['CLIENTE']);
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/cliente', ClientLayoutComponent);
+    await visit(harness, '/cliente', ClientLayoutComponent);
 
     const link = Array.from(
       (harness.routeNativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('nav a'),
@@ -257,9 +304,9 @@ describe('app routes', () => {
     signIn(['TRABAJADOR']);
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/cliente/mis-pedidos/e5f6a7b8-c9d0-4e1f-8a2b-3c4d5e6f7a8b');
+    await visit(harness, '/cliente/mis-pedidos/e5f6a7b8-c9d0-4e1f-8a2b-3c4d5e6f7a8b');
 
-    expect(currentPath()).toBe('/');
+    expect(currentPath()).toBe('/acceso-denegado');
   });
 
   it('opens «Publicar pedido» in the client area', async () => {
@@ -284,9 +331,9 @@ describe('app routes', () => {
     signIn(['TRABAJADOR']);
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/cliente/publicar-pedido');
+    await visit(harness, '/cliente/publicar-pedido');
 
-    expect(currentPath()).toBe('/');
+    expect(currentPath()).toBe('/acceso-denegado');
   });
 
   it('opens «Mi cuenta» in the client area', async () => {
@@ -312,9 +359,9 @@ describe('app routes', () => {
     signIn(['CLIENTE']);
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/trabajador/perfil');
+    await visit(harness, '/trabajador/perfil');
 
-    expect(currentPath()).toBe('/');
+    expect(currentPath()).toBe('/acceso-denegado');
     httpTesting.expectNone(apiUrl('worker-profile', 'me'));
   });
 
@@ -347,6 +394,75 @@ describe('app routes', () => {
     signIn(['ADMINISTRADOR']);
     const harness = await RouterTestingHarness.create();
 
-    await harness.navigateByUrl('/admin', AdminLayoutComponent);
+    await visit(harness, '/admin', AdminLayoutComponent);
+  });
+
+  it.each([
+    ['/', 'ArreglaloYA', PublicHomePageComponent],
+    ['/como-funciona', 'Cómo funciona | ArreglaloYA', HowItWorksPageComponent],
+  ] as const)('renders the public page %s', async (url, title, page) => {
+    const harness = await RouterTestingHarness.create();
+
+    await visit(harness, url, PublicLayoutComponent);
+
+    expect(TestBed.inject(Title).getTitle()).toBe(title);
+    expect(
+      harness.routeDebugElement?.query((node) => node.componentInstance instanceof page),
+    ).not.toBeNull();
+  });
+
+  it.each([
+    ['/cliente', ClientHomePageComponent],
+    ['/trabajador', WorkerHomePageComponent],
+    ['/admin', AdminHomePageComponent],
+  ] as const)('shows a home page at the root of %s', async (url, page) => {
+    signIn(['CLIENTE', 'TRABAJADOR', 'ADMINISTRADOR']);
+    const harness = await RouterTestingHarness.create();
+
+    await visit(harness, url);
+
+    expect(
+      harness.routeDebugElement?.query((node) => node.componentInstance instanceof page),
+    ).not.toBeNull();
+  });
+
+  it.each([
+    [['TRABAJADOR'], '/trabajador/mi-cuenta'],
+    [['ADMINISTRADOR'], '/admin/mi-cuenta'],
+  ] as const)('opens «Mi cuenta» for %j at %s', async (roles, url) => {
+    signIn([...roles]);
+    const harness = await RouterTestingHarness.create();
+
+    const navigation = harness.navigateByUrl(url);
+    (await vi.waitFor(() => httpTesting.expectOne(apiUrl('auth', 'me')))).flush(
+      userWithRoles([...roles]),
+    );
+    await navigation;
+
+    expect(currentPath()).toBe(url);
+    expect(TestBed.inject(Title).getTitle()).toBe('Mi cuenta | ArreglaloYA');
+  });
+
+  it('sends an authenticated user to the login when the API answers 401', async () => {
+    signIn(['CLIENTE']);
+    const harness = await RouterTestingHarness.create();
+    await visit(harness, '/cliente');
+
+    const navigation = harness.navigateByUrl('/cliente/mis-pedidos');
+    (
+      await vi.waitFor(() =>
+        httpTesting.expectOne((request) => request.url === apiUrl('orders', 'me')),
+      )
+    ).flush(
+      { statusCode: 401, message: 'Sesión inválida', error: 'Unauthorized' },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+    await navigation;
+
+    await vi.waitFor(() => expect(currentPath()).toBe('/auth/login'));
+    expect(router.parseUrl(router.url).queryParams['returnUrl']).toBe('/cliente/mis-pedidos');
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(document.body.textContent).toContain('Su sesión terminó');
   });
 });

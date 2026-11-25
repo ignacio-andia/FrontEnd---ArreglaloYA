@@ -34,7 +34,7 @@ describe('PublicLayoutComponent', () => {
     expect(element.querySelector('.site-footer__brand')?.textContent?.trim()).toBe('ArreglaloYA');
   });
 
-  it('renders the public navigation, marking sections without page as pending', () => {
+  it('renders the public navigation', () => {
     const { element } = render();
 
     const main = element.querySelector('nav[aria-label="Principal"]');
@@ -42,9 +42,8 @@ describe('PublicLayoutComponent', () => {
     expect(mainLinks.map((link) => [link.textContent?.trim(), link.getAttribute('href')])).toEqual([
       ['Inicio', '/'],
       ['Categorías', '/categorias'],
+      ['Cómo funciona', '/como-funciona'],
     ]);
-    const pending = Array.from(main?.querySelectorAll('.nav-link--pending') ?? []);
-    expect(pending.map((item) => item.firstChild?.textContent?.trim())).toEqual(['Cómo funciona']);
 
     const account = element.querySelector('nav[aria-label="Cuenta"]');
     expect(account?.querySelector('.nav-link--pending')).toBeNull();
@@ -55,12 +54,32 @@ describe('PublicLayoutComponent', () => {
     ]);
   });
 
-  it('shows the main CTA as pending until order publishing exists', () => {
+  it('links the main CTA to order publishing for visitors', () => {
     const { element } = render();
 
-    const cta = element.querySelector('.cta');
-    expect(cta?.textContent).toContain('Solicitar un servicio');
-    expect(cta?.tagName).toBe('SPAN');
+    const cta = element.querySelector('a.cta');
+    expect(cta?.textContent?.trim()).toBe('Solicitar un servicio');
+    expect(cta?.getAttribute('href')).toBe('/cliente/publicar-pedido');
+  });
+
+  it('hides the CTA for an account without the CLIENTE role', () => {
+    TestBed.inject(SessionStore).setSession({
+      accessToken: 'jwt-token',
+      tokenType: 'Bearer',
+      user: {
+        id: '8f1c2a8e-5a2b-4c3d-9e4f-1a2b3c4d5e6f',
+        firstName: 'Ana',
+        lastName: 'Pérez',
+        email: 'ana@example.com',
+        phone: null,
+        status: 'ACTIVO',
+        roles: ['ADMINISTRADOR'],
+        createdAt: '2026-11-15T14:30:00.000Z',
+        updatedAt: '2026-11-15T14:30:00.000Z',
+      },
+    });
+
+    expect(render().element.querySelector('.cta')).toBeNull();
   });
 
   it('replaces account links with the session menu when authenticated', () => {

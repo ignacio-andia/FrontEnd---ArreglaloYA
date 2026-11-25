@@ -1,3 +1,5 @@
+import { UserStatus } from '../../../core/auth/auth.models';
+
 /**
  * Cuerpo de `PATCH /users/:id` (`UpdateUserDto`). Solo estos datos personales son modificables;
  * el correo, los roles, el estado y el id no. Hay que enviar al menos una propiedad.
@@ -9,6 +11,11 @@ export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
   phone?: string | null;
+}
+
+/** Cuerpo de `PATCH /users/:id/status` (`UpdateUserStatusDto`). */
+export interface UpdateUserStatusRequest {
+  status: UserStatus;
 }
 
 /** `@MaxLength(100)` de nombre y apellido en `UpdateUserDto`. */

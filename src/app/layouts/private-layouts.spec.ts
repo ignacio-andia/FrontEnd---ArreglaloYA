@@ -39,14 +39,18 @@ const cases: LayoutCase[] = [
     links: [
       ['Resumen', '/trabajador'],
       ['Mi perfil', '/trabajador/perfil'],
+      ['Mi cuenta', '/trabajador/mi-cuenta'],
     ],
-    pending: ['Pedidos disponibles', 'Mis ofertas', 'Trabajos asignados', 'Mi cuenta'],
+    pending: ['Pedidos disponibles', 'Mis ofertas', 'Trabajos asignados'],
   },
   {
     name: 'AdminLayoutComponent',
     component: AdminLayoutComponent,
     area: 'Administración',
-    links: [['Resumen', '/admin']],
+    links: [
+      ['Resumen', '/admin'],
+      ['Mi cuenta', '/admin/mi-cuenta'],
+    ],
     pending: [
       'Verificación de trabajadores',
       'Pedidos',

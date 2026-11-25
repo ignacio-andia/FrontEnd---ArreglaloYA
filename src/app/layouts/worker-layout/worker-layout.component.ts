@@ -26,6 +26,6 @@ export class WorkerLayoutComponent {
     { label: 'Mis ofertas', path: null },
     { label: 'Trabajos asignados', path: null },
     { label: 'Mi perfil', path: '/trabajador/perfil' },
-    { label: 'Mi cuenta', path: null },
+    { label: 'Mi cuenta', path: '/trabajador/mi-cuenta' },
   ];
 }

@@ -1,0 +1,68 @@
+// Botones y enlaces con aspecto de botón, con la presentación ya usada en la plataforma.
+// No emite CSS por sí mismo: cada componente lo incluye en su propia clase, por ejemplo
+//   .page__cta { @include buttons.primary; }
+@use 'tokens';
+
+@mixin base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: tokens.$space-2 tokens.$space-4;
+  border-radius: tokens.$radius-md;
+  font-weight: tokens.$font-weight-semibold;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@mixin primary {
+  @include base;
+
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-primary);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary-dark);
+    background-color: var(--color-primary-dark);
+    color: #fff;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+  }
+}
+
+@mixin secondary {
+  @include base;
+
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-surface);
+  color: var(--color-primary-dark);
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-pale);
+    color: var(--color-primary-dark);
+  }
+
+  &:disabled {
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+    cursor: not-allowed;
+  }
+}
+
+// Acción destructiva: texto blanco sobre el color de error (6.6:1).
+@mixin danger {
+  @include base;
+
+  border: 1px solid var(--color-danger);
+  background-color: var(--color-danger);
+  color: #fff;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+  }
+}

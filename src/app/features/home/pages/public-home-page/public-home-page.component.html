@@ -1,0 +1,39 @@
+<div class="home home--public">
+  <section class="hero" aria-labelledby="home-title">
+    <h1 id="home-title" class="hero__title">Servicios técnicos para su hogar</h1>
+    <p class="hero__text">
+      Cuente qué necesita arreglar, reciba ofertas de trabajadores con perfil aprobado de su zona y
+      elija la que más le convenga.
+    </p>
+    <div class="home__actions">
+      @if (canRequestService()) {
+        <a class="hero__primary" routerLink="/cliente/publicar-pedido">Publicar un pedido</a>
+      }
+      <a class="hero__secondary" routerLink="/categorias">Ver categorías</a>
+    </div>
+  </section>
+
+  <section class="home__section" aria-labelledby="home-categories-title">
+    <h2 id="home-categories-title" class="home__subtitle">Categorías de servicios</h2>
+    @if (categories.isLoading()) {
+      <app-loading-state message="Cargando categorías…" />
+    } @else if (categoriesError(); as message) {
+      <app-error-alert [message]="message" (retry)="categories.reload()" />
+    } @else if (categories.hasValue()) {
+      @if (featured().length === 0) {
+        <app-empty-state heading="Todavía no hay categorías disponibles." />
+      } @else {
+        <ul class="home__grid home__grid--three">
+          @for (category of featured(); track category.id) {
+            <li><app-category-card [category]="category" /></li>
+          }
+        </ul>
+      }
+    }
+  </section>
+
+  <section class="home__section" aria-labelledby="home-how-title">
+    <h2 id="home-how-title" class="home__subtitle">Cómo funciona</h2>
+    <app-how-it-works />
+  </section>
+</div>

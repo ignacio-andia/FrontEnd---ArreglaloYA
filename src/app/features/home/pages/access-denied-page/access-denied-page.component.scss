@@ -1,0 +1,5 @@
+@use 'buttons';
+
+.denied__primary {
+  @include buttons.primary;
+}

@@ -1,0 +1,55 @@
+<section class="home" aria-labelledby="worker-home-title">
+  <header>
+    <h1 id="worker-home-title" class="home__title">Hola, {{ firstName() }}</h1>
+    <p class="home__intro">Consulte el estado de su perfil de trabajador.</p>
+  </header>
+
+  <section class="home__section" aria-labelledby="worker-home-status-title">
+    <h2 id="worker-home-status-title" class="home__subtitle">Estado de su perfil</h2>
+    @if (eligibility.isLoading()) {
+      <app-loading-state message="Consultando su perfil…" />
+    } @else if (eligibilityError(); as message) {
+      <app-error-alert [message]="message" (retry)="eligibility.reload()" />
+    } @else if (eligibility.hasValue()) {
+      @let current = eligibility.value();
+      <div class="status" [class.status--enabled]="current.eligible">
+        <p class="status__message">{{ current.message }}</p>
+        @if (current.reason) {
+          <p>Motivo: {{ current.reason }}</p>
+        }
+        @if (current.pendingZoneChangeRequest; as pending) {
+          <p>
+            Solicitud de cambio de zona pendiente: {{ pending.toZone.name }}, enviada el
+            {{ pending.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}.
+          </p>
+        }
+        @if (current.eligible && !current.canTakeNewWork) {
+          <p>
+            Mientras la solicitud esté pendiente no puede ofertar ni tomar trabajos nuevos. Los
+            trabajos que ya tiene no se ven afectados.
+          </p>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="home__section" aria-labelledby="worker-home-actions-title">
+    <h2 id="worker-home-actions-title" class="home__subtitle">Accesos rápidos</h2>
+    <ul class="home__grid">
+      <li>
+        <app-action-card
+          heading="Mi perfil"
+          description="Datos, especialidades, horarios y documentos."
+          path="/trabajador/perfil"
+        />
+      </li>
+      <li>
+        <app-action-card
+          heading="Mi cuenta"
+          description="Actualice su nombre y teléfono."
+          path="/trabajador/mi-cuenta"
+        />
+      </li>
+    </ul>
+  </section>
+</section>

@@ -1,0 +1,85 @@
+<section class="home" aria-labelledby="client-home-title">
+  <header>
+    <h1 id="client-home-title" class="home__title">Hola, {{ firstName() }}</h1>
+    <p class="home__intro">Publique un pedido o revise el estado de los que ya publicó.</p>
+  </header>
+
+  <section class="home__section" aria-labelledby="client-home-actions-title">
+    <h2 id="client-home-actions-title" class="home__subtitle">Accesos rápidos</h2>
+    <ul class="home__grid">
+      <li>
+        <app-action-card
+          heading="Publicar un pedido"
+          description="Describa lo que necesita y adjunte fotografías."
+          path="/cliente/publicar-pedido"
+        />
+      </li>
+      <li>
+        <app-action-card
+          heading="Mis pedidos"
+          description="Consulte sus pedidos y su estado."
+          path="/cliente/mis-pedidos"
+        />
+      </li>
+      <li>
+        <app-action-card
+          heading="Mi cuenta"
+          description="Actualice su nombre y teléfono."
+          path="/cliente/mi-cuenta"
+        />
+      </li>
+      <li>
+        @if (isWorker()) {
+          <app-action-card
+            heading="Mi perfil de trabajador"
+            description="Revise el estado y los datos de su perfil."
+            path="/trabajador/perfil"
+          />
+        } @else {
+          <app-action-card
+            heading="Ofrecer mis servicios"
+            description="Cree su perfil de trabajador con esta misma cuenta."
+            path="/cliente/ofrecer-servicios"
+          />
+        }
+      </li>
+    </ul>
+  </section>
+
+  <section class="home__section" aria-labelledby="client-home-orders-title">
+    <h2 id="client-home-orders-title" class="home__subtitle">Pedidos recientes</h2>
+    @if (orders.isLoading()) {
+      <app-loading-state message="Cargando sus pedidos…" />
+    } @else if (ordersError(); as message) {
+      <app-error-alert [message]="message" (retry)="orders.reload()" />
+    } @else if (orders.hasValue()) {
+      @if (orders.value().data.length === 0) {
+        <app-empty-state heading="Todavía no publicó ningún pedido.">
+          <a class="recent__cta" routerLink="/cliente/publicar-pedido">Publicar mi primer pedido</a>
+        </app-empty-state>
+      } @else {
+        <ul class="recent">
+          @for (order of orders.value().data; track order.id) {
+            <li class="recent__item">
+              <div>
+                <a class="recent__link" [routerLink]="['/cliente/mis-pedidos', order.id]">
+                  {{ order.category.name }}
+                </a>
+                <p class="recent__meta">
+                  Bs {{ order.budgetAmount }} · Publicado el
+                  {{ order.publishedAt | date: 'dd/MM/yyyy' : timezone }}
+                </p>
+              </div>
+              <app-order-status-badge [status]="order.status" />
+            </li>
+          }
+        </ul>
+        <p>
+          <a routerLink="/cliente/mis-pedidos">
+            Ver todos mis pedidos ({{ orders.value().meta.total }})
+          </a>
+        </p>
+      }
+    }
+  </section>
+</section>

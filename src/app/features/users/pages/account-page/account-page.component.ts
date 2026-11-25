@@ -21,6 +21,7 @@ import {
 } from '../../../../shared/utils/server-validation';
 import { optionalPhone } from '../../../../shared/validators/phone.validators';
 import { trimmedMaxLength, trimmedRequired } from '../../../../shared/validators/text.validators';
+import { DeactivateAccountComponent } from '../../components/deactivate-account/deactivate-account.component';
 import { ACCOUNT_NAME_MAX_LENGTH, UpdateUserRequest } from '../../models/user-account.model';
 import { UsersApiService } from '../../services/users-api.service';
 
@@ -42,7 +43,7 @@ const NO_CHANGES_MESSAGE = 'No hay cambios para guardar.';
  */
 @Component({
   selector: 'app-account-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DeactivateAccountComponent],
   templateUrl: './account-page.component.html',
   styleUrl: './account-page.component.scss',
 })

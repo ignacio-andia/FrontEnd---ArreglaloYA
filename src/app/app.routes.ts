@@ -7,9 +7,9 @@ import { PublicLayoutComponent } from './layouts/public-layout/public-layout.com
 import { WorkerLayoutComponent } from './layouts/worker-layout/worker-layout.component';
 
 /**
- * Árbol principal de rutas. Cada área usa su layout; las features se añadirán como hijas
- * con `loadComponent`/`loadChildren`. Las áreas no tienen todavía páginas hijas: las secciones
- * previstas se muestran como "Próximamente" en la navegación y no tienen ruta.
+ * Árbol principal de rutas. Cada área usa su layout y tiene una página de inicio; las features
+ * se montan como hijas con `loadComponent`/`loadChildren`. Las secciones previstas sin página se
+ * muestran como "Próximamente" en la navegación y no tienen ruta.
  *
  * Cada área define un `title` (las páginas hijas lo reemplazan con el suyo), para que el título
  * de la pestaña no conserve el de la página anterior.
@@ -22,6 +22,30 @@ export const routes: Routes = [
     title: 'ArreglaloYA',
     component: PublicLayoutComponent,
     children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/home/pages/public-home-page/public-home-page.component').then(
+            (m) => m.PublicHomePageComponent,
+          ),
+      },
+      {
+        path: 'como-funciona',
+        title: 'Cómo funciona | ArreglaloYA',
+        loadComponent: () =>
+          import('./features/home/pages/how-it-works-page/how-it-works-page.component').then(
+            (m) => m.HowItWorksPageComponent,
+          ),
+      },
+      {
+        path: 'acceso-denegado',
+        title: 'Acceso no permitido | ArreglaloYA',
+        loadComponent: () =>
+          import('./features/home/pages/access-denied-page/access-denied-page.component').then(
+            (m) => m.AccessDeniedPageComponent,
+          ),
+      },
       {
         path: 'auth',
         loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
@@ -39,6 +63,14 @@ export const routes: Routes = [
     component: ClientLayoutComponent,
     canActivate: [authGuard, roleGuard(['CLIENTE'])],
     children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/home/pages/client-home-page/client-home-page.component').then(
+            (m) => m.ClientHomePageComponent,
+          ),
+      },
       {
         path: 'mi-cuenta',
         loadChildren: () => import('./features/users/users.routes').then((m) => m.ACCOUNT_ROUTES),
@@ -72,6 +104,18 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard(['TRABAJADOR'])],
     children: [
       {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/home/pages/worker-home-page/worker-home-page.component').then(
+            (m) => m.WorkerHomePageComponent,
+          ),
+      },
+      {
+        path: 'mi-cuenta',
+        loadChildren: () => import('./features/users/users.routes').then((m) => m.ACCOUNT_ROUTES),
+      },
+      {
         path: 'perfil',
         loadChildren: () =>
           import('./features/worker-profile/worker-profile.routes').then(
@@ -85,7 +129,20 @@ export const routes: Routes = [
     title: 'Administración | ArreglaloYA',
     component: AdminLayoutComponent,
     canActivate: [authGuard, roleGuard(['ADMINISTRADOR'])],
-    children: [],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/home/pages/admin-home-page/admin-home-page.component').then(
+            (m) => m.AdminHomePageComponent,
+          ),
+      },
+      {
+        path: 'mi-cuenta',
+        loadChildren: () => import('./features/users/users.routes').then((m) => m.ACCOUNT_ROUTES),
+      },
+    ],
   },
   { path: '**', redirectTo: '' },
 ];

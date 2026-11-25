@@ -14,6 +14,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
 import { apiErrorMessages, apiErrorStatus } from '../../../../shared/utils/api-error-message';
 import { DISPLAY_TIMEZONE } from '../../../../shared/utils/display-timezone';
+import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
 import { OrderPhotoComponent } from '../../components/order-photo/order-photo.component';
 import { OrderStatusBadgeComponent } from '../../components/order-status-badge/order-status-badge.component';
 import {
@@ -47,6 +48,7 @@ const LIST_ERROR = 'No se pudieron cargar sus pedidos. Compruebe su conexión e 
     RouterLink,
     OrderPhotoComponent,
     OrderStatusBadgeComponent,
+    PaginatorComponent,
   ],
   templateUrl: './my-orders-page.component.html',
   styleUrl: './my-orders-page.component.scss',

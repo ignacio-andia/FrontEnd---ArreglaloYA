@@ -248,16 +248,3 @@
     font-weight: tokens.$font-weight-medium;
   }
 }
-
-.pager {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: tokens.$space-3;
-}
-
-.pager__info {
-  color: var(--color-text-secondary);
-  font-size: 0.9375rem;
-}

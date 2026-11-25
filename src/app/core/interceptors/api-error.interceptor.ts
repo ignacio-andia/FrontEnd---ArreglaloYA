@@ -1,8 +1,11 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject, isDevMode } from '@angular/core';
+import { Router } from '@angular/router';
 import { Observable, catchError, from, map, of, switchMap, throwError } from 'rxjs';
+import { LoginNavigationState } from '../auth/auth-navigation';
 import { SessionStore } from '../auth/session.store';
+import { loginRedirect } from '../guards/auth.guard';
 import { isApiUrl } from '../http/api-url';
 import { ApiError, NormalizedApiError } from '../models/api-error.model';
 
@@ -16,7 +19,8 @@ const UNEXPECTED_ERROR_MESSAGE = 'Ocurrió un error inesperado. Inténtelo de nu
  *
  * - Conserva `statusCode`, los mensajes del backend (`string` o `string[]`) y `error`.
  * - 0 y 5xx: mensaje genérico; los detalles técnicos solo se registran en desarrollo.
- * - 401: limpia la sesión local. 403: no la modifica.
+ * - 401: limpia la sesión local y, si el usuario ya estaba autenticado, lo lleva al login con
+ *   `returnUrl`. Durante una navegación deciden los guards. 403: no modifica la sesión.
  * - Las peticiones a otros dominios se dejan intactas.
  */
 export const apiErrorInterceptor: HttpInterceptorFn = (req, next) => {
@@ -25,6 +29,7 @@ export const apiErrorInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const session = inject(SessionStore);
+  const router = inject(Router);
   const tokenAtRequest = session.token();
 
   return next(req).pipe(
@@ -38,7 +43,11 @@ export const apiErrorInterceptor: HttpInterceptorFn = (req, next) => {
         switchMap((normalized) => {
           // Solo se limpia si la sesión no cambió mientras la petición estaba en curso.
           if (normalized.statusCode === 401 && session.token() === tokenAtRequest) {
+            const wasAuthenticated = session.isAuthenticated();
             session.clear();
+            if (wasAuthenticated && router.currentNavigation() === null) {
+              redirectToLogin(router);
+            }
           }
 
           if (isDevMode() && (normalized.statusCode === 0 || normalized.statusCode >= 500)) {
@@ -51,6 +60,14 @@ export const apiErrorInterceptor: HttpInterceptorFn = (req, next) => {
     }),
   );
 };
+
+function redirectToLogin(router: Router): void {
+  const state: LoginNavigationState = { loginNotice: 'session-expired' };
+  router
+    .navigateByUrl(loginRedirect(router, router.url), { state: { ...state } })
+    // Si el login no se puede cargar, el guard volverá a pedirlo en la siguiente navegación.
+    .catch(() => false);
+}
 
 /** Obtiene el cuerpo del error; en descargas (`responseType: 'blob'`) el JSON llega como Blob. */
 function readErrorBody(body: unknown): Observable<unknown> {

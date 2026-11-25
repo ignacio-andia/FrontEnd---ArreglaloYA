@@ -3,6 +3,10 @@
     <h1 id="login-title" class="auth-card__title">Iniciar sesión</h1>
     <p class="auth-card__intro">Ingrese con el correo electrónico y la contraseña de su cuenta.</p>
 
+    @if (notice) {
+      <p class="form-notice auth-card__notice" role="status">{{ notice }}</p>
+    }
+
     @if (formError(); as message) {
       <div id="login-error-summary" class="form-alert" role="alert" tabindex="-1">
         {{ message }}

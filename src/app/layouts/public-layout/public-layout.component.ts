@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { SessionStore } from '../../core/auth/session.store';
 import { NavItem } from '../../shared/components/nav-list/nav-item.model';
@@ -21,14 +21,21 @@ import { UserMenuComponent } from '../../shared/components/user-menu/user-menu.c
 export class PublicLayoutComponent {
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
 
-  protected readonly isAuthenticated = inject(SessionStore).isAuthenticated;
+  private readonly session = inject(SessionStore);
+
+  protected readonly isAuthenticated = this.session.isAuthenticated;
+  /** Publicar exige el rol CLIENTE; sin sesión, el guard pide iniciarla. */
+  protected readonly canRequestService = computed(() => {
+    const user = this.session.user();
+    return user === null || user.roles.includes('CLIENTE');
+  });
   protected readonly menuId = 'public-menu';
   protected readonly menuOpen = signal(false);
 
   protected readonly mainNav: readonly NavItem[] = [
     { label: 'Inicio', path: '/', exact: true },
     { label: 'Categorías', path: '/categorias' },
-    { label: 'Cómo funciona', path: null },
+    { label: 'Cómo funciona', path: '/como-funciona' },
   ];
 
   protected readonly accountNav: readonly NavItem[] = [

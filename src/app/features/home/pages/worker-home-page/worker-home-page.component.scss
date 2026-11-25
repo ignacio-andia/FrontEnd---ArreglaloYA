@@ -1,0 +1,20 @@
+@use 'tokens';
+
+.status {
+  display: grid;
+  gap: tokens.$space-2;
+  padding: tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-control-border);
+  border-radius: tokens.$radius-sm;
+  background-color: var(--color-surface);
+}
+
+.status--enabled {
+  border-left-color: var(--color-primary);
+  background-color: var(--color-primary-pale);
+}
+
+.status__message {
+  font-weight: tokens.$font-weight-semibold;
+}
