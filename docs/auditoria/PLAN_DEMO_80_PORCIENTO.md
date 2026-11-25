@@ -283,3 +283,28 @@ D0 ──► D1 ──► D2 ──► D3   = 45 (80,4 %)
 2. ¿Autorizas commits locales por bloque validado?
 3. ¿La defensa se hará con el entorno aislado de pruebas? Si no, hay que preparar otra base sin tocar `public`.
 4. Solo para D7: ¿qué estados permiten calificar?
+
+## 9. Registro de ejecución (D0–D4)
+
+Autorizado el 25/11/2026: directamente en `main`, commits locales, sin push, sin cambios en backend ni migraciones y solo en el esquema aislado `e1_frontend_pruebas`.
+
+Dos métricas separadas, ambas sobre 56:
+
+- **Demostrable provisional:** pantalla, acción, respuesta, persistencia y permisos comprobados contra el backend.
+- **Formal completa:** definición estricta de la auditoría (frontend cubre los criterios, backend verificado, integración real y pruebas unitarias).
+
+| Punto de control | Demostrable | Formal completa |
+|---|---|---|
+| Inicio | 28 sin ensayar (50,0 %) | 15 (26,8 %) |
+| D0 | **35 (62,5 %)** | **20 (35,7 %)** |
+
+### D0 — Validación de lo construido
+
+- **Completados (demostrables):** los 28 del grupo A, ensayados de nuevo en la interfaz, y 01, 02, 06, 07, 08, 15 y 29.
+- **Fallidos:** ninguno.
+- **Defecto corregido:** el aviso «El pedido fue cancelado» se arrastraba al detalle de otro pedido.
+- **Evidencia en pantalla:** registro, cierre e inicio de sesión; cambio de área; perfil, especialidades, horarios, documento (subida y descarga) y envío a revisión; aviso de pedido repetido; publicar, editar y cancelar; oferta, dos contraofertas, rechazo y aceptación; cruce de horario (409 visible); anticipo, saldo y constancias; visita, cobro, adicional y su rechazo; inicio, finalización, conformidad, cancelación, inasistencia, reclamo con foto y resolución.
+- **Integración:** `integracion-d0.mjs` 15/15 (cubre los 11 endpoints que faltaban: #1, #7, #23, #25–#28, #32–#34, #43) y los 14 scripts anteriores sin fallos.
+- **Calidad:** 893 pruebas unitarias, build (323,85 kB iniciales), ESLint y Prettier correctos; `public` intacta.
+- **Formal completa:** se suman 02, 06, 07, 15 y 29. RF-08 se cierra cuando se vean «Observado» y «Rechazado» (D1).
+- **Pendientes anotados:** el reemplazo de documentos se comprueba en pantalla en D1; textos del backend en el historial («Oferta de el trabajador»); el 409 de horario muestra el identificador completo del otro pedido; sin aviso explícito del anticipo en «Acordado» sin visita (RF-39).
