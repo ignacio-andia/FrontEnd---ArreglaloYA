@@ -103,6 +103,25 @@ export interface OwnerOrder extends WorkerOrder {
   canCancel: boolean;
 }
 
+/** Consulta de `GET /orders/available` (`ListAvailableOrdersQueryDto`). */
+export interface AvailableOrdersQuery {
+  categoryId?: string;
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Pedido acordado para el trabajador asignado (`AssignedOrderView`, `GET /orders/assigned/:id`):
+ * incluye la dirección exacta y el nombre del cliente mientras el acuerdo sigue vigente.
+ */
+export interface AssignedOrder extends WorkerOrder {
+  address: OrderAddress | null;
+  client: { firstName: string; lastName: string };
+}
+
+/** Desde qué ruta autorizada se descargan las fotografías según quién las consulta. */
+export type OrderPhotoSource = 'own' | 'available' | 'assigned';
+
 /** Aviso orientativo del backend (`OrderWarning`): nunca bloquea la publicación. */
 export type OrderWarning =
   | { code: 'POSIBLE_DUPLICADO'; message: string; orderIds: string[] }

@@ -86,6 +86,11 @@ export const routes: Routes = [
           import('./features/orders/orders.routes').then((m) => m.PUBLISH_ORDER_ROUTES),
       },
       {
+        path: 'ofertas',
+        loadChildren: () =>
+          import('./features/offers/offers.routes').then((m) => m.RECEIVED_OFFERS_ROUTES),
+      },
+      {
         path: 'ofrecer-servicios',
         loadChildren: () =>
           import('./features/worker-profile/worker-profile.routes').then(
@@ -114,6 +119,16 @@ export const routes: Routes = [
       {
         path: 'mi-cuenta',
         loadChildren: () => import('./features/users/users.routes').then((m) => m.ACCOUNT_ROUTES),
+      },
+      {
+        path: 'pedidos',
+        loadChildren: () =>
+          import('./features/offers/offers.routes').then((m) => m.AVAILABLE_ORDERS_ROUTES),
+      },
+      {
+        path: 'ofertas',
+        loadChildren: () =>
+          import('./features/offers/offers.routes').then((m) => m.OWN_OFFERS_ROUTES),
       },
       {
         path: 'perfil',

@@ -1,0 +1,28 @@
+<ol class="timeline">
+  @for (entry of entries(); track $index) {
+    <li class="timeline__item" [class]="'timeline__item--' + entry.author">
+      <p class="timeline__header">
+        <strong class="timeline__who">{{ entry.who }}</strong>
+        <span>{{ entry.action }}</span>
+        <span class="timeline__round">Ronda {{ entry.event.round }}</span>
+      </p>
+      @if (entry.event.amount) {
+        <p class="timeline__amount">
+          Bs {{ entry.event.amount }}
+          @if (entry.previous) {
+            <span class="timeline__previous">(antes Bs {{ entry.previous }})</span>
+          }
+        </p>
+      }
+      @if (entry.reason) {
+        <p>{{ entry.reason }}</p>
+      }
+      <p class="timeline__meta">
+        <time [attr.datetime]="entry.event.createdAt">
+          {{ entry.event.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+        </time>
+        · Estado resultante: {{ entry.result }}
+      </p>
+    </li>
+  }
+</ol>

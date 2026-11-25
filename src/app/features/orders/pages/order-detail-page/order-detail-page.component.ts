@@ -14,6 +14,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { apiErrorMessages, apiErrorStatus } from '../../../../shared/utils/api-error-message';
 import { DISPLAY_TIMEZONE } from '../../../../shared/utils/display-timezone';
+import { OrderOffersComponent } from '../../../offers/components/order-offers/order-offers.component';
 import { CancelOrderComponent } from '../../components/cancel-order/cancel-order.component';
 import { OrderPhotoComponent } from '../../components/order-photo/order-photo.component';
 import { OrderStatusBadgeComponent } from '../../components/order-status-badge/order-status-badge.component';
@@ -39,6 +40,7 @@ const DETAIL_ERROR = 'No se pudo cargar el pedido. Compruebe su conexi√≥n e int√
     DatePipe,
     RouterLink,
     CancelOrderComponent,
+    OrderOffersComponent,
     OrderPhotoComponent,
     OrderStatusBadgeComponent,
   ],

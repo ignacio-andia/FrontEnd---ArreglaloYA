@@ -1,0 +1,234 @@
+<section class="offers create" aria-labelledby="offer-create-title">
+  <a class="offers__back" [routerLink]="['/trabajador/pedidos', orderId()]">
+    <span aria-hidden="true">←</span> Volver al pedido
+  </a>
+  <h1 id="offer-create-title" class="offers__title" tabindex="-1">Enviar una oferta</h1>
+
+  @if (errors().length > 0) {
+    <div id="offer-error-summary" class="form-alert" role="alert" tabindex="-1">
+      @for (message of errors(); track $index) {
+        <p>{{ message }}</p>
+      }
+      <p><a routerLink="/trabajador/ofertas">Ver mis ofertas</a></p>
+    </div>
+  }
+
+  @if (order.isLoading() && !order.hasValue()) {
+    <app-loading-state message="Cargando el pedido…" />
+  } @else if (notFound()) {
+    <app-empty-state heading="El pedido no está disponible para ofertar.">
+      <a class="offers__secondary" routerLink="/trabajador/pedidos">Ver pedidos disponibles</a>
+    </app-empty-state>
+  } @else if (loadError(); as message) {
+    <app-error-alert [message]="message" (retry)="order.reload()" />
+  } @else if (order.hasValue()) {
+    <p class="offers__muted">
+      {{ order.value().category.name }} · {{ order.value().zone.name }} · Presupuesto del cliente:
+      Bs {{ order.value().budgetAmount }}
+    </p>
+    @if (blocked()) {
+      <p class="offers__notice offers__notice--waiting">
+        Ahora no puede ofertar trabajos nuevos. Consulte el estado de su perfil en el inicio del
+        área de trabajador.
+      </p>
+    }
+
+    @if (review(); as request) {
+      <div class="offers__card">
+        <h2 id="offer-review-title" class="offers__subtitle" tabindex="-1">Revise su oferta</h2>
+        <dl class="offers__data">
+          <div>
+            <dt>Monto</dt>
+            <dd>Bs {{ request.amount }}</dd>
+          </div>
+          <div>
+            <dt>Modalidad</dt>
+            <dd>{{ request.requiresVisit ? 'Requiere visita' : 'Cotización por fotos' }}</dd>
+          </div>
+          @if (request.visitCost !== undefined) {
+            <div>
+              <dt>Costo de la visita</dt>
+              <dd>Bs {{ request.visitCost }}</dd>
+            </div>
+          }
+          <div>
+            <dt>Materiales</dt>
+            <dd>{{ request.materialsIncluded ? 'Incluidos' : 'No incluidos' }}</dd>
+          </div>
+          <div>
+            <dt>Inicio propuesto</dt>
+            <dd>{{ startLabel() }}</dd>
+          </div>
+          <div>
+            <dt>Duración estimada</dt>
+            <dd>{{ duration(request.estimatedDurationMinutes) }}</dd>
+          </div>
+        </dl>
+        <p class="offers__muted">
+          La oferta vence a las 24 horas. Si la retira o el cliente la rechaza, no podrá volver a
+          ofertar en este pedido.
+        </p>
+        <div class="offers__actions">
+          <button type="button" class="offers__primary" [disabled]="sending()" (click)="send()">
+            {{ sending() ? 'Enviando…' : 'Enviar oferta' }}
+          </button>
+          <button
+            type="button"
+            class="offers__secondary"
+            [disabled]="sending()"
+            (click)="backToForm()"
+          >
+            Modificar
+          </button>
+        </div>
+      </div>
+    } @else {
+      <form
+        class="offers__card create__form"
+        [formGroup]="form"
+        (ngSubmit)="continueToReview()"
+        novalidate
+      >
+        <div class="field create__short">
+          <label class="field__label" for="offer-amount">Monto (Bs)</label>
+          <input
+            id="offer-amount"
+            class="field__input"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            formControlName="amount"
+            required
+            [attr.aria-invalid]="errorFor('amount') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('amount')"
+          />
+          @if (errorFor('amount'); as error) {
+            <p id="offer-amount-error" class="field__error">{{ error }}</p>
+          }
+        </div>
+
+        <fieldset
+          class="field"
+          tabindex="-1"
+          [attr.aria-invalid]="errorFor('requiresVisit') ? 'true' : null"
+          [attr.aria-describedby]="describedBy('requiresVisit')"
+        >
+          <legend class="field__label">Modalidad</legend>
+          <ul class="field__checks">
+            <li>
+              <label class="field__check">
+                <input type="radio" formControlName="requiresVisit" [value]="false" />
+                Cotización por fotos
+              </label>
+            </li>
+            <li>
+              <label class="field__check">
+                <input type="radio" formControlName="requiresVisit" [value]="true" />
+                Requiere visita
+              </label>
+            </li>
+          </ul>
+          @if (errorFor('requiresVisit'); as error) {
+            <p id="offer-requiresVisit-error" class="field__error">{{ error }}</p>
+          }
+        </fieldset>
+
+        @if (form.controls.requiresVisit.value) {
+          <div class="field create__short">
+            <label class="field__label" for="offer-visitCost">Costo de la visita (Bs)</label>
+            <input
+              id="offer-visitCost"
+              class="field__input"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              formControlName="visitCost"
+              required
+              [attr.aria-invalid]="errorFor('visitCost') ? 'true' : null"
+              [attr.aria-describedby]="describedBy('visitCost', true)"
+            />
+            <p id="offer-visitCost-hint" class="field__hint">Escriba 0 si es gratis.</p>
+            @if (errorFor('visitCost'); as error) {
+              <p id="offer-visitCost-error" class="field__error">{{ error }}</p>
+            }
+          </div>
+        }
+
+        <fieldset
+          class="field"
+          tabindex="-1"
+          [attr.aria-invalid]="errorFor('materialsIncluded') ? 'true' : null"
+          [attr.aria-describedby]="describedBy('materialsIncluded')"
+        >
+          <legend class="field__label">Materiales</legend>
+          <ul class="field__checks">
+            <li>
+              <label class="field__check">
+                <input type="radio" formControlName="materialsIncluded" [value]="true" />
+                Incluidos
+              </label>
+            </li>
+            <li>
+              <label class="field__check">
+                <input type="radio" formControlName="materialsIncluded" [value]="false" />
+                No incluidos
+              </label>
+            </li>
+          </ul>
+          @if (errorFor('materialsIncluded'); as error) {
+            <p id="offer-materialsIncluded-error" class="field__error">{{ error }}</p>
+          }
+        </fieldset>
+
+        <div class="field create__short">
+          <label class="field__label" for="offer-proposedStartAt">Fecha y hora de inicio</label>
+          <input
+            id="offer-proposedStartAt"
+            class="field__input"
+            type="datetime-local"
+            formControlName="proposedStartAt"
+            required
+            [attr.aria-invalid]="errorFor('proposedStartAt') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('proposedStartAt', true)"
+          />
+          <p id="offer-proposedStartAt-hint" class="field__hint">
+            Hora de Bolivia. Puede proponer cualquier día y hora futuros.
+          </p>
+          @if (errorFor('proposedStartAt'); as error) {
+            <p id="offer-proposedStartAt-error" class="field__error">{{ error }}</p>
+          }
+        </div>
+
+        <div class="field create__short">
+          <label class="field__label" for="offer-estimatedDurationMinutes">
+            Duración estimada (minutos)
+          </label>
+          <input
+            id="offer-estimatedDurationMinutes"
+            class="field__input"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="1"
+            formControlName="estimatedDurationMinutes"
+            required
+            [attr.aria-invalid]="errorFor('estimatedDurationMinutes') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('estimatedDurationMinutes', true)"
+          />
+          <p id="offer-estimatedDurationMinutes-hint" class="field__hint">
+            Por ejemplo, 90 equivale a 1 h 30 min.
+          </p>
+          @if (errorFor('estimatedDurationMinutes'); as error) {
+            <p id="offer-estimatedDurationMinutes-error" class="field__error">{{ error }}</p>
+          }
+        </div>
+
+        <div class="offers__actions">
+          <button type="submit" class="offers__primary" [disabled]="blocked()">
+            Revisar oferta
+          </button>
+        </div>
+      </form>
+    }
+  }
+</section>

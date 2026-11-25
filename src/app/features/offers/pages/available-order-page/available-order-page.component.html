@@ -1,0 +1,67 @@
+<section class="offers" aria-labelledby="request-title">
+  <a class="offers__back" routerLink="/trabajador/pedidos">
+    <span aria-hidden="true">←</span> Volver a pedidos disponibles
+  </a>
+
+  @if (order.isLoading() && !order.hasValue()) {
+    <h1 id="request-title" class="offers__title">Pedido</h1>
+    <app-loading-state message="Cargando el pedido…" />
+  } @else if (notFound()) {
+    <h1 id="request-title" class="offers__title">Pedido no disponible</h1>
+    <app-empty-state heading="El pedido no está disponible para usted.">
+      <p>Puede haber vencido, haberse cancelado o tener ya un acuerdo.</p>
+    </app-empty-state>
+  } @else if (errorMessage(); as message) {
+    <h1 id="request-title" class="offers__title">Pedido</h1>
+    <app-error-alert [message]="message" (retry)="retry()" />
+  } @else if (order.hasValue()) {
+    @let current = order.value();
+    <h1 id="request-title" class="offers__title">{{ current.category.name }}</h1>
+
+    @if (ownOffer.isLoading()) {
+      <app-loading-state message="Comprobando si ya ofertó en este pedido…" />
+    } @else if (ownOffer.error()) {
+      <app-error-alert
+        message="No pudimos comprobar si ya ofertó en este pedido. Reintente para poder ofertar."
+        (retry)="ownOffer.reload()"
+      />
+    } @else if (existingOffer(); as offer) {
+      <p class="offers__notice">
+        Ya tiene una oferta en este pedido por Bs {{ offer.amount }}.
+        <a [routerLink]="['/trabajador/ofertas', offer.id]">Ver mi oferta</a>
+      </p>
+    } @else {
+      <div class="offers__actions">
+        <a class="offers__primary" routerLink="ofertar">Enviar una oferta</a>
+      </div>
+    }
+
+    <div class="offers__card">
+      <dl class="offers__data">
+        <div>
+          <dt>Presupuesto del cliente</dt>
+          <dd>Bs {{ current.budgetAmount }}</dd>
+        </div>
+        <div>
+          <dt>Zona</dt>
+          <dd>{{ current.zone.name }}</dd>
+        </div>
+        <div>
+          <dt>Publicado el</dt>
+          <dd>{{ current.publishedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+        </div>
+        <div>
+          <dt>Vence el</dt>
+          <dd>{{ current.expiresAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+        </div>
+      </dl>
+      <h2 class="offers__subtitle">Descripción</h2>
+      <p>{{ current.description }}</p>
+    </div>
+
+    <section class="offers__card" aria-labelledby="request-photos-title">
+      <h2 id="request-photos-title" class="offers__subtitle">Fotografías</h2>
+      <app-order-gallery source="available" [orderId]="current.id" [images]="current.images" />
+    </section>
+  }
+</section>

@@ -4,15 +4,19 @@ import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
 import { PaginatedResponse } from '../../../core/models/pagination.model';
 import {
+  AssignedOrder,
+  AvailableOrdersQuery,
   CancelOrderRequest,
   CreateOrderRequest,
   DuplicateCheckRequest,
   DuplicateCheckResponse,
   OrderImageVariant,
+  OrderPhotoSource,
   OrderWithWarnings,
   OwnOrdersQuery,
   OwnerOrder,
   UpdateOrderRequest,
+  WorkerOrder,
 } from '../models/order.model';
 
 /** Cuerpo multipart de una fotografía; el navegador agrega el `boundary`. */
@@ -139,14 +143,52 @@ export class OrdersApiService {
     return this.http.post<OwnerOrder>(apiUrl('orders', 'me', orderId, 'cancel'), body);
   }
 
+  /** `GET /orders/available` (trabajador aprobado): pedidos que puede ver y ofertar. */
+  listAvailable(query: AvailableOrdersQuery = {}): Observable<PaginatedResponse<WorkerOrder>> {
+    let params = new HttpParams();
+    if (query.categoryId !== undefined) {
+      params = params.set('categoryId', query.categoryId);
+    }
+    if (query.page !== undefined) {
+      params = params.set('page', query.page);
+    }
+    if (query.limit !== undefined) {
+      params = params.set('limit', query.limit);
+    }
+    return this.http.get<PaginatedResponse<WorkerOrder>>(apiUrl('orders', 'available'), {
+      params,
+    });
+  }
+
+  /** `GET /orders/available/:orderId`: 404 si no le corresponde verlo. */
+  getAvailable(orderId: string): Observable<WorkerOrder> {
+    return this.http.get<WorkerOrder>(apiUrl('orders', 'available', orderId));
+  }
+
+  /** `GET /orders/assigned/:orderId`: solo el trabajador asignado con el acuerdo vigente. */
+  getAssigned(orderId: string): Observable<AssignedOrder> {
+    return this.http.get<AssignedOrder>(apiUrl('orders', 'assigned', orderId));
+  }
+
+  /** Fotografía como Blob por la ruta que corresponde a quien la consulta. */
+  getImage(
+    source: OrderPhotoSource,
+    orderId: string,
+    imageId: string,
+    variant: OrderImageVariant,
+  ): Observable<Blob> {
+    const owner = source === 'own' ? 'me' : source;
+    return this.http.get(apiUrl('orders', owner, orderId, 'images', imageId), {
+      params: { variant },
+      responseType: 'blob',
+    });
+  }
+
   /**
    * `GET /orders/me/:orderId/images/:imageId?variant=` como Blob (`image/webp`). Es privada:
    * `<img src>` no enviaría el token Bearer, por eso se descarga con HttpClient.
    */
   getOwnImage(orderId: string, imageId: string, variant: OrderImageVariant): Observable<Blob> {
-    return this.http.get(apiUrl('orders', 'me', orderId, 'images', imageId), {
-      params: { variant },
-      responseType: 'blob',
-    });
+    return this.getImage('own', orderId, imageId, variant);
   }
 }

@@ -1,0 +1,17 @@
+@use 'form-controls';
+
+@include form-controls.base;
+@include form-controls.alerts;
+@include form-controls.checks;
+
+.create {
+  max-width: 48rem;
+
+  > .form-alert {
+    margin-top: 0;
+  }
+}
+
+.create__short {
+  max-width: 20rem;
+}

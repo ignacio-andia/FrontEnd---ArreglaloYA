@@ -31,7 +31,7 @@ export class ClientLayoutComponent {
     { label: 'Resumen', path: '/cliente', exact: true },
     { label: 'Mis pedidos', path: '/cliente/mis-pedidos' },
     { label: 'Publicar pedido', path: '/cliente/publicar-pedido' },
-    { label: 'Ofertas recibidas', path: null },
+    { label: 'Ofertas recibidas', path: '/cliente/ofertas' },
     { label: 'Mi cuenta', path: '/cliente/mi-cuenta' },
     this.hasWorkerRole()
       ? { label: 'Mi perfil de trabajador', path: '/trabajador/perfil' }

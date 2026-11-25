@@ -27,10 +27,11 @@ const cases: LayoutCase[] = [
       ['Resumen', '/cliente'],
       ['Mis pedidos', '/cliente/mis-pedidos'],
       ['Publicar pedido', '/cliente/publicar-pedido'],
+      ['Ofertas recibidas', '/cliente/ofertas'],
       ['Mi cuenta', '/cliente/mi-cuenta'],
       ['Quiero ofrecer mis servicios', '/cliente/ofrecer-servicios'],
     ],
-    pending: ['Ofertas recibidas'],
+    pending: [],
   },
   {
     name: 'WorkerLayoutComponent',
@@ -38,10 +39,12 @@ const cases: LayoutCase[] = [
     area: 'Área de trabajador',
     links: [
       ['Resumen', '/trabajador'],
+      ['Pedidos disponibles', '/trabajador/pedidos'],
+      ['Mis ofertas', '/trabajador/ofertas'],
       ['Mi perfil', '/trabajador/perfil'],
       ['Mi cuenta', '/trabajador/mi-cuenta'],
     ],
-    pending: ['Pedidos disponibles', 'Mis ofertas', 'Trabajos asignados'],
+    pending: ['Trabajos asignados'],
   },
   {
     name: 'AdminLayoutComponent',

@@ -1,0 +1,100 @@
+<section class="offers" aria-labelledby="available-title">
+  <header>
+    <h1 id="available-title" class="offers__title">Pedidos disponibles</h1>
+    <p class="offers__intro">
+      Pedidos de su zona y especialidades que puede ofertar. La dirección exacta solo se muestra si
+      el cliente acepta su oferta.
+    </p>
+  </header>
+
+  @if (blocked()) {
+    <p class="offers__notice offers__notice--waiting">
+      Ahora no puede tomar trabajos nuevos (por ejemplo, tiene una solicitud de cambio de zona
+      pendiente). Solo verá los pedidos que ya está negociando.
+    </p>
+  }
+
+  <div class="offers__filters">
+    <label for="available-category">Categoría</label>
+    <select id="available-category" [formControl]="categoryFilter">
+      <option value="">Todas mis especialidades</option>
+      @if (categories.hasValue()) {
+        @for (category of categories.value(); track category.id) {
+          <option [value]="category.id">{{ category.name }}</option>
+        }
+      }
+    </select>
+    <button type="button" class="offers__secondary" (click)="orders.reload()">Actualizar</button>
+  </div>
+
+  @if (orders.isLoading() && !orders.hasValue()) {
+    <app-loading-state message="Cargando pedidos disponibles…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="orders.reload()" />
+  } @else if (meta(); as meta) {
+    @if (items().length === 0) {
+      <app-empty-state heading="No hay pedidos disponibles por ahora.">
+        @if (categoryId() || page() > 1) {
+          <button type="button" class="offers__secondary" (click)="showAll()">Ver todos</button>
+        }
+      </app-empty-state>
+    } @else {
+      <ul class="offers__list">
+        @for (order of items(); track order.id) {
+          <li>
+            <article class="request">
+              <div class="request__media">
+                @if (order.images[0]; as cover) {
+                  <app-order-photo
+                    class="request__photo"
+                    source="available"
+                    variant="thumb"
+                    alt=""
+                    [orderId]="order.id"
+                    [imageId]="cover.id"
+                  />
+                } @else {
+                  <span class="offers__muted">Sin fotografías</span>
+                }
+              </div>
+              <div class="request__body">
+                <h2 class="request__title">
+                  <a class="request__link" [routerLink]="[order.id]">{{ order.category.name }}</a>
+                </h2>
+                <p class="request__description">{{ order.description }}</p>
+                <dl class="request__data">
+                  <div>
+                    <dt>Presupuesto</dt>
+                    <dd>Bs {{ order.budgetAmount }}</dd>
+                  </div>
+                  <div>
+                    <dt>Zona</dt>
+                    <dd>{{ order.zone.name }}</dd>
+                  </div>
+                  <div>
+                    <dt>Publicado</dt>
+                    <dd>{{ order.publishedAt | date: 'dd/MM/yyyy' : timezone }}</dd>
+                  </div>
+                  <div>
+                    <dt>Vence</dt>
+                    <dd>{{ order.expiresAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+                  </div>
+                </dl>
+              </div>
+            </article>
+          </li>
+        }
+      </ul>
+    }
+    @if (meta.totalPages > 1) {
+      <app-paginator
+        label="Páginas de pedidos disponibles"
+        [page]="page()"
+        [totalPages]="meta.totalPages"
+        [total]="meta.total"
+        [busy]="orders.isLoading()"
+        (pageChange)="goToPage($event)"
+      />
+    }
+  }
+</section>

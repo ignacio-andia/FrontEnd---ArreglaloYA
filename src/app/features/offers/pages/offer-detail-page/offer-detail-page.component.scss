@@ -1,0 +1,29 @@
+@use 'tokens';
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: tokens.$space-3;
+}
+
+.head__amount {
+  margin-top: tokens.$space-1;
+  font-size: 2rem;
+  font-weight: tokens.$font-weight-bold;
+}
+
+.head__side {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tokens.$space-3;
+}
+
+.head__error {
+  padding: tokens.$space-3 tokens.$space-4;
+  border-left: 4px solid var(--color-danger);
+  border-radius: tokens.$radius-sm;
+  background-color: rgb(180 35 24 / 8%);
+}

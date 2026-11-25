@@ -55,7 +55,20 @@ describe('OrderDetailPageComponent (acciones)', () => {
       OrderDetailPageComponent,
     );
     (await vi.waitFor(() => httpTesting.expectOne(URL_DETAIL))).flush(order);
+    if (order.status === 'ACORDADO' || order.status === 'EN_EJECUCION') {
+      await flushAssignedOffer();
+    }
     await navigation;
+    await settle();
+  }
+
+  /** Con acuerdo, el detalle consulta la oferta aceptada para mostrar al asignado. */
+  async function flushAssignedOffer(): Promise<void> {
+    const request = await vi.waitFor(() => {
+      harness.detectChanges();
+      return httpTesting.expectOne((req) => req.url === apiUrl('offers', 'received'));
+    });
+    request.flush({ data: [], meta: { page: 1, limit: 1, total: 0, totalPages: 0 } });
     await settle();
   }
 
@@ -144,7 +157,7 @@ describe('OrderDetailPageComponent (acciones)', () => {
     (await vi.waitFor(() => httpTesting.expectOne(URL_DETAIL))).flush(
       ownerOrder({ status: 'ACORDADO', canEdit: false, canCancel: false, images: [] }),
     );
-    await settle();
+    await flushAssignedOffer();
 
     expect(element().querySelector('[role="alert"]')?.textContent).toContain(message);
     expect(cancelButton()).toBeNull();

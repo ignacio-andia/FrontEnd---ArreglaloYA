@@ -30,6 +30,7 @@ import { Component, ElementRef, effect, input, output, viewChild } from '@angula
         <button
           type="button"
           class="dialog__confirm"
+          [class.dialog__confirm--primary]="tone() === 'primary'"
           [disabled]="busy()"
           (click)="confirmed.emit()"
         >
@@ -49,6 +50,8 @@ export class ConfirmDialogComponent {
   readonly confirmLabel = input.required<string>();
   /** Texto del botón que cierra sin hacer nada. */
   readonly dismissLabel = input('Cancelar');
+  /** `danger` para acciones destructivas; `primary` para las que no destruyen nada. */
+  readonly tone = input<'danger' | 'primary'>('danger');
   readonly busyLabel = input('Procesando…');
   readonly busy = input(false);
   readonly titleId = input('confirm-dialog-title');

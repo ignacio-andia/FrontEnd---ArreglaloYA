@@ -47,6 +47,10 @@
   @include buttons.danger;
 }
 
+.dialog__confirm--primary {
+  @include buttons.primary;
+}
+
 @keyframes dialog-in {
   from {
     transform: translateY(0.5rem);

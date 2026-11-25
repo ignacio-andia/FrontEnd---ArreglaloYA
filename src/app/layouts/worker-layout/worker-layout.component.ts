@@ -22,8 +22,8 @@ import { PanelShellComponent } from '../../shared/components/panel-shell/panel-s
 export class WorkerLayoutComponent {
   protected readonly navItems: readonly NavItem[] = [
     { label: 'Resumen', path: '/trabajador', exact: true },
-    { label: 'Pedidos disponibles', path: null },
-    { label: 'Mis ofertas', path: null },
+    { label: 'Pedidos disponibles', path: '/trabajador/pedidos' },
+    { label: 'Mis ofertas', path: '/trabajador/ofertas' },
     { label: 'Trabajos asignados', path: null },
     { label: 'Mi perfil', path: '/trabajador/perfil' },
     { label: 'Mi cuenta', path: '/trabajador/mi-cuenta' },

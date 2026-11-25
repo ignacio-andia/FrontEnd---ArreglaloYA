@@ -1,0 +1,136 @@
+@if (isOpen()) {
+  <section class="actions" aria-labelledby="offer-actions-title">
+    <h2 id="offer-actions-title" class="actions__title">Acciones</h2>
+
+    @if (viewer() === 'TRABAJADOR' && myTurn()) {
+      <p class="actions__hint">
+        El cliente propuso Bs {{ offer().amount }}. Para estar de acuerdo con ese monto, envíe una
+        contraoferta por la misma cifra: el cliente deberá aceptarla. Solo el cliente puede aceptar
+        o rechazar ofertas.
+      </p>
+    }
+    @if (viewer() === 'CLIENTE' && !myTurn()) {
+      <p class="actions__hint">
+        Podrá aceptar, rechazar o contraofertar cuando el trabajador responda.
+      </p>
+    }
+
+    @if (canAccept() || canReject()) {
+      <div class="actions__row">
+        <button type="button" class="actions__accept" (click)="ask('accept')">
+          Aceptar oferta
+        </button>
+        <button type="button" class="actions__reject" (click)="ask('reject')">
+          Rechazar oferta
+        </button>
+      </div>
+    }
+
+    @if (canCounter()) {
+      <form class="actions__counter" (submit)="$event.preventDefault(); reviewCounter()">
+        <div class="field">
+          <label class="field__label" for="offer-counter-amount">
+            Contraoferta: nuevo monto (Bs)
+          </label>
+          <input
+            id="offer-counter-amount"
+            class="field__input"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            [formControl]="amount"
+            [attr.aria-invalid]="amountError() ? 'true' : null"
+            [attr.aria-describedby]="
+              amountError() ? 'offer-counter-hint offer-counter-error' : 'offer-counter-hint'
+            "
+          />
+          <p id="offer-counter-hint" class="field__hint">
+            Monto actual: Bs {{ offer().amount }}
+            @if (originalAmount(); as original) {
+              · Propuesta original: Bs {{ original }}
+            }
+            · Solo cambia el monto. Será la ronda {{ offer().round + 1 }} de {{ maxRounds }}.
+          </p>
+          @if (amountError(); as error) {
+            <p id="offer-counter-error" class="field__error">{{ error }}</p>
+          }
+        </div>
+        <button type="submit" class="actions__secondary">Revisar contraoferta</button>
+      </form>
+    } @else if (myTurn() && offer().round >= maxRounds) {
+      <p class="actions__hint">
+        Se alcanzó el máximo de {{ maxRounds }} rondas: ya no se puede contraofertar.
+      </p>
+    }
+
+    @if (canWithdraw()) {
+      <div class="actions__row">
+        <button type="button" class="actions__reject" (click)="ask('withdraw')">
+          Retirar oferta
+        </button>
+      </div>
+    }
+  </section>
+}
+
+<app-confirm-dialog
+  heading="¿Aceptar la oferta?"
+  confirmLabel="Sí, aceptar"
+  dismissLabel="Volver"
+  tone="primary"
+  titleId="offer-accept-title"
+  [open]="pending() === 'accept'"
+  [busy]="submitting()"
+  (confirmed)="confirm()"
+  (cancelled)="pending.set(null)"
+>
+  <p>
+    Aceptará Bs {{ offer().amount }}. El trabajador quedará asignado, el pedido pasará a «Acordado»
+    y las demás ofertas quedarán sin efecto. Ya no podrá editar ni cancelar el pedido como uno
+    publicado.
+  </p>
+</app-confirm-dialog>
+
+<app-confirm-dialog
+  heading="¿Rechazar la oferta?"
+  confirmLabel="Sí, rechazar"
+  dismissLabel="Volver"
+  titleId="offer-reject-title"
+  [open]="pending() === 'reject'"
+  [busy]="submitting()"
+  (confirmed)="confirm()"
+  (cancelled)="pending.set(null)"
+>
+  <p>La oferta se cerrará y ese trabajador no podrá volver a ofertar en este pedido.</p>
+</app-confirm-dialog>
+
+<app-confirm-dialog
+  heading="¿Retirar su oferta?"
+  confirmLabel="Sí, retirar"
+  dismissLabel="Volver"
+  titleId="offer-withdraw-title"
+  [open]="pending() === 'withdraw'"
+  [busy]="submitting()"
+  (confirmed)="confirm()"
+  (cancelled)="pending.set(null)"
+>
+  <p>La oferta se cerrará y no podrá volver a ofertar en este pedido.</p>
+</app-confirm-dialog>
+
+<app-confirm-dialog
+  heading="¿Enviar la contraoferta?"
+  confirmLabel="Sí, enviar"
+  dismissLabel="Volver"
+  tone="primary"
+  titleId="offer-counter-title"
+  [open]="pending() === 'counter'"
+  [busy]="submitting()"
+  (confirmed)="confirm()"
+  (cancelled)="pending.set(null)"
+>
+  <p>
+    Contraoferta: pasará de Bs {{ offer().amount }} a
+    <strong>Bs {{ counterAmount() }}</strong> (ronda {{ offer().round + 1 }} de {{ maxRounds }}). La
+    vigencia de 24 horas vuelve a empezar.
+  </p>
+</app-confirm-dialog>

@@ -1,0 +1,67 @@
+@use 'tokens';
+@use 'mixins';
+
+:host {
+  display: block;
+}
+
+.timeline {
+  display: grid;
+  gap: tokens.$space-3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// El trabajador a la izquierda y el cliente a la derecha; el texto identifica al autor.
+.timeline__item {
+  display: grid;
+  gap: tokens.$space-1;
+  padding: tokens.$space-3 tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+
+  @include mixins.respond-up(sm) {
+    width: 85%;
+  }
+}
+
+.timeline__item--worker {
+  border-left: 4px solid var(--color-primary);
+  background-color: var(--color-primary-pale);
+}
+
+.timeline__item--client {
+  justify-self: end;
+  border-right: 4px solid #1d3f8f;
+  background-color: #eff4ff;
+}
+
+.timeline__item--system {
+  justify-self: center;
+  border-style: dashed;
+  border-color: var(--color-control-border);
+  background-color: var(--color-surface);
+}
+
+.timeline__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-1 tokens.$space-2;
+}
+
+.timeline__round {
+  margin-left: auto;
+  font-size: 0.875rem;
+}
+
+.timeline__amount {
+  font-size: 1.25rem;
+  font-weight: tokens.$font-weight-bold;
+}
+
+.timeline__previous,
+.timeline__meta {
+  font-size: 0.875rem;
+  font-weight: tokens.$font-weight-regular;
+}

@@ -1,0 +1,121 @@
+<section class="offers" aria-labelledby="offers-title">
+  <header>
+    <h1 id="offers-title" class="offers__title">
+      {{ isClient ? 'Ofertas recibidas' : 'Mis ofertas' }}
+    </h1>
+    <p class="offers__intro">
+      @if (isClient) {
+        Ofertas de los trabajadores para sus pedidos. Cada oferta vence a las 24 horas de la última
+        propuesta.
+      } @else {
+        Ofertas que usted envió. Cada oferta vence a las 24 horas de la última propuesta.
+      }
+    </p>
+  </header>
+
+  <div class="offers__filters">
+    <label for="offers-status">Estado</label>
+    <select id="offers-status" [formControl]="statusFilter">
+      <option value="">Todas las ofertas</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ statusLabels[status] }}</option>
+      }
+    </select>
+    <button type="button" class="offers__secondary" (click)="offers.reload()">Actualizar</button>
+  </div>
+
+  @if (orderId()) {
+    <p class="offers__notice">
+      Mostrando las ofertas de un pedido.
+      <a [routerLink]="['/cliente/mis-pedidos', orderId()]">Ver el pedido</a> ·
+      <button type="button" class="offers-link" (click)="showAll()">Ver todas</button>
+    </p>
+  }
+
+  @if (offers.isLoading() && !offers.hasValue()) {
+    <app-loading-state message="Cargando las ofertas…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="offers.reload()" />
+  } @else if (meta(); as meta) {
+    @if (items().length === 0) {
+      <app-empty-state
+        [heading]="
+          status() || page() > 1
+            ? 'No hay ofertas con ese filtro.'
+            : isClient
+              ? 'Todavía no recibió ofertas.'
+              : 'Todavía no envió ofertas.'
+        "
+      >
+        @if (status() || page() > 1) {
+          <button type="button" class="offers__secondary" (click)="showAll()">
+            Ver todas las ofertas
+          </button>
+        } @else if (isClient) {
+          <a class="offers__secondary" routerLink="/cliente/mis-pedidos">Ver mis pedidos</a>
+        } @else {
+          <a class="offers__primary" routerLink="/trabajador/pedidos">Buscar pedidos</a>
+        }
+      </app-empty-state>
+    } @else {
+      <ul class="offers__list">
+        @for (offer of items(); track offer.id) {
+          <li>
+            <article class="offer" [class.offer--open]="offer.status === 'VIGENTE'">
+              <div class="offer__top">
+                <p class="offer__amount">Bs {{ offer.amount }}</p>
+                <app-offer-status-badge [status]="offer.status" />
+              </div>
+              <h2 class="offer__title">
+                <a class="offer__link" [routerLink]="[offer.id]">
+                  {{ title(offer) }}
+                  @if (offer.worker) {
+                    · {{ offer.worker.firstName }} {{ offer.worker.lastName }}
+                  }
+                </a>
+              </h2>
+              @if (needsReply(offer)) {
+                <p class="offer__turn">Le toca responder</p>
+              } @else if (offer.status === 'VIGENTE') {
+                <p class="offers__muted">
+                  Esperando respuesta del {{ offer.turn === 'CLIENTE' ? 'cliente' : 'trabajador' }}
+                </p>
+              }
+              <dl class="offer__data">
+                <div>
+                  <dt>Inicio propuesto</dt>
+                  <dd>{{ offer.proposedStartAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+                </div>
+                <div>
+                  <dt>{{ offer.status === 'VIGENTE' ? 'Vence' : 'Cerrada' }}</dt>
+                  <dd>
+                    {{
+                      (offer.status === 'VIGENTE'
+                        ? offer.expiresAt
+                        : (offer.closedAt ?? offer.expiresAt)
+                      ) | date: 'dd/MM/yyyy HH:mm' : timezone
+                    }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Ronda</dt>
+                  <dd>{{ offer.round }} de 3</dd>
+                </div>
+              </dl>
+            </article>
+          </li>
+        }
+      </ul>
+    }
+    @if (meta.totalPages > 1) {
+      <app-paginator
+        label="Páginas de ofertas"
+        [page]="page()"
+        [totalPages]="meta.totalPages"
+        [total]="meta.total"
+        [busy]="offers.isLoading()"
+        (pageChange)="goToPage($event)"
+      />
+    }
+  }
+</section>

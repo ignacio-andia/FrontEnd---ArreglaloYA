@@ -2,11 +2,11 @@ import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { OrderImageVariant } from '../../models/order.model';
+import { OrderImageVariant, OrderPhotoSource } from '../../models/order.model';
 import { OrdersApiService } from '../../services/orders-api.service';
 
 /**
- * Fotografía privada de un pedido propio. Se descarga como Blob con HttpClient (el interceptor
+ * Fotografía privada de un pedido (propio, disponible o asignado, según `source`). Se descarga como Blob con HttpClient (el interceptor
  * agrega el token Bearer) y se muestra con una URL `blob:` local, que se libera al cambiar de
  * imagen y al destruir el componente. Mientras carga, o si falla, muestra un marcador.
  */
@@ -30,6 +30,8 @@ import { OrdersApiService } from '../../services/orders-api.service';
 
     :host {
       display: grid;
+      // La celda toma el tamaño del contenedor: la fotografía se ajusta dentro sin desbordarlo.
+      grid-template: minmax(0, 1fr) / minmax(0, 1fr);
       place-items: center;
       overflow: hidden;
       background-color: var(--color-background);
@@ -86,15 +88,21 @@ export class OrderPhotoComponent {
   readonly imageId = input.required<string>();
   readonly variant = input<OrderImageVariant>('thumb');
   readonly alt = input.required<string>();
+  readonly source = input<OrderPhotoSource>('own');
 
   /** URL `blob:` vigente, para liberarla al reemplazarla o al destruir el componente. */
   private currentUrl: string | null = null;
 
   protected readonly photo = rxResource({
-    params: () => ({ orderId: this.orderId(), imageId: this.imageId(), variant: this.variant() }),
+    params: () => ({
+      source: this.source(),
+      orderId: this.orderId(),
+      imageId: this.imageId(),
+      variant: this.variant(),
+    }),
     stream: ({ params }) =>
       this.ordersApi
-        .getOwnImage(params.orderId, params.imageId, params.variant)
+        .getImage(params.source, params.orderId, params.imageId, params.variant)
         .pipe(map((blob) => this.replaceUrl(blob))),
   });
 
