@@ -1,0 +1,59 @@
+<section class="special" aria-labelledby="special-title">
+  <h2 id="special-title" class="special__title">¿Necesita cancelar?</h2>
+  <p class="special__muted">
+    Puede cancelar el trabajo mientras no esté terminado. Deberá indicar el motivo.
+  </p>
+  <div class="special__actions">
+    <button
+      type="button"
+      class="special__cancel"
+      [disabled]="sending() || sent() || refreshing()"
+      (click)="ask()"
+    >
+      {{ sent() ? 'Actualizando…' : 'Cancelar trabajo' }}
+    </button>
+  </div>
+</section>
+
+<app-confirm-dialog
+  heading="¿Cancelar el trabajo?"
+  confirmLabel="Sí, cancelar trabajo"
+  dismissLabel="Volver"
+  busyLabel="Cancelando…"
+  titleId="cancel-work-title"
+  [open]="confirming()"
+  [busy]="sending()"
+  (confirmed)="cancel()"
+  (cancelled)="confirming.set(false)"
+>
+  <p>
+    El pedido pasará a <strong>«Cancelado»</strong> y no podrá reactivarlo. Se guardará quién
+    canceló, cuándo y por qué, y el trabajador lo verá en el historial.
+  </p>
+  <p>La plataforma no gestiona devoluciones ni decide sobre el dinero ya pagado.</p>
+  @if (pendingBudget()) {
+    <p>El presupuesto adicional pendiente quedará sin efecto.</p>
+  }
+  @if (visitToPay()) {
+    <p>La visita ya realizada tiene un costo: su pago se podrá seguir declarando.</p>
+  }
+  <div class="field">
+    <label class="field__label" for="cancel-work-reason">Motivo de la cancelación</label>
+    <textarea
+      #reasonField
+      id="cancel-work-reason"
+      class="field__input"
+      rows="3"
+      required
+      [formControl]="reason"
+      [attr.aria-invalid]="reason.touched && reason.invalid ? 'true' : null"
+      aria-describedby="cancel-work-hint"
+    ></textarea>
+    <p
+      id="cancel-work-hint"
+      [class]="reason.touched && reason.invalid ? 'field__error' : 'field__hint'"
+    >
+      Obligatorio, hasta {{ maxLength }} caracteres.
+    </p>
+  </div>
+</app-confirm-dialog>

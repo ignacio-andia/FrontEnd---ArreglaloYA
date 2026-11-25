@@ -1,0 +1,52 @@
+@use 'tokens';
+@use 'mixins';
+@use 'buttons';
+@use 'page';
+@use 'form-controls';
+
+@include form-controls.base;
+@include form-controls.textarea;
+
+:host {
+  display: block;
+}
+
+.special {
+  display: grid;
+  gap: tokens.$space-3;
+  min-width: 0;
+  padding: tokens.$space-6 tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+
+  @include mixins.respond-up(sm) {
+    padding: tokens.$space-6;
+  }
+}
+
+.special__title {
+  @include page.subtitle;
+}
+
+.special__muted {
+  color: var(--color-text-secondary);
+}
+
+.special__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-3;
+}
+
+.special__cancel {
+  @include buttons.base;
+
+  border: 1px solid var(--color-danger);
+  background-color: var(--color-surface);
+  color: var(--color-danger);
+
+  &:hover {
+    background-color: rgb(180 35 24 / 8%);
+  }
+}

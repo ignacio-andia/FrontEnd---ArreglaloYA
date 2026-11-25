@@ -67,6 +67,15 @@ describe('workflow APIs', () => {
     send(url('b1', 'reject'), { reason: 'Caro' });
   });
 
+  it('sends only the reason to cancel the work', () => {
+    TestBed.inject(WorkflowApiService).cancelWork(ORDER_ID, 'Motivo').subscribe();
+
+    const request = http.expectOne(apiUrl('orders', ORDER_ID, 'cancel-work'));
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ reason: 'Motivo' });
+    request.flush({});
+  });
+
   it('asks the timeline with the page size and, afterwards, the opaque cursor', () => {
     const api = TestBed.inject(TimelineApiService);
     const url = apiUrl('orders', ORDER_ID, 'timeline');
