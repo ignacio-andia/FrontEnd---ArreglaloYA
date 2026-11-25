@@ -1,0 +1,52 @@
+<section class="offers" aria-labelledby="tracking-title">
+  <a class="offers__back" [routerLink]="['/cliente/mis-pedidos', orderId()]">
+    <span aria-hidden="true">←</span> Volver al pedido
+  </a>
+
+  @if (store.workflow.isLoading() && !store.current()) {
+    <h1 id="tracking-title" class="offers__title">Seguimiento</h1>
+    <app-loading-state message="Cargando el seguimiento…" />
+  } @else if (store.notFound()) {
+    <h1 id="tracking-title" class="offers__title">Pedido no encontrado</h1>
+    <app-empty-state heading="El pedido no existe o no pertenece a su cuenta." />
+  } @else if (store.errorMessage(); as message) {
+    <h1 id="tracking-title" class="offers__title">Seguimiento</h1>
+    <app-error-alert [message]="message" (retry)="refresh()" />
+  } @else if (store.current(); as current) {
+    <h1 id="tracking-title" class="offers__title">
+      Seguimiento
+      @if (category()) {
+        · {{ category() }}
+      }
+    </h1>
+    <div class="offers__actions">
+      <button type="button" class="offers__secondary" (click)="refresh()">Actualizar</button>
+    </div>
+
+    <app-work-summary [workflow]="current" />
+
+    <section class="offers__card" aria-labelledby="tracking-worker-title">
+      <h2 id="tracking-worker-title" class="offers__subtitle">Trabajador asignado</h2>
+      @if (worker.isLoading()) {
+        <app-loading-state message="Consultando el trabajador asignado…" />
+      } @else if (workerError(); as message) {
+        <app-error-alert [message]="message" (retry)="worker.reload()" />
+      } @else if (agreement(); as offer) {
+        <p>
+          <strong>{{ offer.worker.firstName }} {{ offer.worker.lastName }}</strong> · Monto de la
+          oferta aceptada: Bs {{ offer.amount }}
+        </p>
+        <a class="offers__back" [routerLink]="['/cliente/ofertas', offer.id]">
+          Ver la oferta y su negociación
+        </a>
+        @if (agreementActive()) {
+          <app-whatsapp-contact [offerId]="offer.id" viewer="CLIENTE" />
+        }
+      } @else {
+        <p class="offers__muted">Este pedido no tiene un trabajador asignado.</p>
+      }
+    </section>
+
+    <app-service-history viewer="CLIENTE" />
+  }
+</section>

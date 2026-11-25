@@ -1,0 +1,70 @@
+<section class="offers" aria-labelledby="job-title">
+  <a class="offers__back" routerLink="/trabajador/trabajos">
+    <span aria-hidden="true">←</span> Volver a trabajos asignados
+  </a>
+
+  @if (store.workflow.isLoading() && !store.current()) {
+    <h1 id="job-title" class="offers__title">Trabajo</h1>
+    <app-loading-state message="Cargando el trabajo…" />
+  } @else if (store.notFound()) {
+    <h1 id="job-title" class="offers__title">Trabajo no encontrado</h1>
+    <app-empty-state heading="El trabajo no existe o no está asignado a su cuenta." />
+  } @else if (store.errorMessage(); as message) {
+    <h1 id="job-title" class="offers__title">Trabajo</h1>
+    <app-error-alert [message]="message" (retry)="refresh()" />
+  } @else if (store.current(); as current) {
+    <h1 id="job-title" class="offers__title">Seguimiento del trabajo</h1>
+    <div class="offers__actions">
+      <button type="button" class="offers__secondary" (click)="refresh()">Actualizar</button>
+    </div>
+
+    <app-work-summary [workflow]="current" />
+
+    <section class="offers__card" aria-labelledby="job-agreement-title">
+      <h2 id="job-agreement-title" class="offers__subtitle">Acuerdo</h2>
+      @if (offer.isLoading()) {
+        <app-loading-state message="Consultando el acuerdo…" />
+      } @else if (offerError(); as message) {
+        <app-error-alert [message]="message" (retry)="offer.reload()" />
+      } @else if (accepted(); as agreement) {
+        <dl class="offers__data">
+          <div>
+            <dt>Monto de la oferta aceptada</dt>
+            <dd>Bs {{ agreement.amount }}</dd>
+          </div>
+          <div>
+            <dt>Inicio propuesto</dt>
+            <dd>{{ agreement.proposedStartAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+          </div>
+          <div>
+            <dt>Duración estimada</dt>
+            <dd>{{ duration(agreement.estimatedDurationMinutes) }}</dd>
+          </div>
+          <div>
+            <dt>Materiales</dt>
+            <dd>{{ agreement.materialsIncluded ? 'Incluidos' : 'No incluidos' }}</dd>
+          </div>
+        </dl>
+        <a class="offers__back" [routerLink]="['/trabajador/ofertas', agreement.id]">
+          Ver la oferta y su negociación
+        </a>
+        @if (agreementActive()) {
+          <app-whatsapp-contact [offerId]="agreement.id" viewer="TRABAJADOR" />
+        }
+      } @else {
+        <p class="offers__muted">No hay una oferta aceptada suya para este pedido.</p>
+      }
+    </section>
+
+    @if (agreementActive()) {
+      <app-assigned-order [orderId]="current.orderId" [showService]="true" />
+    } @else {
+      <p class="offers__notice offers__notice--waiting">
+        Sin acuerdo vigente: los datos del cliente y del pedido ya no se muestran. Se conservan el
+        acuerdo, el estado y el historial.
+      </p>
+    }
+
+    <app-service-history viewer="TRABAJADOR" />
+  }
+</section>

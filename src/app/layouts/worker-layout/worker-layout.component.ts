@@ -24,7 +24,7 @@ export class WorkerLayoutComponent {
     { label: 'Resumen', path: '/trabajador', exact: true },
     { label: 'Pedidos disponibles', path: '/trabajador/pedidos' },
     { label: 'Mis ofertas', path: '/trabajador/ofertas' },
-    { label: 'Trabajos asignados', path: null },
+    { label: 'Trabajos asignados', path: '/trabajador/trabajos' },
     { label: 'Mi perfil', path: '/trabajador/perfil' },
     { label: 'Mi cuenta', path: '/trabajador/mi-cuenta' },
   ];

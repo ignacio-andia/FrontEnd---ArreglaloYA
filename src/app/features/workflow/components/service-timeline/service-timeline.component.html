@@ -1,0 +1,38 @@
+<ol class="line">
+  @for (entry of entries(); track entry.key) {
+    <li class="line__item" tabindex="-1" [class]="'line__item--' + entry.author">
+      <p class="line__summary">{{ entry.event.summary }}</p>
+      <p class="line__meta">
+        <span class="line__who">{{ entry.who }}</span>
+        <time [attr.datetime]="entry.event.at">
+          {{ entry.event.at | date: 'dd/MM/yyyy HH:mm' : timezone }}
+        </time>
+        @if (entry.status) {
+          <span class="line__status">Estado: {{ entry.status }}</span>
+        }
+      </p>
+      @if (entry.details.length > 0) {
+        <dl class="line__details">
+          @for (detail of entry.details; track detail.label) {
+            <div>
+              <dt>{{ detail.label }}:</dt>
+              <dd>
+                {{
+                  detail.date ? (detail.value | date: 'dd/MM/yyyy HH:mm' : timezone) : detail.value
+                }}
+              </dd>
+            </div>
+          }
+        </dl>
+      }
+    </li>
+  }
+</ol>
+
+@if (error(); as message) {
+  <app-error-alert [message]="message" (retry)="more()" />
+} @else if (hasMore()) {
+  <button type="button" class="line__more" [disabled]="loadingMore()" (click)="more()">
+    {{ loadingMore() ? 'Cargando…' : 'Cargar más' }}
+  </button>
+}

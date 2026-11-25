@@ -25,6 +25,16 @@ const ASSIGNED_ERROR = 'Los datos del pedido acordado no están disponibles.';
         @let current = order.value();
         <p class="assigned__muted">Usted es el trabajador asignado a este pedido.</p>
         <dl class="assigned__data">
+          @if (showService()) {
+            <div>
+              <dt>Categoría</dt>
+              <dd>{{ current.category.name }}</dd>
+            </div>
+            <div>
+              <dt>Zona</dt>
+              <dd>{{ current.zone.name }}</dd>
+            </div>
+          }
           <div>
             <dt>Cliente</dt>
             <dd>{{ current.client.firstName }} {{ current.client.lastName }}</dd>
@@ -97,6 +107,8 @@ export class AssignedOrderComponent {
   private readonly ordersApi = inject(OrdersApiService);
 
   readonly orderId = input.required<string>();
+  /** Muestra también la categoría y la zona, donde la página no las indica. */
+  readonly showService = input(false);
 
   protected readonly order = rxResource({
     params: () => this.orderId(),

@@ -76,6 +76,17 @@
       </p>
     }
 
+    @if (tracked()) {
+      <div class="detail__actions">
+        <a
+          class="detail__secondary"
+          [routerLink]="['/cliente/mis-pedidos', current.id, 'seguimiento']"
+        >
+          Ver el seguimiento del servicio
+        </a>
+      </div>
+    }
+
     <app-order-offers [orderId]="current.id" [status]="current.status" />
 
     <div class="detail__grid">

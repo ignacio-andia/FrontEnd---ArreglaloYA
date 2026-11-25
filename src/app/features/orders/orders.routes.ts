@@ -34,6 +34,14 @@ export const MY_ORDERS_ROUTES: Routes = [
       ),
   },
   {
+    path: ':orderId/seguimiento',
+    title: 'Seguimiento del servicio | ArreglaloYA',
+    loadComponent: () =>
+      import('../workflow/pages/tracking-page/tracking-page.component').then(
+        (m) => m.TrackingPageComponent,
+      ),
+  },
+  {
     path: ':orderId',
     title: 'Detalle del pedido | ArreglaloYA',
     loadComponent: () =>

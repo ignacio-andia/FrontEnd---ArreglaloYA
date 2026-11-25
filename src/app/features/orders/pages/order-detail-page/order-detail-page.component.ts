@@ -14,6 +14,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { apiErrorMessages, apiErrorStatus } from '../../../../shared/utils/api-error-message';
 import { DISPLAY_TIMEZONE } from '../../../../shared/utils/display-timezone';
+import { SERVICE_AGREEMENT_STATUSES } from '../../../workflow/models/workflow.model';
 import { OrderOffersComponent } from '../../../offers/components/order-offers/order-offers.component';
 import { CancelOrderComponent } from '../../components/cancel-order/cancel-order.component';
 import { OrderPhotoComponent } from '../../components/order-photo/order-photo.component';
@@ -105,6 +106,16 @@ export class OrderDetailPageComponent {
   });
 
   /** Con acuerdo no se edita ni se cancela por esta vía: se explica por qué. */
+  /** Con acuerdo alguna vez (o cancelado): hay un seguimiento que consultar. */
+  protected readonly tracked = computed(() => {
+    if (!this.order.hasValue()) {
+      return false;
+    }
+    const { status } = this.order.value();
+    return (
+      SERVICE_AGREEMENT_STATUSES.includes(status) || status === 'CERRADO' || status === 'CANCELADO'
+    );
+  });
   protected readonly agreed = computed(
     () => this.order.hasValue() && ORDER_AGREED_STATUSES.includes(this.order.value().status),
   );

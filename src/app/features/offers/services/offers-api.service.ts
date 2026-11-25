@@ -53,15 +53,33 @@ export class OffersApiService {
    * no pueden ser suyas (`publishedAt` no se reinicia nunca).
    */
   findOwnForOrder(orderId: string, publishedAt: string): Observable<Offer | null> {
-    const page = (number: number) => this.listOwn({ page: number, limit: MAX_PAGE_SIZE });
     const published = Date.parse(publishedAt);
+    return this.searchOwn(orderId, {}, (oldest) => Date.parse(oldest.createdAt) < published);
+  }
+
+  /**
+   * La oferta aceptada del trabajador en un pedido (es decir, su acuerdo), o `null`. Sigue
+   * `ACEPTADA` aunque el pedido se cierre o se cancele.
+   */
+  findAcceptedForOrder(orderId: string): Observable<Offer | null> {
+    return this.searchOwn(orderId, { status: 'ACEPTADA' });
+  }
+
+  /** Recorre las páginas de ofertas propias hasta encontrar la del pedido o poder descartarla. */
+  private searchOwn(
+    orderId: string,
+    filter: Pick<OffersQuery, 'status'>,
+    older: (oldest: Offer) => boolean = () => false,
+  ): Observable<Offer | null> {
+    const page = (number: number) =>
+      this.listOwn({ ...filter, page: number, limit: MAX_PAGE_SIZE });
     return page(1).pipe(
       expand(({ data, meta }) => {
         const oldest = data.at(-1);
         const finished =
           oldest === undefined ||
           meta.page >= meta.totalPages ||
-          Date.parse(oldest.createdAt) < published ||
+          older(oldest) ||
           data.some((offer) => offer.orderId === orderId);
         return finished ? EMPTY : page(meta.page + 1);
       }),

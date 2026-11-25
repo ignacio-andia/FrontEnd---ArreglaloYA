@@ -41,10 +41,11 @@ const cases: LayoutCase[] = [
       ['Resumen', '/trabajador'],
       ['Pedidos disponibles', '/trabajador/pedidos'],
       ['Mis ofertas', '/trabajador/ofertas'],
+      ['Trabajos asignados', '/trabajador/trabajos'],
       ['Mi perfil', '/trabajador/perfil'],
       ['Mi cuenta', '/trabajador/mi-cuenta'],
     ],
-    pending: ['Trabajos asignados'],
+    pending: [],
   },
   {
     name: 'AdminLayoutComponent',

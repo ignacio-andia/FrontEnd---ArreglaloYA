@@ -53,6 +53,21 @@
       (stale)="refresh()"
     />
 
+    @if (current.status === 'ACEPTADA') {
+      <div class="offers__actions">
+        <a
+          class="offers__secondary"
+          [routerLink]="
+            isClient
+              ? ['/cliente/mis-pedidos', current.orderId, 'seguimiento']
+              : ['/trabajador/trabajos', current.orderId]
+          "
+        >
+          Ver el seguimiento del servicio
+        </a>
+      </div>
+    }
+
     @if (contactPossible()) {
       <app-whatsapp-contact [offerId]="current.id" [viewer]="party" />
     }

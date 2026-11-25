@@ -1,0 +1,74 @@
+@let current = workflow();
+<section class="summary" aria-labelledby="work-status-title">
+  <div class="summary__top">
+    <h2 id="work-status-title" class="summary__title">Estado del servicio</h2>
+    <app-order-status-badge [status]="current.status" />
+  </div>
+  <p class="summary__help">{{ descriptions[current.status] }}</p>
+
+  @if (current.visit || current.execution) {
+    <dl class="summary__data">
+      @if (current.visit; as visit) {
+        <div>
+          <dt>Visita realizada</dt>
+          <dd>{{ visit.performedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+        </div>
+        @if (visit.visitCost !== null) {
+          <div>
+            <dt>Costo de la visita</dt>
+            <dd>{{ visit.visitCost === '0.00' ? 'Gratis' : 'Bs ' + visit.visitCost }}</dd>
+          </div>
+        }
+      }
+      @if (current.execution; as execution) {
+        @if (execution.startedAt) {
+          <div>
+            <dt>Inicio del trabajo</dt>
+            <dd>{{ execution.startedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+          </div>
+        }
+        @if (execution.finishedAt) {
+          <div>
+            <dt>Trabajo terminado</dt>
+            <dd>{{ execution.finishedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+          </div>
+        }
+        @if (execution.conformityDeadline) {
+          <div>
+            <dt>Plazo de conformidad o reclamo</dt>
+            <dd>{{ execution.conformityDeadline | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+          </div>
+        }
+        @if (execution.conformedAt) {
+          <div>
+            <dt>Conformidad del cliente</dt>
+            <dd>{{ execution.conformedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+          </div>
+        }
+      }
+    </dl>
+  }
+
+  @if (current.additionalBudgets.length > 0) {
+    <h3 class="summary__subtitle">Presupuestos adicionales</h3>
+    <ul class="summary__list">
+      @for (budget of current.additionalBudgets; track budget.id) {
+        <li>
+          <p>
+            <strong>Bs {{ budget.amount }}</strong> · {{ budgetLabels[budget.status] }}
+          </p>
+          <p class="summary__help">Motivo: {{ budget.reason }}</p>
+          <p class="summary__help">Materiales: {{ budget.materials }}</p>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (current.noShowReport; as report) {
+    <h3 class="summary__subtitle">Inasistencia reportada</h3>
+    <p>{{ report.reportedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</p>
+    @if (report.description) {
+      <p class="summary__help">{{ report.description }}</p>
+    }
+  }
+</section>

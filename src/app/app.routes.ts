@@ -131,6 +131,11 @@ export const routes: Routes = [
           import('./features/offers/offers.routes').then((m) => m.OWN_OFFERS_ROUTES),
       },
       {
+        path: 'trabajos',
+        loadChildren: () =>
+          import('./features/workflow/workflow.routes').then((m) => m.ASSIGNED_JOBS_ROUTES),
+      },
+      {
         path: 'perfil',
         loadChildren: () =>
           import('./features/worker-profile/worker-profile.routes').then(

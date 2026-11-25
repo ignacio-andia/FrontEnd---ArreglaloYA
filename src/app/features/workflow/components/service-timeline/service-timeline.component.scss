@@ -1,0 +1,118 @@
+@use 'tokens';
+@use 'buttons';
+
+:host {
+  display: grid;
+  justify-items: start;
+  gap: tokens.$space-4;
+}
+
+// Línea vertical con un punto por acontecimiento; el color del punto identifica al autor y el
+// nombre se escribe siempre.
+.line {
+  display: grid;
+  gap: tokens.$space-4;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line__item {
+  --line-color: var(--color-text-secondary);
+
+  position: relative;
+  display: grid;
+  gap: tokens.$space-1;
+  padding-left: tokens.$space-6;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0.35rem;
+    left: 0;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 2px solid var(--line-color);
+    border-radius: 50%;
+    background-color: var(--line-color);
+  }
+
+  // Tramo hasta el punto siguiente.
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 1.35rem;
+    bottom: calc(-1 * #{tokens.$space-4});
+    left: calc(0.375rem - 1px);
+    width: 2px;
+    background-color: var(--color-border);
+  }
+}
+
+.line__item--worker {
+  --line-color: var(--color-primary);
+}
+
+.line__item--client {
+  --line-color: #1d4ed8;
+}
+
+.line__item--admin {
+  --line-color: #b45309;
+}
+
+.line__item--system::before {
+  background-color: var(--color-surface);
+}
+
+.line__summary {
+  font-weight: tokens.$font-weight-semibold;
+  overflow-wrap: anywhere;
+}
+
+.line__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tokens.$space-1 tokens.$space-3;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.line__who {
+  color: var(--line-color);
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.line__status {
+  padding: 0 tokens.$space-2;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-sm;
+}
+
+.line__details {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0;
+  font-size: 0.875rem;
+
+  div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: tokens.$space-1;
+  }
+
+  dt {
+    color: var(--color-text-secondary);
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.line__more {
+  @include buttons.secondary;
+}

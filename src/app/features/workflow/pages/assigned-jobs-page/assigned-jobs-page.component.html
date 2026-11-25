@@ -1,0 +1,102 @@
+<section class="offers" aria-labelledby="jobs-title">
+  <header>
+    <h1 id="jobs-title" class="offers__title">Trabajos asignados</h1>
+    <p class="offers__intro">
+      Todos los trabajos que le aceptaron, incluidos los terminados, cerrados y cancelados.
+    </p>
+  </header>
+
+  <div class="offers__actions">
+    <button type="button" class="offers__secondary" (click)="jobs.reload()">Actualizar</button>
+  </div>
+
+  @if (jobs.isLoading() && !jobs.hasValue()) {
+    <app-loading-state message="Cargando sus trabajos…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="jobs.reload()" />
+  } @else if (meta(); as meta) {
+    @if (cards().length === 0) {
+      <app-empty-state
+        [heading]="
+          page() > 1 ? 'No hay trabajos en esta página.' : 'Todavía no tiene trabajos asignados.'
+        "
+      >
+        @if (page() > 1) {
+          <button type="button" class="offers__secondary" (click)="goToPage(1)">
+            Volver a la primera página
+          </button>
+        } @else {
+          <a class="offers__primary" routerLink="/trabajador/pedidos">Buscar pedidos</a>
+        }
+      </app-empty-state>
+    } @else {
+      <ul class="offers__list">
+        @for (card of cards(); track card.offer.id) {
+          @let detail = card.detail;
+          <li>
+            <article class="job">
+              <div class="job__top">
+                <h2 class="job__title">
+                  <a class="job__link" [routerLink]="[card.offer.orderId]">
+                    @if (detail.state === 'ready' && detail.order) {
+                      {{ detail.order.category.name }} · {{ detail.order.zone.name }}
+                    } @else {
+                      Trabajo acordado el
+                      {{ card.offer.closedAt | date: 'dd/MM/yyyy' : timezone }}
+                    }
+                  </a>
+                </h2>
+                @if (detail.state === 'ready') {
+                  <app-order-status-badge [status]="detail.status" />
+                }
+              </div>
+
+              @if (detail.state === 'ready') {
+                @if (detail.order) {
+                  <p>
+                    Cliente: {{ detail.order.client.firstName }}
+                    {{ detail.order.client.lastName }}
+                  </p>
+                } @else {
+                  <p class="offers__muted">
+                    {{
+                      detail.note ??
+                        'Sin acuerdo vigente: se conservan su oferta, el estado y el historial.'
+                    }}
+                  </p>
+                }
+              } @else if (detail.state === 'loading') {
+                <app-loading-state message="Consultando el trabajo…" />
+              } @else {
+                <div class="job__retry">
+                  <app-error-alert [message]="detail.message" (retry)="retry(card.offer)" />
+                </div>
+              }
+
+              <dl class="job__data">
+                <div>
+                  <dt>Monto de la oferta</dt>
+                  <dd>Bs {{ card.offer.amount }}</dd>
+                </div>
+                <div>
+                  <dt>Inicio propuesto</dt>
+                  <dd>{{ card.offer.proposedStartAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+                </div>
+              </dl>
+            </article>
+          </li>
+        }
+      </ul>
+    }
+    @if (meta.totalPages > 1) {
+      <app-paginator
+        label="Páginas de trabajos asignados"
+        [page]="page()"
+        [totalPages]="meta.totalPages"
+        [total]="meta.total"
+        [busy]="jobs.isLoading()"
+        (pageChange)="goToPage($event)"
+      />
+    }
+  }
+</section>
