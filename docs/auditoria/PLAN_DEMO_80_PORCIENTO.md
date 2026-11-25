@@ -1,5 +1,7 @@
 # Plan de cierre funcional — 80 % demostrable
 
+> **Estado al 25/11/2026: D0–D4 ejecutadas.** 47 de 56 demostrables (83,9 %) y 28 formalmente completos (50,0 %). Las secciones 0 a 6 conservan la planificación original; el resultado está en las secciones 9 y 10.
+
 Fecha: 25/11/2026 · `main` en `fac0e3a` · Base: [auditoría del frontend](AUDITORIA_FRONTEND.md) y matriz del backend. Solo planificación: no se modificó código.
 
 ## 0. Resumen
@@ -257,32 +259,39 @@ D0 ──► D1 ──► D2 ──► D3   = 45 (80,4 %)
 - RNF: rendimiento, Firefox y Edge, lector de pantalla, prueba de uso con personas y revisión formal de seguridad, trazabilidad y modelo de datos.
 - Deuda conocida: mensaje de pago perdido si falla la recarga, formulario de pago visible a un suspendido, textos del backend con errores o en inglés, `.gitattributes`.
 
-## 7. Guion de demostración (unos 16 minutos, con D0–D5)
+## 7. Guion de demostración (unos 18 minutos, con D0–D4)
 
-**Preparación.** Entorno aislado, nunca `public`. Una pestaña por rol (la sesión es por pestaña). Cuentas de cliente, trabajador aprobado, trabajador nuevo y administrador; fotos y un documento listos; un pedido ya terminado y otro acordado como respaldo. Usar horarios distintos en cada ensayo para no chocar con RF-30. Revisar que la sesión (1 h) no haya vencido. Las tareas programadas están apagadas. Comprobar en el ensayo si la visita y el anticipo pueden mostrarse en un mismo pedido o necesitan dos.
+**Preparación (antes de la defensa).**
 
-| # | Min | Rol | Acción y qué se ve | RF |
-|---|---|---|---|---|
-| 1 | 1 | Visitante | Inicio, cómo funciona, categorías | 54 |
-| 2 | 2 | Trabajador nuevo | Registrarse, crear perfil, horarios, subir documento, enviar a revisión: «Pendiente» y sin pedidos | 01, 06, 07, 08, 29, 03, 09 |
-| 3 | 2 | Administrador | Ver documento, observar con motivo, aprobar tras la corrección; suspender y reactivar a otro | 10, 47, 56 |
-| 4 | 1 | Cliente | Buscar trabajadores y abrir el perfil aprobado | 16, 11 |
-| 5 | 2 | Cliente | Publicar pedido con fotos y ver el aviso de duplicado | 14, 15 |
-| 6 | 2 | Trabajador | Cambiar de área, ver el pedido de su zona sin dirección exacta, ofertar | 02, 17, 19, 22, 24, 31 |
-| 7 | 1 | Ambos | Aviso, contraoferta, historial y aceptación; aparecen dirección y contacto | 33, 20, 21, 23, 30, 55 |
-| 8 | 2 | Ambos | Anticipo, visita, presupuesto adicional, inicio, finalización, conformidad y línea de tiempo | 25, 26, 28, 32, 39 |
-| 9 | 1 | Ambos | Pago final, declaraciones y constancias, aviso de pago directo | 40, 41, 42, 43 |
-| 10 | 1 | Cliente y admin | Reclamo con foto, panel y resolución | 37, 38, 51 |
-| 11 | 1 | Administrador | Pedidos, bitácora, reporte con CSV y una categoría nueva | 50, 53, 52, 48, 49 |
+1. Backend de pruebas: `node iniciar-backend.mjs` en `entorno-pruebas`; nunca el backend normal ni `public`. Frontend: `npm start`.
+2. `node sembrar-demo.mjs` crea los pedidos `[DEMO]` de respaldo: con visita, terminado para conformidad, terminado para reclamo, y acordados para cancelar y para inasistencia.
+3. Una pestaña por rol (la sesión es por pestaña): visitante, cliente, trabajador aprobado, trabajador nuevo y administrador. La sesión dura 1 hora.
+4. Tener a mano dos fotografías y un PDF.
+5. Usar horarios distintos en cada ensayo (RF-30). Como máximo 20 registros por hora.
+6. Las tareas programadas están apagadas: no habrá vencimientos ni cierres automáticos.
 
-**Caminos alternos preparados** (si preguntan): rechazo del adicional (27), editar y cancelar un pedido sin acuerdo (18), cancelar un trabajo acordado (34), reportar inasistencia (36).
+| # | Min | Rol | Dónde | Acción y qué se ve | RF |
+|---|---|---|---|---|---|
+| 1 | 1 | Visitante | Inicio, Cómo funciona, Categorías | Categorías y zonas; sin datos privados | 54 |
+| 2 | 3 | Trabajador nuevo | Registrarse → Quiero ofrecer mis servicios → Mi perfil | Registrarse con teléfono, crear perfil y horarios, subir documento y enviar: «Pendiente» y sin pedidos | 01, 03, 06, 07, 29 |
+| 3 | 3 | Administrador y trabajador | Verificación de trabajadores | Consultar el documento, observar con motivo, el trabajador reemplaza y reenvía, aprobar, suspender y reactivar | 08, 10, 47, 56 |
+| 4 | 1 | Cliente | Buscar trabajadores | Elegir categoría y zona y abrir un perfil; solo aparecen aprobados (buscar Carpintería: el perfil pendiente de prueba no sale) | 09, 11, 16 |
+| 5 | 2 | Cliente | Publicar pedido | Publicar con foto; al repetirlo aparece el aviso | 14, 15 |
+| 6 | 2 | Trabajador | Cambiar de área → Pedidos disponibles | Pedido de su zona sin dirección; ofertar | 02, 17, 19, 22, 24, 31 |
+| 7 | 1 | Ambos | Oferta | Contraoferta, historial y aceptación; aparecen dirección y contacto | 20, 21, 23, 30, 55 |
+| 8 | 2 | Ambos | Pedido `[DEMO] Visita y adicional` | Anticipo, visita y su cobro; proponer el adicional y aceptarlo (el pedido pasa a «En ejecución»); marcar como terminado | 25, 26, 39, 32 |
+| 9 | 1 | Cliente | Pedido `[DEMO] Conformidad` | Declarar el saldo, constancias, aviso de pago directo y dar conformidad | 28, 40, 41, 42, 43 |
+| 10 | 1 | Cliente y administrador | Pedido `[DEMO] Reclamo` → Reclamos | Reclamo con foto, revisión y resolución | 37, 38, 51 |
+| 11 | 1 | Administrador | Pedidos, Bitácora, Reportes, Categorías, Zonas | Detalle con historial, quién hizo qué, reporte y CSV, crear una categoría y desactivarla | 48, 49, 50, 52, 53 |
 
-## 8. Decisiones que necesito antes de empezar
+**Caminos alternos:** rechazar el adicional (27), editar y cancelar un pedido sin acuerdo (18), `[DEMO] Cancelacion de trabajo` (34) e `[DEMO] Inasistencia` (36). El orden anticipo → visita es obligatorio: la visita se registra después de confirmar el anticipo.
 
-1. ¿El equipo acepta la regla de conteo (parcial demostrable = 1, denominador 56)?
-2. ¿Autorizas commits locales por bloque validado?
-3. ¿La defensa se hará con el entorno aislado de pruebas? Si no, hay que preparar otra base sin tocar `public`.
-4. Solo para D7: ¿qué estados permiten calificar?
+**Cuidado:** desactivar una categoría o zona no se puede deshacer; usar solo las creadas durante la demo.
+
+## 8. Decisiones
+
+- **Resueltas el 25/11/2026:** commits locales por etapa autorizados, demo en el entorno aislado y alcance D0–D4.
+- **Abiertas:** que el equipo confirme la regla de conteo (parcial demostrable = 1, sobre 56) y, si se quiere D7, qué estados permiten calificar.
 
 ## 9. Registro de ejecución (D0–D4)
 
@@ -361,3 +370,130 @@ Dos métricas separadas, ambas sobre 56:
 - **Calidad:** 940 pruebas unitarias, build, ESLint y Prettier correctos; sin desbordamiento ni infracciones de axe a 360 y 375 px, también con el diálogo y la edición abiertos; `public` intacta.
 - **Formal completa:** se suman 48 y 49.
 - **Pendientes:** no existe la reactivación; #13 y #15 (consulta de un elemento) no se usan.
+
+## 10. Informe final D0–D4
+
+### 10.1 Resultado
+
+| Métrica | Antes | Ahora |
+|---|---|---|
+| Cobertura demostrable provisional | 28 sin ensayar (50,0 %) | **47 de 56 (83,9 %)** |
+| Cobertura formal completa | 15 de 56 (26,8 %) | **28 de 56 (50,0 %)** |
+| Endpoints consumidos por pantallas | 68 de 115 | **88 de 115 (76,5 %)** |
+| Pruebas unitarias | 892 | **940** (82 archivos) |
+
+Los 47 incluyen 19 requerimientos parciales con su flujo principal demostrable. No hubo requerimientos que fallaran.
+
+**No demostrables (9):** RF-04, RF-05, RF-12, RF-13, RF-33, RF-35, RF-44, RF-45 y RF-46.
+
+### 10.2 RF demostrables y evidencia
+
+«Pantalla» es lo ejecutado en la interfaz contra el backend el 25/11/2026. «Script» es el archivo `integracion-<nombre>.mjs` que pasó en la regresión final. «Formal» usa la definición estricta de la auditoría.
+
+| ID | Requerimiento | Pantalla | Script | Formal |
+|---|---|---|---|---|
+| RF-01 | Registro, inicio y cierre de sesión | Registro, cierre e inicio de sesión | d0 | No |
+| RF-02 | Cambio de rol de trabajador a cliente | Cambio de área cliente/trabajador | d0 | Sí |
+| RF-03 | Funciones de trabajador solo con perfil aprobado | Pendiente y suspendido sin pedidos | d0, d1 | Sí |
+| RF-06 | Datos del perfil del trabajador | Perfil, datos y especialidades | d0 | Sí |
+| RF-07 | Documentación de respaldo | Subida, descarga y reemplazo | d0, d1 | Sí |
+| RF-08 | Estados del perfil | Observado, rechazado, aprobado y suspendido | d0, d1 | Sí |
+| RF-09 | Ocultar perfiles no aprobados | Búsqueda sin no aprobados; perfil no disponible | d2 | Sí |
+| RF-10 | Revisión y decisión sobre el perfil | Aprobar, observar y rechazar con motivo | d1 | Sí |
+| RF-11 | Perfil público | Perfil público desde la búsqueda, la oferta y sin sesión | d2 | No |
+| RF-14 | Creación de un pedido | Publicar pedido con foto | e1 | Sí |
+| RF-15 | Varios pedidos activos | Aviso de pedido repetido | d0 | Sí |
+| RF-16 | Búsqueda de trabajadores | Búsqueda y aviso sin resultados | d2 | Sí |
+| RF-17 | Visibilidad del pedido | Pedidos disponibles | e1, e2 | Sí |
+| RF-18 | Edición y cancelación sin acuerdo | Editar y cancelar | e1 | No |
+| RF-19 | Envío de una oferta | Enviar oferta | e2 | Sí |
+| RF-20 | Aceptar, rechazar o contraofertar | Dos contraofertas, rechazo y aceptación | e2 | No |
+| RF-21 | Historial de la negociación | Historial de la negociación | e2 | Sí |
+| RF-22 | Condiciones claras antes de aceptar | Condiciones antes de aceptar | e2 | Sí |
+| RF-23 | Vigencia y máximo de rondas | Ronda 3 de 3 y vencimiento | e2 | No |
+| RF-24 | Cotización por fotos o visita | Oferta por fotos y trabajo con visita | e2, e33a | Sí |
+| RF-25 | Cobro de la visita | Visita y confirmación del cobro | e33a | Sí |
+| RF-26 | Presupuesto adicional | Proponer y aceptar un adicional | e33b | Sí |
+| RF-27 | Rechazo del adicional | Rechazar el adicional | e33b | No |
+| RF-28 | Terminado y conformidad | Iniciar, terminar y dar conformidad | e33c | No |
+| RF-29 | Días y horarios de atención | Guardar horarios | d0 | Sí |
+| RF-30 | Prevención de cruces | Aviso de cruce al aceptar | e2 | Sí |
+| RF-31 | Duración estimada | Duración en oferta y trabajo | e2 | No |
+| RF-32 | Línea de tiempo | Línea de tiempo | e31 | Sí |
+| RF-34 | Cancelación del trabajo | Cancelar un trabajo acordado | e34a | No |
+| RF-36 | Trabajador que no llega | Reportar inasistencia | e34b | No |
+| RF-37 | Presentación de un reclamo | Reclamo con fotografía | e35a, e35b | Sí |
+| RF-38 | Atención del reclamo | Revisar y resolver | e35c, e35d | No |
+| RF-39 | Registro del anticipo | Confirmar el anticipo | e32 | No |
+| RF-40 | Confirmación del pago final | Saldo declarado por ambas partes | e32 | Sí |
+| RF-41 | Constancias | Constancias | e32 | No |
+| RF-42 | Confirmación «Ya pagué» | Declaraciones de ambas partes comparadas | e32 | No |
+| RF-43 | Aviso de pago directo | Aviso de pago directo | e32 | Sí |
+| RF-47 | Gestión y suspensión de trabajadores | Suspender y reactivar | d1 | No |
+| RF-48 | Categorías | Alta, edición y desactivación de categoría | d4 | Sí |
+| RF-49 | Zonas | Alta y desactivación de zona | d4 | Sí |
+| RF-50 | Supervisión de pedidos | Listado, filtro, detalle, constancias e historial | d3 | No |
+| RF-51 | Panel de reclamos | Panel de reclamos filtrado | e35c | No |
+| RF-52 | Reportes | Reporte en pantalla y CSV | d3 | Sí |
+| RF-53 | Bitácora | Bitácora filtrada | d3 | No |
+| RF-54 | Información pública para visitantes | Inicio, categorías, zonas y perfil sin sesión | d2 | No |
+| RF-55 | Dirección exacta | Dirección solo para el asignado | e1, e2 | Sí |
+| RF-56 | Documentación restringida | El administrador ve documentos; el cliente recibe acceso denegado | d0, d1 | Sí |
+
+### 10.3 Endpoints integrados en D1–D4 (20)
+
+| Etapa | Endpoints |
+|---|---|
+| D1 | #55–#60 |
+| D2 | #106, #107, #114 |
+| D3 | #22, #67, #115 |
+| D4 | #12, #14, #16–#21 |
+
+- D0 probó por primera vez #1, #7, #23, #25–#28, #32–#34 y #43.
+- De los 88 consumidos, 87 respondieron correctamente en los scripts de la regresión final; #81 (foto del pedido asignado) solo se comprueba desde la pantalla.
+- #107 está integrado, pero el botón que lo usa no aparece mientras las calificaciones estén deshabilitadas.
+- **Sin consumir (27):** #4, #5, #9, #11, #13, #15, #35–#41, #61–#66, #102–#105 y #108–#111.
+
+### 10.4 Pruebas y calidad
+
+| Comprobación | Resultado final |
+|---|---|
+| Pruebas unitarias | 940 de 940 |
+| Build de producción | Correcto; carga inicial 325,14 kB (91,91 kB transferidos) |
+| ESLint | Correcto |
+| Prettier (`--end-of-line auto`) | Correcto en `src/` |
+| Integración real | 19 scripts: 229 comprobaciones numeradas y la prueba de paginación |
+| Esquema `public` | Intacto en cada punto de control (30 tablas, 35 filas) |
+| Backend y migraciones | Sin cambios (`2918395`) |
+
+**Incidencias resueltas:** aviso de cancelación arrastrado entre pedidos; en reportes, dos regiones con el mismo nombre y una tabla que no cabía a 375 px; `integracion-e32.mjs` chocaba con horarios al azar. En la regresión final, D0, D1 y D2 recibieron 429 por el límite de 20 registros por hora: se reinició el backend de pruebas y los tres pasaron.
+
+### 10.5 Responsive y accesibilidad
+
+- Recorrido final: 44 rutas (7 públicas, 13 de cliente, 10 de trabajador y 14 de administración, con los accesos denegados) a **360 y 375 px**: sin desbordamiento horizontal, sin infracciones de axe, sin alertas de error y con todas las peticiones en 200.
+- Durante las etapas también se revisaron con axe diálogos y formularios abiertos de D1 y D4.
+- **No verificado:** Firefox, Edge, lector de pantalla, navegación completa por teclado, rendimiento y prueba de uso con personas.
+
+### 10.6 Commits locales (sin push)
+
+| Commit | Contenido |
+|---|---|
+| `9a3dbf5` | Auditoría y plan |
+| `862ca87` | Corrección del aviso en el detalle del pedido |
+| `4fcbd6b` | Registro de D0 |
+| `8fdfa53` | D1 |
+| `5ad98e8` | D2 |
+| `dbf69ed` | D3 |
+| `a1e11dc` | D4 |
+
+Después de estos va el commit de este informe. No se crearon ramas.
+
+### 10.7 Pendiente para después de la defensa
+
+- **Requerimientos:** D5 (RF-33), D6 (RF-13) y D7 (RF-44 a RF-46, con decisión); RF-04 (requiere backend), RF-05 y RF-12 (decisiones) y RF-35.
+- **Criterios abiertos de los 19 parciales:** los de la sección 6, salvo lo cerrado en D1 y D4.
+- **Pantallas:** reasignar la zona de un perfil (#66), gestión de cuentas, agenda y diferencias de pago.
+- **Textos y detalles del backend:** «Oferta de el trabajador» en el historial; el 409 de horario muestra el identificador completo de otro pedido; la bitácora no avisa de un rango invertido de días consecutivos.
+- **Frontend conocido:** sin aviso explícito del anticipo en «Acordado» sin visita; mensaje de pago perdido si falla la recarga; formulario de pago visible a un suspendido; sin `.gitattributes`.
+- **RNF:** seguridad, privacidad y trazabilidad con revisión formal; Firefox, Edge, lector de pantalla y rendimiento.
+- **Datos de la demo:** el esquema aislado acumula cientos de pedidos de prueba y catálogos inactivos que se ven en las pantallas del administrador. Preparar un esquema limpio requiere tu autorización.
