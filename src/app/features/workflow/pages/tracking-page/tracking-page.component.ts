@@ -22,6 +22,7 @@ import { WorkSummaryComponent } from '../../components/work-summary/work-summary
 import {
   BudgetResult,
   CANCELLABLE_WORK_STATUSES,
+  NoShowResult,
   SERVICE_AGREEMENT_STATUSES,
 } from '../../models/workflow.model';
 import { ServiceWorkStore } from '../../services/service-work.store';
@@ -131,6 +132,14 @@ export class TrackingPageComponent {
 
   protected onWorkCancelled(): void {
     this.succeed('Trabajo cancelado. El pedido quedó «Cancelado».');
+  }
+
+  protected onNoShowReported({ created }: NoShowResult): void {
+    this.succeed(
+      created
+        ? 'Inasistencia reportada. Quedó registrada; el estado del pedido no cambia.'
+        : 'Ya había un reporte de inasistencia en este pedido: no se registró otro.',
+    );
   }
 
   protected onActionFailed(messages: string[]): void {

@@ -1,18 +1,36 @@
 <section class="special" aria-labelledby="special-title">
-  <h2 id="special-title" class="special__title">¿Necesita cancelar?</h2>
+  <h2 id="special-title" class="special__title">¿Hubo un problema?</h2>
   <p class="special__muted">
     Puede cancelar el trabajo mientras no esté terminado. Deberá indicar el motivo.
   </p>
+  @if (alreadyReported()) {
+    <p class="special__muted">
+      Ya reportó la inasistencia del trabajador: consta en «Estado del servicio».
+    </p>
+  }
   <div class="special__actions">
+    @if (canReport()) {
+      <button
+        type="button"
+        class="special__report"
+        [disabled]="sending() || sent() || refreshing()"
+        (click)="ask('report')"
+      >
+        El trabajador no llegó
+      </button>
+    }
     <button
       type="button"
       class="special__cancel"
       [disabled]="sending() || sent() || refreshing()"
-      (click)="ask()"
+      (click)="ask('cancel')"
     >
-      {{ sent() ? 'Actualizando…' : 'Cancelar trabajo' }}
+      Cancelar trabajo
     </button>
   </div>
+  @if (sent()) {
+    <p class="special__muted" role="status">Actualizando…</p>
+  }
 </section>
 
 <app-confirm-dialog
@@ -21,10 +39,10 @@
   dismissLabel="Volver"
   busyLabel="Cancelando…"
   titleId="cancel-work-title"
-  [open]="confirming()"
+  [open]="confirming() === 'cancel'"
   [busy]="sending()"
   (confirmed)="cancel()"
-  (cancelled)="confirming.set(false)"
+  (cancelled)="confirming.set(null)"
 >
   <p>
     El pedido pasará a <strong>«Cancelado»</strong> y no podrá reactivarlo. Se guardará quién
@@ -54,6 +72,44 @@
       [class]="reason.touched && reason.invalid ? 'field__error' : 'field__hint'"
     >
       Obligatorio, hasta {{ maxLength }} caracteres.
+    </p>
+  </div>
+</app-confirm-dialog>
+
+<app-confirm-dialog
+  heading="¿Reportar que el trabajador no llegó?"
+  confirmLabel="Sí, reportar"
+  dismissLabel="Volver"
+  tone="primary"
+  titleId="no-show-title"
+  [open]="confirming() === 'report'"
+  [busy]="sending()"
+  (confirmed)="report()"
+  (cancelled)="confirming.set(null)"
+>
+  <p>
+    Quedará registrado con la fecha y hora actuales y se avisará al trabajador y al equipo. Solo se
+    admite un reporte por pedido.
+  </p>
+  <p>
+    <strong>No cancela el pedido</strong> ni cambia su estado, y no aplica una penalización
+    automática.
+  </p>
+  <div class="field">
+    <label class="field__label" for="no-show-description">
+      Qué ocurrió <span class="field__optional">(opcional)</span>
+    </label>
+    <textarea
+      #descriptionField
+      id="no-show-description"
+      class="field__input"
+      rows="3"
+      [formControl]="description"
+      [attr.aria-invalid]="description.touched && description.invalid ? 'true' : null"
+      aria-describedby="no-show-hint"
+    ></textarea>
+    <p id="no-show-hint" [class]="description.invalid ? 'field__error' : 'field__hint'">
+      Hasta {{ descriptionMaxLength }} caracteres.
     </p>
   </div>
 </app-confirm-dialog>

@@ -16,6 +16,13 @@ const TIMELINE = `orders/${ORDER_ID}/timeline`;
 const PAYMENTS = `orders/${ORDER_ID}/payments`;
 const RECEIPTS = `orders/${ORDER_ID}/receipts`;
 const CANCEL = apiUrl('orders', ORDER_ID, 'cancel-work');
+const NO_SHOW = apiUrl('orders', ORDER_ID, 'no-show');
+const REPORT = {
+  id: 'n1',
+  orderId: ORDER_ID,
+  description: 'No vino nadie',
+  reportedAt: '2026-11-21T14:00:00.000Z',
+};
 
 const CANCELLABLE = [
   'ACORDADO',
@@ -228,6 +235,129 @@ describe('TrackingPageComponent: special situations', () => {
     it('closes the session on a 401', async () => {
       await open('ACORDADO');
       await fail(await cancel(), 401, 'Unauthorized');
+
+      expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(false);
+    });
+  });
+
+  describe('report that the worker did not arrive (#91)', () => {
+    const reportButton = () => view.element<HTMLButtonElement>('.special__report');
+    const report = (text?: string) => send(NO_SHOW, '.special__report', text ?? 'No vino nadie');
+
+    it.each(['ACORDADO', 'ANTICIPO_REGISTRADO'] as const)('is offered in %s', async (status) => {
+      await open(status);
+
+      expect(reportButton()?.textContent).toContain('El trabajador no llegó');
+    });
+
+    it.each(['VISITA_REALIZADA', 'PRESUPUESTO_ADICIONAL_PENDIENTE', 'EN_EJECUCION'] as const)(
+      'is not offered in %s, where only cancelling remains',
+      async (status) => {
+        await open(status);
+
+        expect(reportButton()).toBeNull();
+        expect(cancelButton()).not.toBeNull();
+      },
+    );
+
+    it('is not offered again once reported', async () => {
+      await open('ACORDADO', { noShowReport: REPORT });
+
+      expect(reportButton()).toBeNull();
+      expect(view.content()).toContain('Ya reportó la inasistencia');
+      expect(view.content()).toContain('Inasistencia reportada');
+    });
+
+    it('explains that it only records the fact', async () => {
+      await open('ACORDADO');
+      await view.click('.special__report');
+
+      const text = dialog()!.textContent!.replace(/\s+/g, ' ');
+      expect(text).toContain('No cancela el pedido');
+      expect(text).toContain('no aplica una penalización');
+      expect(text).toContain('un reporte por pedido');
+      expect(text).not.toMatch(/minutos|tolerancia|reembolso/i);
+      await view.click('dialog[open] .dialog__cancel');
+      view.http.expectNone(NO_SHOW);
+    });
+
+    it.each([
+      ['without a description', '   ', {}],
+      ['with the trimmed description', '  No vino nadie  ', { description: 'No vino nadie' }],
+    ])('sends it %s, once', async (_, text, body) => {
+      await open('ANTICIPO_REGISTRADO');
+      const request = await report(text);
+      expect(request.request.body).toEqual(body);
+      await confirm();
+      view.http.expectNone(NO_SHOW);
+
+      request.flush({ created: true, report: REPORT });
+      await view.render();
+      expect(reportButton()?.disabled).toBe(true);
+      expect(cancelButton()?.disabled).toBe(true);
+      await refreshed('ANTICIPO_REGISTRADO', { noShowReport: REPORT });
+
+      expect(view.content()).toContain('Anticipo registrado');
+      expect(view.content()).toContain('No vino nadie');
+      expect(reportButton()).toBeNull();
+      expect(cancelButton()?.disabled).toBe(false);
+      expect(notice()?.textContent).toContain('el estado del pedido no cambia');
+      expect(document.activeElement).toBe(notice());
+    });
+
+    it('says when there was already a report', async () => {
+      await open('ACORDADO');
+      (await report()).flush({ created: false, report: REPORT });
+      await view.render();
+      await refreshed('ACORDADO', { noShowReport: REPORT });
+
+      expect(notice()?.textContent).toContain('no se registró otro');
+    });
+
+    it('does not send more than 1000 characters', async () => {
+      await open('ACORDADO');
+      await view.click('.special__report');
+      await view.type('dialog[open] textarea', 'a'.repeat(1001));
+      await confirm();
+
+      view.http.expectNone(NO_SHOW);
+      expect(document.activeElement?.id).toBe('no-show-description');
+      await view.click('dialog[open] .dialog__cancel');
+    });
+
+    it('keeps the confirmed result when the following query fails', async () => {
+      await open('ACORDADO');
+      (await report()).flush({ created: true, report: REPORT });
+      await view.render();
+      await view.fail(WORKFLOW, 500, 'Fallo del servidor');
+      await view.answer(TIMELINE, timeline());
+
+      expect(notice()?.textContent).toContain('Inasistencia reportada');
+    });
+
+    it.each([
+      [403, 'Forbidden resource'],
+      [404, 'El pedido no existe'],
+      [409, 'Todavía no se puede reportar la inasistencia de este trabajo.'],
+    ])('shows a %i answer and consults again', async (status, message) => {
+      await open('ACORDADO');
+      await fail(await report(), status, message);
+
+      expect(notice()?.textContent).toContain(message);
+      await refreshed('ACORDADO');
+    });
+
+    it('shows a server failure and allows retrying', async () => {
+      await open('ACORDADO');
+      await fail(await report(), 500, 'boom');
+
+      expect(notice()?.textContent).toContain('error en el servidor');
+      expect(reportButton()?.disabled).toBe(false);
+    });
+
+    it('closes the session on a 401', async () => {
+      await open('ACORDADO');
+      await fail(await report(), 401, 'Unauthorized');
 
       expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(false);
     });

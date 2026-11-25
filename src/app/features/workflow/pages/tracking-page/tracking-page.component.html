@@ -76,6 +76,7 @@
         [workflow]="current"
         [refreshing]="store.workflow.isLoading()"
         (cancelled)="onWorkCancelled()"
+        (reported)="onNoShowReported($event)"
         (failed)="onActionFailed($event)"
         (stale)="store.refresh()"
       />

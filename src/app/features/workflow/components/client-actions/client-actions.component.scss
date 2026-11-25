@@ -39,6 +39,10 @@
   gap: tokens.$space-3;
 }
 
+.special__report {
+  @include buttons.secondary;
+}
+
 .special__cancel {
   @include buttons.base;
 

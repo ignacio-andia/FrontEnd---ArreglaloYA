@@ -76,6 +76,17 @@ describe('workflow APIs', () => {
     request.flush({});
   });
 
+  it.each([
+    ['', {}],
+    ['No llegó', { description: 'No llegó' }],
+  ])('reports a no-show with description «%s»', (description, body) => {
+    TestBed.inject(WorkflowApiService).reportNoShow(ORDER_ID, description).subscribe();
+
+    const request = http.expectOne(apiUrl('orders', ORDER_ID, 'no-show'));
+    expect(request.request.body).toEqual(body);
+    request.flush({});
+  });
+
   it('asks the timeline with the page size and, afterwards, the opaque cursor', () => {
     const api = TestBed.inject(TimelineApiService);
     const url = apiUrl('orders', ORDER_ID, 'timeline');

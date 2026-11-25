@@ -6,6 +6,7 @@ import { OwnerOrder } from '../../orders/models/order.model';
 import {
   BudgetResult,
   ExecutionResult,
+  NoShowResult,
   ProposeBudgetRequest,
   VisitPaymentConfirmation,
   VisitRegistration,
@@ -56,6 +57,14 @@ export class WorkflowApiService {
   /** `POST /orders/:orderId/cancel-work`: cliente dueño. Devuelve el pedido cancelado. */
   cancelWork(orderId: string, reason: string): Observable<OwnerOrder> {
     return this.http.post<OwnerOrder>(apiUrl('orders', orderId, 'cancel-work'), { reason });
+  }
+
+  /** `POST /orders/:orderId/no-show`: cliente dueño; la descripción es opcional. */
+  reportNoShow(orderId: string, description: string): Observable<NoShowResult> {
+    return this.http.post<NoShowResult>(
+      apiUrl('orders', orderId, 'no-show'),
+      description === '' ? {} : { description },
+    );
   }
 
   /** `POST /orders/:orderId/additional-budgets` (201): trabajador aprobado y asignado. */
