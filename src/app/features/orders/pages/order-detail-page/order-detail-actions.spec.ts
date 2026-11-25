@@ -143,6 +143,23 @@ describe('OrderDetailPageComponent (acciones)', () => {
     expect(cancelButton()).toBeNull();
   });
 
+  it('drops the cancellation notice when another order is opened', async () => {
+    await open();
+    click('.cancel__button');
+    click('.dialog__confirm');
+    httpTesting.expectOne(URL_CANCEL).flush(CANCELLED);
+    await settle();
+    expect(text()).toContain('El pedido fue cancelado.');
+
+    const other = ownerOrder({ id: '00000000-0000-4000-8000-000000000009', images: [] });
+    const navigation = harness.navigateByUrl(`/cliente/mis-pedidos/${other.id}`);
+    (await vi.waitFor(() => httpTesting.expectOne(apiUrl('orders', 'me', other.id)))).flush(other);
+    await navigation;
+    await settle();
+
+    expect(text()).not.toContain('El pedido fue cancelado.');
+  });
+
   it('shows the 409 message and refreshes the order', async () => {
     const message =
       'El pedido ya tiene un acuerdo: no se puede cancelar por esta vía. Use «Cancelar trabajo» (RF-34).';

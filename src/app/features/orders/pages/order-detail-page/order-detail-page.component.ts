@@ -7,7 +7,6 @@ import {
   computed,
   inject,
   linkedSignal,
-  signal,
 } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -120,8 +119,15 @@ export class OrderDetailPageComponent {
     () => this.order.hasValue() && ORDER_AGREED_STATUSES.includes(this.order.value().status),
   );
 
-  protected readonly actionErrors = signal<string[]>([]);
-  protected readonly cancelledMessage = signal(false);
+  /** Los avisos de una acción pertenecen a un pedido: se descartan al pasar a otro. */
+  protected readonly actionErrors = linkedSignal<string, string[]>({
+    source: this.orderId,
+    computation: () => [],
+  });
+  protected readonly cancelledMessage = linkedSignal({
+    source: this.orderId,
+    computation: () => false,
+  });
 
   protected onCancelled(order: OwnerOrder): void {
     this.order.set(order);
