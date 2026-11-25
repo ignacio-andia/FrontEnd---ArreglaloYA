@@ -13,6 +13,7 @@ import { RoleName } from './core/models/role.model';
 import { apiUrl } from './core/http/api-url';
 import { LoginPageComponent } from './features/auth/pages/login-page/login-page.component';
 import { CategoriesPageComponent } from './features/catalogs/pages/categories-page/categories-page.component';
+import { MyOrdersPageComponent } from './features/orders/pages/my-orders-page/my-orders-page.component';
 import { PublishOrderPageComponent } from './features/orders/pages/publish-order-page/publish-order-page.component';
 import { BecomeWorkerPageComponent } from './features/worker-profile/pages/become-worker-page/become-worker-page.component';
 import { AccountPageComponent } from './features/users/pages/account-page/account-page.component';
@@ -224,6 +225,41 @@ describe('app routes', () => {
         (node) => node.componentInstance instanceof BecomeWorkerPageComponent,
       ),
     ).not.toBeNull();
+  });
+
+  it('opens «Mis pedidos» from the client menu', async () => {
+    signIn(['CLIENTE']);
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/cliente', ClientLayoutComponent);
+
+    const link = Array.from(
+      (harness.routeNativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('nav a'),
+    ).find((anchor) => anchor.textContent?.trim() === 'Mis pedidos');
+    expect(link?.getAttribute('href')).toBe('/cliente/mis-pedidos');
+    link?.click();
+    (
+      await vi.waitFor(() =>
+        httpTesting.expectOne((request) => request.url === apiUrl('orders', 'me')),
+      )
+    ).flush({ data: [], meta: { page: 1, limit: 12, total: 0, totalPages: 0 } });
+    await vi.waitFor(() => expect(currentPath()).toBe('/cliente/mis-pedidos'));
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(Title).getTitle()).toBe('Mis pedidos | ArreglaloYA');
+    expect(
+      harness.routeDebugElement?.query(
+        (node) => node.componentInstance instanceof MyOrdersPageComponent,
+      ),
+    ).not.toBeNull();
+  });
+
+  it('keeps «Mis pedidos» closed for an account without the CLIENTE role', async () => {
+    signIn(['TRABAJADOR']);
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/cliente/mis-pedidos/e5f6a7b8-c9d0-4e1f-8a2b-3c4d5e6f7a8b');
+
+    expect(currentPath()).toBe('/');
   });
 
   it('opens «Publicar pedido» in the client area', async () => {

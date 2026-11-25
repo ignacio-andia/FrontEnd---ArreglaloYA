@@ -1,0 +1,166 @@
+<section class="detail" aria-labelledby="order-detail-title">
+  <a class="detail__back" routerLink="/cliente/mis-pedidos" [queryParams]="backQuery">
+    <span aria-hidden="true">←</span> Volver a mis pedidos
+  </a>
+
+  @if (order.isLoading() && !order.hasValue()) {
+    <h1 id="order-detail-title" class="detail__title">Detalle del pedido</h1>
+    <p class="detail__state" role="status">Cargando el pedido…</p>
+  } @else if (notFound()) {
+    <h1 id="order-detail-title" class="detail__title">Pedido no encontrado</h1>
+    <div class="detail__empty">
+      <p>El pedido no existe o no pertenece a su cuenta.</p>
+      <a class="detail__secondary" routerLink="/cliente/mis-pedidos">Ver mis pedidos</a>
+    </div>
+  } @else if (errorMessage(); as message) {
+    <h1 id="order-detail-title" class="detail__title">Detalle del pedido</h1>
+    <div class="detail__alert" role="alert">
+      <p>{{ message }}</p>
+      @if (errorStatus() !== 403) {
+        <button type="button" class="detail__secondary" (click)="retry()">Reintentar</button>
+      }
+    </div>
+  } @else if (order.hasValue()) {
+    @let current = order.value();
+    <header class="detail__header">
+      <h1 id="order-detail-title" class="detail__title">{{ current.category.name }}</h1>
+      <app-order-status-badge [status]="current.status" />
+    </header>
+
+    @if (current.anonymizedAt) {
+      <p class="detail__notice">
+        El pedido se cerró y, por privacidad, se eliminaron su descripción, su dirección y sus
+        fotografías el {{ current.anonymizedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}.
+      </p>
+    }
+
+    <div class="detail__grid">
+      <section class="detail__card" aria-labelledby="order-service-title">
+        <h2 id="order-service-title" class="detail__subtitle">Información del servicio</h2>
+        <dl class="detail__data">
+          <div>
+            <dt>Categoría</dt>
+            <dd>
+              {{ current.category.name }}
+              @if (!current.category.isActive) {
+                <span class="detail__muted">(desactivada)</span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Zona</dt>
+            <dd>
+              {{ current.zone.name }}
+              @if (!current.zone.isActive) {
+                <span class="detail__muted">(desactivada)</span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Presupuesto</dt>
+            <dd>Bs {{ current.budgetAmount }}</dd>
+          </div>
+          <div class="detail__wide">
+            <dt>Descripción</dt>
+            <dd class="detail__text">{{ current.description }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="detail__card" aria-labelledby="order-info-title">
+        <h2 id="order-info-title" class="detail__subtitle">Información del pedido</h2>
+        <dl class="detail__data detail__data--stacked">
+          <div>
+            <dt>Estado</dt>
+            <dd><app-order-status-badge [status]="current.status" /></dd>
+          </div>
+          <div>
+            <dt>Publicado el</dt>
+            <dd>{{ current.publishedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+          </div>
+          <div>
+            <dt>Vence el</dt>
+            <dd>{{ current.expiresAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+          </div>
+          @if (current.lastEditedAt) {
+            <div>
+              <dt>Última edición</dt>
+              <dd>{{ current.lastEditedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+            </div>
+          }
+          @if (current.cancelledAt) {
+            <div>
+              <dt>Cancelado el</dt>
+              <dd>{{ current.cancelledAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    </div>
+
+    <section class="detail__card" aria-labelledby="order-location-title">
+      <h2 id="order-location-title" class="detail__subtitle">Ubicación</h2>
+      @if (current.address; as address) {
+        <dl class="detail__data detail__data--stacked">
+          <div>
+            <dt>Dirección exacta</dt>
+            <dd>{{ address.addressLine }}</dd>
+          </div>
+          @if (address.reference) {
+            <div>
+              <dt>Referencia</dt>
+              <dd>{{ address.reference }}</dd>
+            </div>
+          }
+        </dl>
+        <p class="detail__muted">
+          Solo usted puede ver la dirección; los trabajadores no la ven al consultar el pedido.
+        </p>
+      } @else {
+        <p class="detail__muted">La dirección ya no está disponible.</p>
+      }
+    </section>
+
+    <section class="detail__card" aria-labelledby="order-photos-title">
+      <h2 id="order-photos-title" class="detail__subtitle">
+        Fotografías ({{ current.images.length }})
+      </h2>
+      @if (selectedImage(); as image) {
+        <div class="gallery">
+          <app-order-photo
+            class="gallery__main"
+            [orderId]="current.id"
+            [imageId]="image.id"
+            variant="full"
+            [alt]="'Fotografía ' + image.position + ' de ' + current.images.length + ' del pedido'"
+          />
+          @if (current.images.length > 1) {
+            <ul class="gallery__thumbs" aria-label="Elegir fotografía">
+              @for (thumb of current.images; track thumb.id; let index = $index) {
+                <li>
+                  <button
+                    type="button"
+                    class="gallery__thumb"
+                    [attr.aria-pressed]="thumb.id === image.id"
+                    (click)="selectImage(index)"
+                  >
+                    <app-order-photo
+                      class="gallery__thumb-photo"
+                      [orderId]="current.id"
+                      [imageId]="thumb.id"
+                      variant="thumb"
+                      alt=""
+                    />
+                    <span class="sr-only">Ver la fotografía {{ thumb.position }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      } @else {
+        <p class="detail__muted">El pedido no tiene fotografías disponibles.</p>
+      }
+    </section>
+  }
+</section>

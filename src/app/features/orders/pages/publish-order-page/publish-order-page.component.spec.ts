@@ -235,6 +235,11 @@ describe('PublishOrderPageComponent', () => {
     expect(summary).toContain('Publicado');
     expect(summary).toContain('Bs 150.50');
     expect(summary).toContain('22/11/2026 10:40');
+    expect(
+      Array.from(element.querySelectorAll('a'))
+        .find((link) => link.textContent?.trim() === 'Ver el pedido publicado')
+        ?.getAttribute('href'),
+    ).toBe(`/cliente/mis-pedidos/${ownerOrder().id}`);
   });
 
   it('shows the warnings, lets the user go back with the data intact and publish anyway', async () => {

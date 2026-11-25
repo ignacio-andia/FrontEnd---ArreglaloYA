@@ -25,11 +25,12 @@ const cases: LayoutCase[] = [
     area: 'Área de cliente',
     links: [
       ['Resumen', '/cliente'],
+      ['Mis pedidos', '/cliente/mis-pedidos'],
       ['Publicar pedido', '/cliente/publicar-pedido'],
       ['Mi cuenta', '/cliente/mi-cuenta'],
       ['Quiero ofrecer mis servicios', '/cliente/ofrecer-servicios'],
     ],
-    pending: ['Mis pedidos', 'Ofertas recibidas'],
+    pending: ['Ofertas recibidas'],
   },
   {
     name: 'WorkerLayoutComponent',

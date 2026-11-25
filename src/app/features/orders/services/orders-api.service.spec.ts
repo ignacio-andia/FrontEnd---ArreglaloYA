@@ -108,4 +108,60 @@ describe('OrdersApiService', () => {
     const body = httpTesting.expectOne(apiUrl('orders')).request.body as FormData;
     expect(body.has('addressReference')).toBe(false);
   });
+
+  it('lists own orders sending only the given query parameters', async () => {
+    const page = { data: [ownerOrder()], meta: { page: 2, limit: 12, total: 13, totalPages: 2 } };
+    const result = firstValueFrom(service.listOwn({ status: 'PUBLICADO', page: 2, limit: 12 }));
+
+    const req = httpTesting.expectOne((request) => request.url === apiUrl('orders', 'me'));
+    expect(req.request.method).toBe('GET');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-token');
+    expect(req.request.params.keys()).toEqual(['status', 'page', 'limit']);
+    expect(req.request.params.get('status')).toBe('PUBLICADO');
+    expect(req.request.params.get('page')).toBe('2');
+    expect(req.request.params.get('limit')).toBe('12');
+    req.flush(page);
+
+    expect(await result).toEqual(page);
+  });
+
+  it('lists own orders without parameters by default', () => {
+    service.listOwn().subscribe();
+
+    const req = httpTesting.expectOne(apiUrl('orders', 'me'));
+    expect(req.request.params.keys()).toEqual([]);
+    req.flush({ data: [], meta: { page: 1, limit: 20, total: 0, totalPages: 0 } });
+  });
+
+  it('gets the own order detail', async () => {
+    const order = ownerOrder();
+    const result = firstValueFrom(service.getOwn(order.id));
+
+    const req = httpTesting.expectOne(apiUrl('orders', 'me', order.id));
+    expect(req.request.method).toBe('GET');
+    req.flush(order);
+
+    expect(await result).toEqual(order);
+  });
+
+  it.each(['thumb', 'full'] as const)(
+    'downloads the %s image as a Blob with the Bearer token',
+    async (variant) => {
+      const order = ownerOrder();
+      const imageId = order.images[0].id;
+      const blob = new Blob(['webp'], { type: 'image/webp' });
+      const result = firstValueFrom(service.getOwnImage(order.id, imageId, variant));
+
+      const req = httpTesting.expectOne(
+        (request) => request.url === apiUrl('orders', 'me', order.id, 'images', imageId),
+      );
+      expect(req.request.method).toBe('GET');
+      expect(req.request.responseType).toBe('blob');
+      expect(req.request.params.get('variant')).toBe(variant);
+      expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-token');
+      req.flush(blob);
+
+      expect(await result).toBe(blob);
+    },
+  );
 });

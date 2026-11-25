@@ -1,17 +1,22 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
+import { PaginatedResponse } from '../../../core/models/pagination.model';
 import {
   CreateOrderRequest,
   DuplicateCheckRequest,
   DuplicateCheckResponse,
+  OrderImageVariant,
   OrderWithWarnings,
+  OwnOrdersQuery,
+  OwnerOrder,
 } from '../models/order.model';
 
 /**
- * Pedidos del cliente dueño (`/api/orders`, rol CLIENTE). Por ahora solo cubre la publicación:
- * la consulta previa de posibles duplicados y la creación del pedido con sus fotografías.
+ * Pedidos del cliente dueño (`/api/orders` y `/api/orders/me`, rol CLIENTE): publicación (con la
+ * consulta previa de posibles duplicados), listado, detalle y fotografías privadas. Un pedido
+ * ajeno responde 404, igual que uno inexistente.
  */
 @Service()
 export class OrdersApiService {
@@ -50,5 +55,36 @@ export class OrdersApiService {
       form.append('images', image, image.name);
     }
     return this.http.post<OrderWithWarnings>(apiUrl('orders'), form);
+  }
+
+  /** `GET /orders/me`: pedidos propios paginados; solo envía los parámetros indicados. */
+  listOwn(query: OwnOrdersQuery = {}): Observable<PaginatedResponse<OwnerOrder>> {
+    let params = new HttpParams();
+    if (query.status !== undefined) {
+      params = params.set('status', query.status);
+    }
+    if (query.page !== undefined) {
+      params = params.set('page', query.page);
+    }
+    if (query.limit !== undefined) {
+      params = params.set('limit', query.limit);
+    }
+    return this.http.get<PaginatedResponse<OwnerOrder>>(apiUrl('orders', 'me'), { params });
+  }
+
+  /** `GET /orders/me/:orderId`: 404 si no existe o no es del cliente; 400 si no es un UUID. */
+  getOwn(orderId: string): Observable<OwnerOrder> {
+    return this.http.get<OwnerOrder>(apiUrl('orders', 'me', orderId));
+  }
+
+  /**
+   * `GET /orders/me/:orderId/images/:imageId?variant=` como Blob (`image/webp`). Es privada:
+   * `<img src>` no enviaría el token Bearer, por eso se descarga con HttpClient.
+   */
+  getOwnImage(orderId: string, imageId: string, variant: OrderImageVariant): Observable<Blob> {
+    return this.http.get(apiUrl('orders', 'me', orderId, 'images', imageId), {
+      params: { variant },
+      responseType: 'blob',
+    });
   }
 }

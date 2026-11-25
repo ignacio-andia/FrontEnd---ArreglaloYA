@@ -29,7 +29,7 @@ export class ClientLayoutComponent {
 
   protected readonly navItems = computed((): readonly NavItem[] => [
     { label: 'Resumen', path: '/cliente', exact: true },
-    { label: 'Mis pedidos', path: null },
+    { label: 'Mis pedidos', path: '/cliente/mis-pedidos' },
     { label: 'Publicar pedido', path: '/cliente/publicar-pedido' },
     { label: 'Ofertas recibidas', path: null },
     { label: 'Mi cuenta', path: '/cliente/mi-cuenta' },

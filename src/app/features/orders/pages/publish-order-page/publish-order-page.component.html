@@ -343,7 +343,9 @@
             <button type="button" class="publish__secondary" (click)="startOver()">
               Publicar otro pedido
             </button>
-            <a class="publish__link" routerLink="/cliente">Volver al resumen</a>
+            <a class="publish__link" [routerLink]="['/cliente/mis-pedidos', result.order.id]">
+              Ver el pedido publicado
+            </a>
           </div>
         </div>
       }

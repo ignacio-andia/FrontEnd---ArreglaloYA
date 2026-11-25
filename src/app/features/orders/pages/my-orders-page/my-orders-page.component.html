@@ -1,0 +1,142 @@
+<section class="orders" aria-labelledby="my-orders-title">
+  <header class="orders__header">
+    <div>
+      <h1 id="my-orders-title" class="orders__title">Mis pedidos</h1>
+      <p class="orders__intro">
+        Consulte los pedidos que publicó, su estado y su información completa.
+      </p>
+    </div>
+    <a class="orders__cta" routerLink="/cliente/publicar-pedido">Publicar un pedido</a>
+  </header>
+
+  <div class="orders__filters">
+    <label class="orders__label" for="my-orders-status">Estado</label>
+    <select id="my-orders-status" class="orders__select" [formControl]="statusFilter">
+      <option value="">Todos los pedidos</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ statusLabels[status] }}</option>
+      }
+    </select>
+  </div>
+
+  @if (orders.isLoading() && !orders.hasValue()) {
+    <p class="orders__state" role="status">Cargando sus pedidos…</p>
+  } @else if (errorMessage(); as message) {
+    <div class="orders__alert" role="alert">
+      <p>{{ message }}</p>
+      @if (errorStatus() !== 403) {
+        <button type="button" class="orders__secondary" (click)="retry()">Reintentar</button>
+      }
+    </div>
+  } @else if (meta(); as meta) {
+    <section
+      id="my-orders-results"
+      class="orders__results"
+      aria-labelledby="my-orders-results-title"
+      tabindex="-1"
+      [attr.aria-busy]="refreshing()"
+    >
+      <h2 id="my-orders-results-title" class="sr-only">Resultados</h2>
+      <p class="orders__state" role="status">
+        @if (refreshing()) {
+          Actualizando…
+        } @else if (meta.total > 0) {
+          {{ meta.total }} {{ meta.total === 1 ? 'pedido' : 'pedidos' }}
+        }
+      </p>
+
+      @if (items().length === 0) {
+        <div class="orders__empty">
+          @if (page() > 1) {
+            <p>No hay pedidos en esta página.</p>
+            <button type="button" class="orders__secondary" (click)="goToPage(1)">
+              Ir a la primera página
+            </button>
+          } @else if (status(); as status) {
+            <p>No tiene pedidos con estado «{{ statusLabels[status] }}».</p>
+            <button type="button" class="orders__secondary" (click)="showAll()">
+              Ver todos los pedidos
+            </button>
+          } @else {
+            <p class="orders__empty-title">Todavía no publicó ningún pedido.</p>
+            <p>Cuente qué necesita y reciba ofertas de trabajadores verificados de su zona.</p>
+            <a class="orders__cta" routerLink="/cliente/publicar-pedido">
+              Publicar mi primer pedido
+            </a>
+          }
+        </div>
+      } @else {
+        <ul class="orders__list">
+          @for (order of items(); track order.id) {
+            <li>
+              <article class="card">
+                <div class="card__media">
+                  @if (cover(order); as imageId) {
+                    <app-order-photo
+                      class="card__photo"
+                      [orderId]="order.id"
+                      [imageId]="imageId"
+                      variant="thumb"
+                      alt=""
+                    />
+                  } @else {
+                    <span class="card__no-photo">Sin fotografías</span>
+                  }
+                </div>
+                <div class="card__body">
+                  <div class="card__top">
+                    <h3 class="card__title">
+                      <a class="card__link" [routerLink]="[order.id]" [state]="detailState()">
+                        {{ order.category.name }}
+                      </a>
+                    </h3>
+                    <app-order-status-badge [status]="order.status" />
+                  </div>
+                  <p class="card__description">{{ order.description }}</p>
+                  <dl class="card__data">
+                    <div>
+                      <dt>Presupuesto</dt>
+                      <dd>Bs {{ order.budgetAmount }}</dd>
+                    </div>
+                    <div>
+                      <dt>Zona</dt>
+                      <dd>{{ order.zone.name }}</dd>
+                    </div>
+                    <div>
+                      <dt>Publicado</dt>
+                      <dd>{{ order.publishedAt | date: 'dd/MM/yyyy' : timezone }}</dd>
+                    </div>
+                  </dl>
+                </div>
+              </article>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (meta.totalPages > 1) {
+        <nav class="pager" aria-label="Páginas de pedidos">
+          <button
+            type="button"
+            class="orders__secondary"
+            [disabled]="page() <= 1 || refreshing()"
+            (click)="goToPage(page() - 1)"
+          >
+            Anterior
+          </button>
+          <p class="pager__info">
+            Página {{ meta.page }} de {{ meta.totalPages }} · {{ meta.total }} resultados
+          </p>
+          <button
+            type="button"
+            class="orders__secondary"
+            [disabled]="page() >= meta.totalPages || refreshing()"
+            (click)="goToPage(page() + 1)"
+          >
+            Siguiente
+          </button>
+        </nav>
+      }
+    </section>
+  }
+</section>

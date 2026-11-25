@@ -7,8 +7,9 @@ export interface PaginationMeta {
 }
 
 /**
- * Respuesta paginada del backend. Solo la usan usuarios, bitácora, pedidos y
- * solicitudes de cambio de zona del administrador; los demás listados son arreglos simples.
+ * Respuesta paginada del backend (`Paginated<T>`): usuarios, bitácora, solicitudes de cambio de
+ * zona y perfiles del administrador, pedidos, ofertas y notificaciones. Los demás listados son
+ * arreglos simples.
  */
 export interface PaginatedResponse<T> {
   data: T[];

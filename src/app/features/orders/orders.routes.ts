@@ -11,3 +11,26 @@ export const PUBLISH_ORDER_ROUTES: Routes = [
       ),
   },
 ];
+
+/**
+ * «Mis pedidos», montada en `/cliente/mis-pedidos` (ClientLayout, rol CLIENTE): listado
+ * (`?estado=&pagina=`) y detalle de un pedido propio.
+ */
+export const MY_ORDERS_ROUTES: Routes = [
+  {
+    path: '',
+    title: 'Mis pedidos | ArreglaloYA',
+    loadComponent: () =>
+      import('./pages/my-orders-page/my-orders-page.component').then(
+        (m) => m.MyOrdersPageComponent,
+      ),
+  },
+  {
+    path: ':orderId',
+    title: 'Detalle del pedido | ArreglaloYA',
+    loadComponent: () =>
+      import('./pages/order-detail-page/order-detail-page.component').then(
+        (m) => m.OrderDetailPageComponent,
+      ),
+  },
+];

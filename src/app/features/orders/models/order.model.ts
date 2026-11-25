@@ -19,6 +19,10 @@ export const ORDER_STATUSES = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+export function isOrderStatus(value: string): value is OrderStatus {
+  return (ORDER_STATUSES as readonly string[]).includes(value);
+}
+
 /** Texto visible de cada estado. Solo traduce el literal. */
 export const ORDER_STATUS_LABELS: Readonly<Record<OrderStatus, string>> = {
   PUBLICADO: 'Publicado',
@@ -35,6 +39,19 @@ export const ORDER_STATUS_LABELS: Readonly<Record<OrderStatus, string>> = {
   VENCIDO: 'Vencido',
   CANCELADO: 'Cancelado',
 };
+
+/** Variante de una fotografía: `full` (hasta 1600 px de lado) o `thumb` (miniatura). */
+export type OrderImageVariant = 'full' | 'thumb';
+
+/**
+ * Consulta de `GET /orders/me` (`ListOwnOrdersQueryDto`). `status` filtra por estado efectivo;
+ * por defecto `page = 1` y `limit = 20` (máximo 50). El orden es por creación, descendente.
+ */
+export interface OwnOrdersQuery {
+  status?: OrderStatus;
+  page?: number;
+  limit?: number;
+}
 
 /** Fotografía de un pedido (`OrderImageView`). Siempre WebP; los bytes se piden aparte. */
 export interface OrderImage {
@@ -70,7 +87,12 @@ export interface OrderAddress {
   reference: string | null;
 }
 
-/** Pedido visto por su cliente dueño (`OwnerOrderView`). `canEdit` y `canCancel` los calcula el backend. */
+/**
+ * Pedido visto por su cliente dueño (`OwnerOrderView`): lo devuelven el listado, el detalle, la
+ * creación y la edición. `canEdit` y `canCancel` los calcula el backend. Un pedido vencido o
+ * cancelado sin acuerdo llega limpio (`anonymizedAt`): sin fotos, sin dirección y con una
+ * descripción fija.
+ */
 export interface OwnerOrder extends WorkerOrder {
   address: OrderAddress | null;
   cancelledAt: string | null;
