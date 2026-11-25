@@ -35,6 +35,13 @@
         (failed)="onActionFailed($event)"
         (stale)="store.refresh()"
       />
+      <app-claim-form
+        [orderId]="current.orderId"
+        [refreshing]="store.workflow.isLoading()"
+        (submitted)="onClaimSubmitted()"
+        (failed)="onActionFailed($event)"
+        (stale)="store.refresh()"
+      />
     }
 
     @if (current.additionalBudgets.length > 0) {

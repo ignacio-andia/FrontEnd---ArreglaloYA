@@ -7,6 +7,7 @@ import { ErrorAlertComponent } from '../../../../shared/components/error-alert/e
 import { LoadingStateComponent } from '../../../../shared/components/loading-state/loading-state.component';
 import { apiErrorMessages } from '../../../../shared/utils/api-error-message';
 import { WhatsappContactComponent } from '../../../offers/components/whatsapp-contact/whatsapp-contact.component';
+import { ClaimFormComponent } from '../../../claims/components/claim-form/claim-form.component';
 import { OffersApiService } from '../../../offers/services/offers-api.service';
 import { OrdersApiService } from '../../../orders/services/orders-api.service';
 import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
@@ -36,6 +37,7 @@ const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
     RouterLink,
     ActionNoticeComponent,
     AdditionalBudgetListComponent,
+    ClaimFormComponent,
     ClientActionsComponent,
     ConformityPanelComponent,
     EmptyStateComponent,
@@ -128,6 +130,12 @@ export class TrackingPageComponent {
 
   protected onConformityConfirmed(): void {
     this.succeed('Conformidad confirmada. El pedido quedó cerrado.');
+  }
+
+  protected onClaimSubmitted(): void {
+    this.succeed(
+      'Reclamo presentado. El pedido quedó «En reclamo» y un administrador lo revisará.',
+    );
   }
 
   protected onWorkCancelled(): void {
