@@ -9,6 +9,14 @@ export function isClaimStatus(value: string): value is ClaimStatus {
 
 /** Límite de `CreateClaimDto.description`. */
 export const CLAIM_DESCRIPTION_MAX_LENGTH = 2000;
+/** Límite de `decision` y `justification` en `DecideClaimDto`. */
+export const CLAIM_DECISION_MAX_LENGTH = 2000;
+
+/** Cuerpo de `POST /admin/claims/:claimId/decision` (`DecideClaimDto`). */
+export interface DecideClaimRequest {
+  decision: string;
+  justification: string;
+}
 /**
  * Fotografías por reclamo: por defecto son opcionales y hasta 20 (`CLAIM_MIN_IMAGES` y
  * `CLAIM_MAX_IMAGES`). La API no expone esa configuración: si cambia, responde 400.

@@ -1,0 +1,47 @@
+@use 'tokens';
+@use 'mixins';
+@use 'buttons';
+@use 'page';
+@use 'form-controls';
+
+@include form-controls.base;
+@include form-controls.textarea;
+
+:host {
+  display: block;
+}
+
+.resolution {
+  display: grid;
+  gap: tokens.$space-3;
+  min-width: 0;
+  padding: tokens.$space-6 tokens.$space-4;
+  border: 1px solid var(--color-primary);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+
+  @include mixins.respond-up(sm) {
+    padding: tokens.$space-6;
+  }
+}
+
+.resolution__title {
+  @include page.subtitle;
+}
+
+.resolution__muted {
+  color: var(--color-text-secondary);
+}
+
+.resolution__form {
+  display: grid;
+  gap: tokens.$space-3;
+}
+
+.resolution__review {
+  @include buttons.secondary;
+}
+
+.resolution__send {
+  @include buttons.primary;
+}

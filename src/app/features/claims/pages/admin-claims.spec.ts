@@ -1,3 +1,6 @@
+import { TestRequest } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { SessionStore } from '../../../core/auth/session.store';
 import { apiUrl } from '../../../core/http/api-url';
 import { ORDER_ID, page, setupOfferPage } from '../../offers/testing/offers.fixtures';
 import { stubObjectUrls } from '../../orders/testing/order.fixtures';
@@ -5,7 +8,7 @@ import { receipts } from '../../payments/testing/payments.fixtures';
 import { event, timeline } from '../../workflow/testing/workflow.fixtures';
 import { ADMIN_CLAIMS_ROUTES } from '../claims.routes';
 import { ClaimSummary } from '../models/claim.model';
-import { CLAIM_ID, claim } from '../testing/claims.fixtures';
+import { CLAIM_ID, claim, resolved } from '../testing/claims.fixtures';
 
 const row = (overrides: Partial<ClaimSummary> = {}): ClaimSummary => ({
   id: CLAIM_ID,
@@ -188,6 +191,205 @@ describe('administration of claims', () => {
       await view.answer(`orders/${ORDER_ID}/receipts`, receipts());
       await view.answer(`orders/${ORDER_ID}/timeline`, timeline());
       expect(view.content()).toContain('Sigue goteando');
+    });
+  });
+
+  describe('review and decision (#97, #98)', () => {
+    const REVIEW = apiUrl('admin', 'claims', CLAIM_ID, 'review');
+    const DECIDE = apiUrl('admin', 'claims', CLAIM_ID, 'decision');
+    const dialog = () => view.element('dialog[open]');
+    const confirm = () => view.click('dialog[open] .dialog__confirm');
+    const notice = () => view.element('#action-notice');
+    const review = () => view.element<HTMLButtonElement>('.resolution__review');
+    const submit = () => view.element<HTMLButtonElement>('.resolution__send');
+    const bare = (overrides = {}) => claim({ images: [], ...overrides });
+
+    async function context(summary = 'Historial actualizado'): Promise<void> {
+      await view.answer(`orders/admin/${ORDER_ID}`, ADMIN_ORDER);
+      await view.answer(`orders/${ORDER_ID}/receipts`, receipts());
+      await view.answer(`orders/${ORDER_ID}/timeline`, timeline([event({ summary })]));
+    }
+
+    async function open(body = bare()): Promise<void> {
+      await view.visit(`/admin/reclamos/${CLAIM_ID}`);
+      await view.answer(`admin/claims/${CLAIM_ID}`, body);
+      await context('Reclamo presentado');
+    }
+
+    async function startReview(): Promise<TestRequest> {
+      await view.click('.resolution__review');
+      await confirm();
+      return view.http.expectOne(REVIEW);
+    }
+
+    async function fill(decision = '  Revisar la unión  ', justification = '  Hay fuga  ') {
+      await view.type('#claim-decision', decision);
+      await view.type('#claim-justification', justification);
+      await view.click('.resolution__send');
+    }
+
+    async function decide(): Promise<TestRequest> {
+      await fill();
+      await confirm();
+      return view.http.expectOne(DECIDE);
+    }
+
+    async function fail(request: TestRequest, status: number, message: string): Promise<void> {
+      request.flush({ statusCode: status, message }, { status, statusText: 'Error' });
+      await view.render();
+    }
+
+    async function reloaded(body = bare()): Promise<void> {
+      await view.answer(`admin/claims/${CLAIM_ID}`, body);
+      await context();
+    }
+
+    it('offers both actions on an open claim', async () => {
+      await open();
+
+      expect(review()).not.toBeNull();
+      expect(submit()).not.toBeNull();
+    });
+
+    it('offers only the decision while in review', async () => {
+      await open(bare({ status: 'EN_REVISION' }));
+
+      expect(review()).toBeNull();
+      expect(submit()).not.toBeNull();
+    });
+
+    it('offers no action on a resolved claim and shows its decision', async () => {
+      await open(resolved({ images: [] }));
+
+      expect(view.element('app-claim-resolution')).toBeNull();
+      expect(view.content()).toContain('Las fotografías muestran la fuga.');
+    });
+
+    it('starts the review once, shows the new state and refreshes the context', async () => {
+      await open();
+      await view.click('.resolution__review');
+      expect(dialog()?.textContent).toContain('«En revisión»');
+      view.http.expectNone(REVIEW);
+      await confirm();
+      const request = view.http.expectOne(REVIEW);
+      expect(request.request.body).toBeNull();
+      await confirm();
+      view.http.expectNone(REVIEW);
+
+      request.flush(bare({ status: 'EN_REVISION' }));
+      await view.render();
+      await context();
+
+      expect(view.content()).toContain('En revisión');
+      expect(view.content()).toContain('Historial actualizado');
+      expect(review()).toBeNull();
+      expect(notice()?.textContent).toContain('Revisión iniciada');
+      expect(document.activeElement).toBe(notice());
+    });
+
+    it.each([
+      ['', 'Hay fuga', 'Escriba la decisión.', 'claim-decision'],
+      ['Revisar', '   ', 'Escriba la justificación.', 'claim-justification'],
+      ['a'.repeat(2001), 'x', 'Use como máximo 2000 caracteres.', 'claim-decision'],
+      ['x', 'a'.repeat(2001), 'Use como máximo 2000 caracteres.', 'claim-justification'],
+    ])('requires decision and justification', async (decision, justification, message, id) => {
+      await open();
+      await fill(decision, justification);
+
+      expect(view.content()).toContain(message);
+      expect(document.activeElement?.id).toBe(id);
+      expect(dialog()).toBeNull();
+    });
+
+    it('warns before resolving, without promising effects, and may be dismissed', async () => {
+      await open();
+      await fill();
+
+      const text = dialog()!.textContent!.replace(/\s+/g, ' ');
+      expect(text).toContain('«Cerrado»');
+      expect(text).toContain('no se puede modificar');
+      expect(text).toContain('no aplica sanciones, devoluciones');
+      await view.click('dialog[open] .dialog__cancel');
+      view.http.expectNone(DECIDE);
+    });
+
+    it('resolves once and shows the decision and justification of the backend', async () => {
+      await open();
+      const request = await decide();
+      expect(request.request.body).toEqual({
+        decision: 'Revisar la unión',
+        justification: 'Hay fuga',
+      });
+      await confirm();
+      view.http.expectNone(DECIDE);
+
+      request.flush(resolved({ images: [] }));
+      await view.render();
+      await context();
+
+      expect(view.content()).toContain('Resuelto');
+      expect(view.content()).toContain('El trabajador debe revisar la unión.');
+      expect(view.element('app-claim-resolution')).toBeNull();
+      expect(notice()?.textContent).toContain('El pedido quedó «Cerrado»');
+      expect(document.activeElement).toBe(notice());
+    });
+
+    it('keeps the confirmed result when the following queries fail', async () => {
+      await open();
+      (await decide()).flush(resolved({ images: [] }));
+      await view.render();
+      await view.fail(`orders/admin/${ORDER_ID}`, 500);
+      await view.fail(`orders/${ORDER_ID}/receipts`, 500);
+      await view.fail(`orders/${ORDER_ID}/timeline`, 500);
+
+      expect(notice()?.textContent).toContain('Reclamo resuelto');
+      expect(view.content()).toContain('El trabajador debe revisar la unión.');
+    });
+
+    it.each([
+      [409, 'El reclamo ya fue resuelto.', 'El reclamo ya fue resuelto.'],
+      [409, 'El pedido ya no está en reclamo (estado CERRADO).', 'El reclamo cambió de estado'],
+      [404, 'El reclamo no existe', 'El reclamo no existe'],
+      [403, 'Forbidden resource', 'Forbidden resource'],
+    ])('shows a %i of the decision and consults again', async (status, message, shown) => {
+      await open();
+      await fail(await decide(), status, message);
+
+      expect(notice()?.textContent).toContain(shown);
+      expect(view.content()).not.toContain('estado CERRADO');
+      await reloaded();
+      expect(notice()?.textContent).toContain(shown);
+    });
+
+    it('does not show the internal status of a review conflict', async () => {
+      await open();
+      await fail(
+        await startReview(),
+        409,
+        'El reclamo no se puede poner en revisión desde EN_REVISION.',
+      );
+
+      expect(notice()?.textContent).toContain('El reclamo cambió de estado');
+      await reloaded(bare({ status: 'EN_REVISION' }));
+    });
+
+    it.each([
+      [400, 'decision es obligatoria', 'decision es obligatoria'],
+      [500, 'boom', 'error en el servidor'],
+    ])('keeps what was written after a %i', async (status, message, shown) => {
+      await open();
+      await fail(await decide(), status, message);
+
+      expect(notice()?.textContent).toContain(shown);
+      expect(view.element<HTMLTextAreaElement>('#claim-decision')?.value).toContain('Revisar');
+      expect(submit()?.disabled).toBe(false);
+    });
+
+    it('closes the session on a 401', async () => {
+      await open();
+      await fail(await startReview(), 401, 'Unauthorized');
+
+      expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(false);
     });
   });
 });

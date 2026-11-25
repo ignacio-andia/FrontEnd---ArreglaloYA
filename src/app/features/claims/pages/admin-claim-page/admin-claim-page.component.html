@@ -3,6 +3,8 @@
     <span aria-hidden="true">←</span> Volver a reclamos
   </a>
 
+  <app-action-notice [notice]="notice()" />
+
   @if (claim.isLoading() && !current()) {
     <h1 id="claim-page-title" class="offers__title">Reclamo</h1>
     <app-loading-state message="Cargando el reclamo…" />
@@ -22,6 +24,16 @@
       <h2 id="claim-info-title" class="offers__subtitle">Reclamo del cliente</h2>
       <app-claim-detail [claim]="current" />
     </section>
+
+    @if (current.status !== 'RESUELTO') {
+      <app-claim-resolution
+        [claim]="current"
+        [refreshing]="claim.isLoading()"
+        (changed)="onChanged($event)"
+        (failed)="onActionFailed($event)"
+        (stale)="reload()"
+      />
+    }
 
     <section class="offers__card" aria-labelledby="claim-order-title">
       <h2 id="claim-order-title" class="offers__subtitle">Pedido y partes</h2>

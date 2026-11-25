@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, untracked } from '@angular/core';
+import { Component, computed, effect, inject, linkedSignal, untracked } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
@@ -11,8 +11,16 @@ import { OrdersApiService } from '../../../orders/services/orders-api.service';
 import { ReceiptsListComponent } from '../../../payments/components/receipts-list/receipts-list.component';
 import { PaymentsApiService } from '../../../payments/services/payments-api.service';
 import { ServiceHistoryComponent } from '../../../workflow/components/service-history/service-history.component';
+import {
+  ActionNotice,
+  ActionNoticeComponent,
+} from '../../../workflow/components/action-notice/action-notice.component';
 import { ServiceWorkStore } from '../../../workflow/services/service-work.store';
 import { ClaimDetailComponent } from '../../components/claim-detail/claim-detail.component';
+import {
+  ClaimChange,
+  ClaimResolutionComponent,
+} from '../../components/claim-resolution/claim-resolution.component';
 import { ClaimsApiService } from '../../services/claims-api.service';
 
 const CLAIM_ERROR = 'No se pudo cargar el reclamo.';
@@ -27,7 +35,9 @@ const RECEIPTS_ERROR = 'No se pudieron cargar las constancias.';
   selector: 'app-admin-claim-page',
   imports: [
     RouterLink,
+    ActionNoticeComponent,
     ClaimDetailComponent,
+    ClaimResolutionComponent,
     EmptyStateComponent,
     ErrorAlertComponent,
     LoadingStateComponent,
@@ -86,6 +96,12 @@ export class AdminClaimPageComponent {
     return error === undefined ? null : apiErrorMessages(error, RECEIPTS_ERROR).join(' ');
   });
 
+  /** Se borra al pasar a otro reclamo. */
+  protected readonly notice = linkedSignal<string, ActionNotice | null>({
+    source: this.claimId,
+    computation: () => null,
+  });
+
   constructor() {
     effect(() => {
       const orderId = this.orderId();
@@ -96,8 +112,27 @@ export class AdminClaimPageComponent {
   }
 
   protected refresh(): void {
+    this.notice.set(null);
+    this.reload();
+  }
+
+  protected reload(): void {
     this.claim.reload();
     this.reloadContext();
+  }
+
+  /**
+   * El reclamo que devuelve el backend se muestra tal cual, así el resultado no depende de otra
+   * consulta; el pedido, las constancias y el historial se vuelven a pedir.
+   */
+  protected onChanged({ claim, message }: ClaimChange): void {
+    this.claim.set(claim);
+    this.notice.set({ failed: false, messages: [message] });
+    this.reloadContext();
+  }
+
+  protected onActionFailed(messages: string[]): void {
+    this.notice.set(messages.length === 0 ? null : { failed: true, messages });
   }
 
   private reloadContext(): void {

@@ -1,0 +1,100 @@
+<section class="resolution" aria-labelledby="resolution-title">
+  <h2 id="resolution-title" class="resolution__title">Atender el reclamo</h2>
+
+  @if (claim().status === 'ABIERTO') {
+    <p class="resolution__muted">
+      Puede marcarlo «En revisión» mientras lo estudia, o registrar directamente la decisión.
+    </p>
+    <div>
+      <button
+        type="button"
+        class="resolution__review"
+        [disabled]="sending() || refreshing()"
+        (click)="askReview()"
+      >
+        Iniciar revisión
+      </button>
+    </div>
+  }
+
+  <form class="resolution__form" [formGroup]="form" (ngSubmit)="askDecision()" novalidate>
+    <div class="field">
+      <label class="field__label" for="claim-decision">Decisión</label>
+      <textarea
+        id="claim-decision"
+        class="field__input"
+        rows="3"
+        formControlName="decision"
+        required
+        [attr.aria-invalid]="error('decision') ? 'true' : null"
+        [attr.aria-describedby]="error('decision') ? 'claim-decision-error' : null"
+      ></textarea>
+      @if (error('decision'); as message) {
+        <p id="claim-decision-error" class="field__error">{{ message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="claim-justification">Justificación</label>
+      <textarea
+        id="claim-justification"
+        class="field__input"
+        rows="4"
+        formControlName="justification"
+        required
+        [attr.aria-invalid]="error('justification') ? 'true' : null"
+        [attr.aria-describedby]="
+          error('justification') ? 'claim-justification-error' : 'claim-resolution-hint'
+        "
+      ></textarea>
+      @if (error('justification'); as message) {
+        <p id="claim-justification-error" class="field__error">{{ message }}</p>
+      }
+    </div>
+    <p id="claim-resolution-hint" class="resolution__muted">
+      Hasta {{ maxLength }} caracteres cada una. Se comunican a las partes: no incluya datos
+      privados.
+    </p>
+
+    <div>
+      <button type="submit" class="resolution__send" [disabled]="sending() || refreshing()">
+        Resolver reclamo
+      </button>
+    </div>
+  </form>
+</section>
+
+<app-confirm-dialog
+  heading="¿Iniciar la revisión?"
+  confirmLabel="Sí, iniciar revisión"
+  dismissLabel="Volver"
+  tone="primary"
+  titleId="claim-review-title"
+  [open]="confirming() === 'review'"
+  [busy]="sending()"
+  (confirmed)="startReview()"
+  (cancelled)="confirming.set(null)"
+>
+  <p>El reclamo pasará a «En revisión». El pedido sigue en reclamo.</p>
+</app-confirm-dialog>
+
+<app-confirm-dialog
+  heading="¿Resolver el reclamo?"
+  confirmLabel="Sí, resolver"
+  dismissLabel="Volver"
+  tone="primary"
+  titleId="claim-decide-title"
+  [open]="confirming() === 'decide'"
+  [busy]="sending()"
+  (confirmed)="decide()"
+  (cancelled)="confirming.set(null)"
+>
+  <p>
+    El reclamo quedará <strong>«Resuelto»</strong> y el pedido <strong>«Cerrado»</strong>. La
+    decisión no se puede modificar.
+  </p>
+  <p>
+    Solo se registra y se comunica el texto: no aplica sanciones, devoluciones ni otros efectos
+    automáticos.
+  </p>
+</app-confirm-dialog>

@@ -10,6 +10,7 @@ import {
   ClaimSummary,
   ClaimsQuery,
   CreateClaimRequest,
+  DecideClaimRequest,
 } from '../models/claim.model';
 
 /** Reclamos de un pedido. Un pedido ajeno responde 404. */
@@ -56,6 +57,19 @@ export class ClaimsApiService {
   /** `GET /admin/claims/:claimId`: solo administradores. */
   get(claimId: string): Observable<Claim> {
     return this.http.get<Claim>(apiUrl('admin', 'claims', claimId));
+  }
+
+  /** `POST /admin/claims/:claimId/review`, sin cuerpo: `ABIERTO` → `EN_REVISION`. */
+  markInReview(claimId: string): Observable<Claim> {
+    return this.http.post<Claim>(apiUrl('admin', 'claims', claimId, 'review'), null);
+  }
+
+  /** `POST /admin/claims/:claimId/decision`: resuelve el reclamo y cierra el pedido. */
+  decide(claimId: string, { decision, justification }: DecideClaimRequest): Observable<Claim> {
+    return this.http.post<Claim>(apiUrl('admin', 'claims', claimId, 'decision'), {
+      decision,
+      justification,
+    });
   }
 
   /** `GET /claims/:claimId/images/:imageId`: cliente que reclamó o administrador. */
