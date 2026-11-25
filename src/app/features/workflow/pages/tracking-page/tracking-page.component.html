@@ -47,6 +47,8 @@
       }
     </section>
 
+    <app-payments-section [workflow]="current" viewer="CLIENTE" (changed)="store.refresh()" />
+
     <app-service-history viewer="CLIENTE" />
   }
 </section>

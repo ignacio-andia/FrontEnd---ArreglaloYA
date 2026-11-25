@@ -65,6 +65,8 @@
       </p>
     }
 
+    <app-payments-section [workflow]="current" viewer="TRABAJADOR" (changed)="store.refresh()" />
+
     <app-service-history viewer="TRABAJADOR" />
   }
 </section>

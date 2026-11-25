@@ -1,0 +1,77 @@
+<form class="declare" [formGroup]="form" (ngSubmit)="review()" novalidate>
+  <div class="field declare__short">
+    <label class="field__label" [for]="fieldId() + '-amount'">
+      {{ isWorker() ? 'Monto recibido (Bs)' : 'Monto pagado (Bs)' }}
+    </label>
+    <input
+      class="field__input"
+      type="text"
+      inputmode="decimal"
+      autocomplete="off"
+      formControlName="amount"
+      required
+      [id]="fieldId() + '-amount'"
+      [readonly]="fixedAmount()"
+      [attr.aria-invalid]="amountError() ? 'true' : null"
+      [attr.aria-describedby]="
+        amountError() ? fieldId() + '-hint ' + fieldId() + '-error' : fieldId() + '-hint'
+      "
+    />
+    <p class="field__hint" [id]="fieldId() + '-hint'">
+      @if (fixedAmount()) {
+        El anticipo se confirma por el monto exacto y con ello el pedido avanza.
+      } @else {
+        Declare el monto realmente pagado. No modifica el monto acordado.
+      }
+    </p>
+    @if (amountError(); as error) {
+      <p class="field__error" [id]="fieldId() + '-error'">{{ error }}</p>
+    }
+  </div>
+
+  <fieldset
+    class="field"
+    [attr.aria-describedby]="methodError() ? fieldId() + '-method-error' : null"
+  >
+    <legend class="field__label">Forma de pago</legend>
+    <ul class="field__checks">
+      @for (method of methods(); track method) {
+        <li>
+          <label class="field__check">
+            <input type="radio" formControlName="method" [value]="method" />
+            {{ methodLabels[method] }}
+          </label>
+        </li>
+      }
+    </ul>
+    @if (methodError()) {
+      <p class="field__error" [id]="fieldId() + '-method-error'">Elija la forma de pago.</p>
+    }
+  </fieldset>
+
+  <button type="submit" class="declare__button" [disabled]="sending()">{{ actionLabel() }}</button>
+</form>
+
+<app-confirm-dialog
+  confirmLabel="Sí, registrar"
+  dismissLabel="Volver"
+  tone="primary"
+  [heading]="isWorker() ? '¿Confirmar el pago recibido?' : '¿Declarar el pago realizado?'"
+  [titleId]="fieldId() + '-title'"
+  [open]="pending() !== null"
+  [busy]="sending()"
+  (confirmed)="confirm()"
+  (cancelled)="pending.set(null)"
+>
+  @if (pending(); as request) {
+    <p>
+      {{ isWorker() ? 'Declarará que recibió' : 'Declarará que pagó' }}
+      <strong>Bs {{ request.amount }}</strong> en
+      {{ request.method === 'QR' ? 'QR' : 'efectivo' }} por el concepto «{{ conceptLabel() }}».
+    </p>
+    <p>
+      La declaración no se edita ni se borra. La plataforma no recibe, retiene ni garantiza el
+      dinero.
+    </p>
+  }
+</app-confirm-dialog>

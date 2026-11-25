@@ -2,6 +2,7 @@ import { apiUrl } from '../../../../core/http/api-url';
 import { ORDER_ID, offer, page, setupOfferPage } from '../../../offers/testing/offers.fixtures';
 import { OrderStatus } from '../../../orders/models/order.model';
 import { assignedOrder, event, timeline, workflow } from '../../testing/workflow.fixtures';
+import { overview, receipts } from '../../../payments/testing/payments.fixtures';
 import { ASSIGNED_JOBS_ROUTES } from '../../workflow.routes';
 
 const ACCEPTED = offer({ status: 'ACEPTADA' });
@@ -29,11 +30,18 @@ describe('JobPageComponent', () => {
 
   const timelinePath = `orders/${ORDER_ID}/timeline`;
 
+  /** La sección de pagos consulta el resumen y las constancias. */
+  async function payments(): Promise<void> {
+    await view.answer(`orders/${ORDER_ID}/payments`, overview({ payments: [] }));
+    await view.answer(`orders/${ORDER_ID}/receipts`, receipts());
+  }
+
   async function open(status: OrderStatus, history = timeline()): Promise<void> {
     await view.visit(`/trabajador/trabajos/${ORDER_ID}`);
     await view.answer(`orders/${ORDER_ID}/workflow`, workflow(status));
     await view.answer(timelinePath, history);
     await view.answer('offers/me', page([ACCEPTED]));
+    await payments();
   }
 
   const entries = () =>
@@ -117,6 +125,7 @@ describe('JobPageComponent', () => {
     );
     await view.answer(timelinePath, timeline([]));
     await view.answer('offers/me', page([ACCEPTED]));
+    await payments();
 
     const content = view.content();
     expect(content).toContain('Gratis');
@@ -178,6 +187,7 @@ describe('JobPageComponent', () => {
 
     await view.answer(`orders/${ORDER_ID}/workflow`, workflow('CANCELADO'));
     await view.answer(timelinePath, timeline([event({ summary: 'Trabajo cancelado' })]));
+    await payments();
     expect(view.content()).toContain('Cancelado');
     expect(entries()[0]).toContain('Trabajo cancelado');
   });
@@ -187,11 +197,13 @@ describe('JobPageComponent', () => {
     await view.answer(`orders/${ORDER_ID}/workflow`, workflow('CERRADO'));
     await view.fail(timelinePath, 500, 'Sin historial');
     await view.answer('offers/me', page([ACCEPTED]));
+    await payments();
 
     expect(view.content()).toContain('Estado del servicio');
     await view.click('app-service-history app-error-alert button');
     await view.answer(`orders/${ORDER_ID}/workflow`, workflow('CERRADO'));
     await view.answer(timelinePath, timeline());
+    await payments();
     expect(entries()).toHaveLength(1);
   });
 
@@ -216,6 +228,7 @@ describe('JobPageComponent', () => {
     await view.answer(`orders/${ORDER_ID}/workflow`, workflow('CERRADO'));
     await view.answer(timelinePath, timeline());
     await view.answer('offers/me', page([ACCEPTED]));
+    await payments();
     expect(view.content()).toContain('Cerrado');
   });
 });

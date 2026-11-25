@@ -9,6 +9,7 @@ import { apiErrorMessages } from '../../../../shared/utils/api-error-message';
 import { WhatsappContactComponent } from '../../../offers/components/whatsapp-contact/whatsapp-contact.component';
 import { OffersApiService } from '../../../offers/services/offers-api.service';
 import { OrdersApiService } from '../../../orders/services/orders-api.service';
+import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
 import { SERVICE_AGREEMENT_STATUSES } from '../../models/workflow.model';
@@ -24,6 +25,7 @@ const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
     EmptyStateComponent,
     ErrorAlertComponent,
     LoadingStateComponent,
+    PaymentsSectionComponent,
     ServiceHistoryComponent,
     WhatsappContactComponent,
     WorkSummaryComponent,

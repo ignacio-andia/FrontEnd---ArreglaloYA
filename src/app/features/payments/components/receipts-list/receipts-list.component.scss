@@ -1,0 +1,43 @@
+@use 'tokens';
+
+:host {
+  display: grid;
+  gap: tokens.$space-3;
+}
+
+.receipts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: tokens.$space-3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.receipt {
+  display: grid;
+  align-content: start;
+  gap: tokens.$space-1;
+  padding: tokens.$space-3 tokens.$space-4;
+  border: 1px dashed var(--color-border);
+  border-radius: tokens.$radius-md;
+}
+
+.receipt--service {
+  border-style: solid;
+  border-color: var(--color-primary);
+}
+
+.receipt__title {
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.receipt__amount {
+  font-size: 1.25rem;
+  font-weight: tokens.$font-weight-bold;
+}
+
+.receipts__muted {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}

@@ -1,0 +1,30 @@
+@use 'tokens';
+@use 'buttons';
+@use 'form-controls';
+
+@include form-controls.base;
+@include form-controls.checks;
+
+.declare {
+  display: grid;
+  justify-items: start;
+  gap: tokens.$space-3;
+  padding-top: tokens.$space-3;
+  border-top: 1px solid var(--color-border);
+
+  .field {
+    width: 100%;
+  }
+}
+
+.declare__short {
+  max-width: 20rem;
+}
+
+.field__input[readonly] {
+  background-color: var(--color-background);
+}
+
+.declare__button {
+  @include buttons.primary;
+}

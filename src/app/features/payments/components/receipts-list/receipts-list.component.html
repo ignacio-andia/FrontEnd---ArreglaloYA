@@ -1,0 +1,34 @@
+@let current = receipts();
+@if (current.service === null && current.payments.length === 0) {
+  <p class="receipts__muted">Todavía no hay constancias para este pedido.</p>
+} @else {
+  <ul class="receipts">
+    @if (current.service; as service) {
+      <li class="receipt receipt--service">
+        <p class="receipt__title">Constancia del servicio</p>
+        <p class="receipt__amount">Bs {{ service.agreedAmount }}</p>
+        <p class="receipts__muted">
+          Monto acordado · Emitida el
+          {{ service.issuedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+        </p>
+      </li>
+    }
+    @for (item of current.payments; track item.declaration.id) {
+      <li class="receipt">
+        <p class="receipt__title">
+          Declaración del {{ parties[item.declaration.declaredBy].toLowerCase() }}:
+          {{ concepts[item.concept] }}
+        </p>
+        <p class="receipt__amount">Bs {{ item.declaration.amount }}</p>
+        <p class="receipts__muted">
+          {{ methods[item.declaration.method] }} ·
+          {{ item.declaration.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+        </p>
+      </li>
+    }
+  </ul>
+}
+<p class="receipts__muted">
+  Estas constancias registran lo declarado por las partes; no son comprobantes bancarios. La
+  plataforma no recibe, retiene ni garantiza dinero.
+</p>

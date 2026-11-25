@@ -12,6 +12,7 @@ import { AssignedOrderComponent } from '../../../offers/components/assigned-orde
 import { WhatsappContactComponent } from '../../../offers/components/whatsapp-contact/whatsapp-contact.component';
 import { formatDuration } from '../../../offers/models/offer.model';
 import { OffersApiService } from '../../../offers/services/offers-api.service';
+import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
 import { SERVICE_AGREEMENT_STATUSES } from '../../models/workflow.model';
@@ -33,6 +34,7 @@ const AGREEMENT_ERROR = 'No se pudo consultar el acuerdo.';
     EmptyStateComponent,
     ErrorAlertComponent,
     LoadingStateComponent,
+    PaymentsSectionComponent,
     ServiceHistoryComponent,
     WhatsappContactComponent,
     WorkSummaryComponent,
