@@ -41,5 +41,5 @@ import { ServiceTimelineComponent } from '../service-timeline/service-timeline.c
 export class ServiceHistoryComponent {
   protected readonly store = inject(ServiceWorkStore);
 
-  readonly viewer = input.required<OfferParty>();
+  readonly viewer = input.required<OfferParty | null>();
 }

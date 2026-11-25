@@ -1,0 +1,36 @@
+@use 'tokens';
+
+.claim-row {
+  display: grid;
+  gap: tokens.$space-2;
+  min-width: 0;
+  padding: tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+}
+
+.claim-row__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$space-2;
+}
+
+.claim-row__title {
+  font-size: 1.0625rem;
+
+  a {
+    color: var(--color-primary-dark);
+  }
+}
+
+.claim-row__status {
+  padding: 0.125rem tokens.$space-2;
+  border: 1px solid var(--color-primary);
+  border-radius: tokens.$radius-sm;
+  color: var(--color-primary-dark);
+  font-size: 0.8125rem;
+  font-weight: tokens.$font-weight-semibold;
+}

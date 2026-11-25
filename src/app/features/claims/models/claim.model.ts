@@ -1,5 +1,11 @@
 /** Literales exactos del enum `ClaimStatus` del backend. */
-export type ClaimStatus = 'ABIERTO' | 'EN_REVISION' | 'RESUELTO';
+export const CLAIM_STATUSES = ['ABIERTO', 'EN_REVISION', 'RESUELTO'] as const;
+
+export type ClaimStatus = (typeof CLAIM_STATUSES)[number];
+
+export function isClaimStatus(value: string): value is ClaimStatus {
+  return (CLAIM_STATUSES as readonly string[]).includes(value);
+}
 
 /** Límite de `CreateClaimDto.description`. */
 export const CLAIM_DESCRIPTION_MAX_LENGTH = 2000;
@@ -54,6 +60,22 @@ export const CLAIM_STATUS_LABELS: Readonly<Record<ClaimStatus, string>> = {
   EN_REVISION: 'En revisión',
   RESUELTO: 'Resuelto',
 };
+
+/** Fila de `GET /admin/claims` (`ClaimSummary`): el listado no trae a las partes. */
+export interface ClaimSummary {
+  id: string;
+  orderId: string;
+  status: ClaimStatus;
+  imageCount: number;
+  createdAt: string;
+}
+
+/** Consulta del listado administrativo (`limit` máximo 50). */
+export interface ClaimsQuery {
+  status?: ClaimStatus;
+  page?: number;
+  limit?: number;
+}
 
 /** Campos de `POST /orders/:orderId/claims` (`multipart/form-data`). */
 export interface CreateClaimRequest {

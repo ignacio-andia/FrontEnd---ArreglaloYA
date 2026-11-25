@@ -17,6 +17,7 @@ import { PanelShellComponent } from '../../shared/components/panel-shell/panel-s
 export class AdminLayoutComponent {
   protected readonly navItems: readonly NavItem[] = [
     { label: 'Resumen', path: '/admin', exact: true },
+    { label: 'Reclamos', path: '/admin/reclamos' },
     { label: 'Verificación de trabajadores', path: null },
     { label: 'Pedidos', path: null },
     { label: 'Categorías', path: null },

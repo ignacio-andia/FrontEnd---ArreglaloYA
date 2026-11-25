@@ -6,6 +6,7 @@ import { PaginatedResponse } from '../../../core/models/pagination.model';
 import {
   AssignedOrder,
   AvailableOrdersQuery,
+  AdminOrder,
   CancelOrderRequest,
   CreateOrderRequest,
   DuplicateCheckRequest,
@@ -132,6 +133,11 @@ export class OrdersApiService {
   /** `DELETE /orders/me/:orderId/images/:imageId` (200 con el pedido). 409 si es la única. */
   deleteImage(orderId: string, imageId: string): Observable<OwnerOrder> {
     return this.http.delete<OwnerOrder>(apiUrl('orders', 'me', orderId, 'images', imageId));
+  }
+
+  /** `GET /orders/admin/:orderId`: solo administradores. */
+  getForAdmin(orderId: string): Observable<AdminOrder> {
+    return this.http.get<AdminOrder>(apiUrl('orders', 'admin', orderId));
   }
 
   /** `POST /orders/me/:orderId/cancel` (200): devuelve el pedido ya cancelado. 409 estado. */

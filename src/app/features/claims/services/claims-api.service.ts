@@ -3,7 +3,14 @@ import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
 import { ImageVariant } from '../../../shared/components/private-image/private-image.component';
-import { Claim, ClaimParty, CreateClaimRequest } from '../models/claim.model';
+import { PaginatedResponse } from '../../../core/models/pagination.model';
+import {
+  Claim,
+  ClaimParty,
+  ClaimSummary,
+  ClaimsQuery,
+  CreateClaimRequest,
+} from '../models/claim.model';
 
 /** Reclamos de un pedido. Un pedido ajeno responde 404. */
 @Service()
@@ -29,6 +36,26 @@ export class ClaimsApiService {
    */
   getForOrder(orderId: string): Observable<Claim | ClaimParty> {
     return this.http.get<Claim | ClaimParty>(apiUrl('orders', orderId, 'claim'));
+  }
+
+  /** `GET /admin/claims`: solo administradores; los más antiguos primero. */
+  list({ status, page, limit }: ClaimsQuery): Observable<PaginatedResponse<ClaimSummary>> {
+    let params = new HttpParams();
+    if (status !== undefined) {
+      params = params.set('status', status);
+    }
+    if (page !== undefined) {
+      params = params.set('page', page);
+    }
+    if (limit !== undefined) {
+      params = params.set('limit', limit);
+    }
+    return this.http.get<PaginatedResponse<ClaimSummary>>(apiUrl('admin', 'claims'), { params });
+  }
+
+  /** `GET /admin/claims/:claimId`: solo administradores. */
+  get(claimId: string): Observable<Claim> {
+    return this.http.get<Claim>(apiUrl('admin', 'claims', claimId));
   }
 
   /** `GET /claims/:claimId/images/:imageId`: cliente que reclamó o administrador. */

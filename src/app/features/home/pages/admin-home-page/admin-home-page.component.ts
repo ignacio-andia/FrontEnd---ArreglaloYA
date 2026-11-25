@@ -21,6 +21,13 @@ import { ActionCardComponent } from '../../../../shared/components/action-card/a
         <ul class="home__grid">
           <li>
             <app-action-card
+              heading="Reclamos"
+              description="Revise los reclamos de los clientes y registre su decisión."
+              path="/admin/reclamos"
+            />
+          </li>
+          <li>
+            <app-action-card
               heading="Mi cuenta"
               description="Actualice su nombre y teléfono."
               path="/admin/mi-cuenta"

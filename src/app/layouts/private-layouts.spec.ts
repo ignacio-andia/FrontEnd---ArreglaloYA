@@ -53,6 +53,7 @@ const cases: LayoutCase[] = [
     area: 'Administración',
     links: [
       ['Resumen', '/admin'],
+      ['Reclamos', '/admin/reclamos'],
       ['Mi cuenta', '/admin/mi-cuenta'],
     ],
     pending: [

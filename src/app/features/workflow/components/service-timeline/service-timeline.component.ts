@@ -41,8 +41,8 @@ const METHOD_LABELS: Readonly<Partial<Record<string, string>>> = {
 })
 export class ServiceTimelineComponent {
   readonly events = input.required<readonly TimelineEvent[]>();
-  /** Quién mira, para señalar sus propias acciones. */
-  readonly viewer = input.required<OfferParty>();
+  /** Quién mira, para señalar sus propias acciones; `null` si no es una de las partes. */
+  readonly viewer = input.required<OfferParty | null>();
   readonly hasMore = input(false);
   readonly loadingMore = input(false);
   readonly error = input<string | null>(null);
@@ -57,7 +57,8 @@ export class ServiceTimelineComponent {
   protected readonly entries = computed(() =>
     this.events().map((event) => {
       const author = authorOf(event.actor);
-      const own = author === (this.viewer() === 'CLIENTE' ? 'client' : 'worker');
+      const viewer = this.viewer();
+      const own = viewer !== null && author === (viewer === 'CLIENTE' ? 'client' : 'worker');
       return {
         key: `${event.source}:${event.id}:${event.type}`,
         event,

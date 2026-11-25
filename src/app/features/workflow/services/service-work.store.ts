@@ -22,9 +22,11 @@ export class ServiceWorkStore {
   private readonly timelineApi = inject(TimelineApiService);
 
   private readonly orderId = signal<string | undefined>(undefined);
+  /** El flujo (#82) es de las partes: quien solo mira el historial no lo consulta. */
+  private readonly withWorkflow = signal(true);
 
   readonly workflow = rxResource({
-    params: () => this.orderId(),
+    params: () => (this.withWorkflow() ? this.orderId() : undefined),
     stream: ({ params }) => this.workflowApi.get(params),
   });
   private readonly firstPage = rxResource({
@@ -78,7 +80,17 @@ export class ServiceWorkStore {
   }
 
   load(orderId: string): void {
+    this.open(orderId, true);
+  }
+
+  /** Solo el historial (#112), para quien no puede consultar el flujo (administración). */
+  loadHistory(orderId: string): void {
+    this.open(orderId, false);
+  }
+
+  private open(orderId: string, withWorkflow: boolean): void {
     this.restartPages();
+    this.withWorkflow.set(withWorkflow);
     this.orderId.set(orderId);
   }
 

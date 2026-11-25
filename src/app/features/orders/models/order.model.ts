@@ -158,6 +158,21 @@ export interface UpdateOrderRequest {
   addressReference?: string | null;
 }
 
+/**
+ * Lo que la interfaz usa de `GET /orders/admin/:orderId` (`AdminOrderView`): sin dirección ni
+ * descripción. `client` es `null` si el pedido se anonimizó.
+ */
+export interface AdminOrder {
+  id: string;
+  status: OrderStatus;
+  category: { id: string; name: string };
+  zone: { id: string; name: string };
+  budgetAmount: string;
+  publishedAt: string;
+  client: { id: string; firstName: string; lastName: string } | null;
+  assignedWorkerId: string | null;
+}
+
 /** Cuerpo de `POST /orders/me/:orderId/cancel` (`CancelOrderDto`): el motivo es opcional. */
 export interface CancelOrderRequest {
   reason?: string;

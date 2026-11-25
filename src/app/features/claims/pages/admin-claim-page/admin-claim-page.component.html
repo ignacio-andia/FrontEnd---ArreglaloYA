@@ -1,0 +1,79 @@
+<section class="offers" aria-labelledby="claim-page-title">
+  <a class="offers__back" routerLink="/admin/reclamos">
+    <span aria-hidden="true">←</span> Volver a reclamos
+  </a>
+
+  @if (claim.isLoading() && !current()) {
+    <h1 id="claim-page-title" class="offers__title">Reclamo</h1>
+    <app-loading-state message="Cargando el reclamo…" />
+  } @else if (notFound()) {
+    <h1 id="claim-page-title" class="offers__title">Reclamo no encontrado</h1>
+    <app-empty-state heading="El reclamo no existe." />
+  } @else if (errorMessage(); as message) {
+    <h1 id="claim-page-title" class="offers__title">Reclamo</h1>
+    <app-error-alert [message]="message" (retry)="claim.reload()" />
+  } @else if (current(); as current) {
+    <h1 id="claim-page-title" class="offers__title">Reclamo {{ current.id.slice(0, 8) }}</h1>
+    <div class="offers__actions">
+      <button type="button" class="offers__secondary" (click)="refresh()">Actualizar</button>
+    </div>
+
+    <section class="offers__card" aria-labelledby="claim-info-title">
+      <h2 id="claim-info-title" class="offers__subtitle">Reclamo del cliente</h2>
+      <app-claim-detail [claim]="current" />
+    </section>
+
+    <section class="offers__card" aria-labelledby="claim-order-title">
+      <h2 id="claim-order-title" class="offers__subtitle">Pedido y partes</h2>
+      @if (order.isLoading() && !order.hasValue()) {
+        <app-loading-state message="Consultando el pedido…" />
+      } @else if (orderError(); as message) {
+        <app-error-alert [message]="message" (retry)="order.reload()" />
+      } @else if (order.hasValue()) {
+        @let detail = order.value();
+        <p><app-order-status-badge [status]="detail.status" /></p>
+        <dl class="offers__data">
+          <div>
+            <dt>Pedido</dt>
+            <dd>{{ detail.id.slice(0, 8) }}</dd>
+          </div>
+          <div>
+            <dt>Categoría</dt>
+            <dd>{{ detail.category.name }}</dd>
+          </div>
+          <div>
+            <dt>Zona</dt>
+            <dd>{{ detail.zone.name }}</dd>
+          </div>
+          <div>
+            <dt>Cliente</dt>
+            <dd>
+              @if (detail.client; as person) {
+                {{ person.firstName }} {{ person.lastName }}
+              } @else {
+                No disponible
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Trabajador asignado (identificador)</dt>
+            <dd>{{ detail.assignedWorkerId ?? 'Sin asignar' }}</dd>
+          </div>
+        </dl>
+      }
+    </section>
+
+    <section class="offers__card" aria-labelledby="claim-receipts-title">
+      <h2 id="claim-receipts-title" class="offers__subtitle">Constancias</h2>
+      @if (receipts.isLoading() && !receipts.hasValue()) {
+        <app-loading-state message="Cargando las constancias…" />
+      } @else if (receiptsError(); as message) {
+        <app-error-alert [message]="message" (retry)="receipts.reload()" />
+      } @else if (receipts.hasValue()) {
+        <app-receipts-list [receipts]="receipts.value()" />
+      }
+    </section>
+
+    <app-service-history [viewer]="null" />
+  }
+</section>

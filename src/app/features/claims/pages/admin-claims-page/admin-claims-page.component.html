@@ -1,0 +1,71 @@
+<section class="offers" aria-labelledby="claims-title">
+  <h1 id="claims-title" class="offers__title">Reclamos</h1>
+  <p class="offers__intro">Se muestran del más antiguo al más reciente.</p>
+
+  <div class="offers__filters">
+    <label for="claims-status">Estado</label>
+    <select id="claims-status" [formControl]="statusFilter">
+      <option value="">Todos</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ labels[status] }}</option>
+      }
+    </select>
+    <button
+      type="button"
+      class="offers__secondary"
+      [disabled]="claims.isLoading()"
+      (click)="claims.reload()"
+    >
+      Actualizar
+    </button>
+  </div>
+
+  @if (claims.isLoading() && !claims.hasValue()) {
+    <app-loading-state message="Cargando los reclamos…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="claims.reload()" />
+  } @else if (items().length === 0) {
+    @if (page() > 1) {
+      <app-empty-state heading="No hay reclamos en esta página." />
+      <div class="offers__actions">
+        <button type="button" class="offers__secondary" (click)="showFirstPage()">
+          Volver a la primera página
+        </button>
+      </div>
+    } @else {
+      <app-empty-state
+        [heading]="status() ? 'No hay reclamos con ese estado.' : 'Todavía no hay reclamos.'"
+      />
+    }
+  } @else {
+    <ul class="offers__list">
+      @for (claim of items(); track claim.id) {
+        <li class="claim-row">
+          <div class="claim-row__top">
+            <h2 class="claim-row__title">
+              <a [routerLink]="['/admin/reclamos', claim.id]">
+                Reclamo {{ claim.id.slice(0, 8) }}
+              </a>
+            </h2>
+            <span class="claim-row__status">{{ labels[claim.status] }}</span>
+          </div>
+          <p class="offers__muted">Pedido {{ claim.orderId.slice(0, 8) }}</p>
+          <p>Presentado el {{ claim.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</p>
+          <p class="offers__muted">Fotografías: {{ claim.imageCount }}</p>
+        </li>
+      }
+    </ul>
+    @if (meta(); as current) {
+      @if (current.totalPages > 1) {
+        <app-paginator
+          label="Páginas de reclamos"
+          [page]="current.page"
+          [totalPages]="current.totalPages"
+          [total]="current.total"
+          [busy]="claims.isLoading()"
+          (pageChange)="goToPage($event)"
+        />
+      }
+    }
+  }
+</section>
