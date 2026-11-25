@@ -71,6 +71,17 @@
 
     <app-payments-section [workflow]="current" viewer="CLIENTE" (changed)="store.refresh()" />
 
+    @if (canCancelWork()) {
+      <app-client-actions
+        [workflow]="current"
+        [refreshing]="store.workflow.isLoading()"
+        (cancelled)="onWorkCancelled()"
+        (reported)="onNoShowReported($event)"
+        (failed)="onActionFailed($event)"
+        (stale)="store.refresh()"
+      />
+    }
+
     <app-service-history viewer="CLIENTE" />
   }
 </section>

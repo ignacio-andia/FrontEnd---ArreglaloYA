@@ -2,9 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
+import { OwnerOrder } from '../../orders/models/order.model';
 import {
   BudgetResult,
   ExecutionResult,
+  NoShowResult,
   ProposeBudgetRequest,
   VisitPaymentConfirmation,
   VisitRegistration,
@@ -50,6 +52,19 @@ export class WorkflowApiService {
   /** `POST /orders/:orderId/confirm-conformity`, sin cuerpo: cliente dueño; cierra el pedido. */
   confirmConformity(orderId: string): Observable<ExecutionResult> {
     return this.http.post<ExecutionResult>(apiUrl('orders', orderId, 'confirm-conformity'), null);
+  }
+
+  /** `POST /orders/:orderId/cancel-work`: cliente dueño. Devuelve el pedido cancelado. */
+  cancelWork(orderId: string, reason: string): Observable<OwnerOrder> {
+    return this.http.post<OwnerOrder>(apiUrl('orders', orderId, 'cancel-work'), { reason });
+  }
+
+  /** `POST /orders/:orderId/no-show`: cliente dueño; la descripción es opcional. */
+  reportNoShow(orderId: string, description: string): Observable<NoShowResult> {
+    return this.http.post<NoShowResult>(
+      apiUrl('orders', orderId, 'no-show'),
+      description === '' ? {} : { description },
+    );
   }
 
   /** `POST /orders/:orderId/additional-budgets` (201): trabajador aprobado y asignado. */

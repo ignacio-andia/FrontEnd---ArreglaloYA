@@ -69,6 +69,24 @@ export interface ExecutionResult {
   execution: Execution;
 }
 
+/** Límite de `CancelWorkDto`. */
+export const CANCEL_WORK_REASON_MAX_LENGTH = 500;
+
+/** Estados en los que el backend admite «Cancelar trabajo»: acordado y sin terminar. */
+export const CANCELLABLE_WORK_STATUSES: readonly OrderStatus[] = ORDER_AGREED_STATUSES;
+
+/** Límite de `ReportNoShowDto`. */
+export const NO_SHOW_DESCRIPTION_MAX_LENGTH = 1000;
+
+/** Estados en los que el backend admite reportar que el trabajador no llegó. */
+export const NO_SHOW_STATUSES: readonly OrderStatus[] = ['ACORDADO', 'ANTICIPO_REGISTRADO'];
+
+/** Respuesta de `POST /orders/:orderId/no-show`; `created: false` si ya había un reporte. */
+export interface NoShowResult {
+  created: boolean;
+  report: NoShowReport;
+}
+
 /** Límites de `CreateAdditionalBudgetDto` y `RejectAdditionalBudgetDto`. */
 export const BUDGET_TEXT_MAX_LENGTH = 1000;
 export const BUDGET_REJECT_REASON_MAX_LENGTH = 400;

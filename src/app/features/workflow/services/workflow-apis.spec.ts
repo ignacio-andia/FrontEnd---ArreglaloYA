@@ -67,6 +67,26 @@ describe('workflow APIs', () => {
     send(url('b1', 'reject'), { reason: 'Caro' });
   });
 
+  it('sends only the reason to cancel the work', () => {
+    TestBed.inject(WorkflowApiService).cancelWork(ORDER_ID, 'Motivo').subscribe();
+
+    const request = http.expectOne(apiUrl('orders', ORDER_ID, 'cancel-work'));
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ reason: 'Motivo' });
+    request.flush({});
+  });
+
+  it.each([
+    ['', {}],
+    ['No llegó', { description: 'No llegó' }],
+  ])('reports a no-show with description «%s»', (description, body) => {
+    TestBed.inject(WorkflowApiService).reportNoShow(ORDER_ID, description).subscribe();
+
+    const request = http.expectOne(apiUrl('orders', ORDER_ID, 'no-show'));
+    expect(request.request.body).toEqual(body);
+    request.flush({});
+  });
+
   it('asks the timeline with the page size and, afterwards, the opaque cursor', () => {
     const api = TestBed.inject(TimelineApiService);
     const url = apiUrl('orders', ORDER_ID, 'timeline');

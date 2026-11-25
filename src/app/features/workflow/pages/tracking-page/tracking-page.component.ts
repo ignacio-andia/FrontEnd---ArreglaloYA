@@ -15,10 +15,16 @@ import {
   ActionNoticeComponent,
 } from '../../components/action-notice/action-notice.component';
 import { AdditionalBudgetListComponent } from '../../components/additional-budget-list/additional-budget-list.component';
+import { ClientActionsComponent } from '../../components/client-actions/client-actions.component';
 import { ConformityPanelComponent } from '../../components/conformity-panel/conformity-panel.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
-import { BudgetResult, SERVICE_AGREEMENT_STATUSES } from '../../models/workflow.model';
+import {
+  BudgetResult,
+  CANCELLABLE_WORK_STATUSES,
+  NoShowResult,
+  SERVICE_AGREEMENT_STATUSES,
+} from '../../models/workflow.model';
 import { ServiceWorkStore } from '../../services/service-work.store';
 
 const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
@@ -30,6 +36,7 @@ const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
     RouterLink,
     ActionNoticeComponent,
     AdditionalBudgetListComponent,
+    ClientActionsComponent,
     ConformityPanelComponent,
     EmptyStateComponent,
     ErrorAlertComponent,
@@ -80,6 +87,11 @@ export class TrackingPageComponent {
     return current !== null && SERVICE_AGREEMENT_STATUSES.includes(current.status);
   });
 
+  protected readonly canCancelWork = computed(() => {
+    const current = this.store.current();
+    return current !== null && CANCELLABLE_WORK_STATUSES.includes(current.status);
+  });
+
   /** Se borra al pasar a otro pedido. */
   protected readonly notice = linkedSignal<string, ActionNotice | null>({
     source: this.orderId,
@@ -111,22 +123,32 @@ export class TrackingPageComponent {
       budget.status === 'ACEPTADO'
         ? 'aceptado. El pedido pasó a «En ejecución».'
         : 'rechazado. El pedido quedó cerrado.';
-    this.notice.set({
-      failed: false,
-      messages: [`Presupuesto adicional de Bs ${budget.amount} ${outcome}`],
-    });
-    this.store.refresh();
+    this.succeed(`Presupuesto adicional de Bs ${budget.amount} ${outcome}`);
   }
 
   protected onConformityConfirmed(): void {
-    this.notice.set({
-      failed: false,
-      messages: ['Conformidad confirmada. El pedido quedó cerrado.'],
-    });
-    this.store.refresh();
+    this.succeed('Conformidad confirmada. El pedido quedó cerrado.');
+  }
+
+  protected onWorkCancelled(): void {
+    this.succeed('Trabajo cancelado. El pedido quedó «Cancelado».');
+  }
+
+  protected onNoShowReported({ created }: NoShowResult): void {
+    this.succeed(
+      created
+        ? 'Inasistencia reportada. Quedó registrada; el estado del pedido no cambia.'
+        : 'Ya había un reporte de inasistencia en este pedido: no se registró otro.',
+    );
   }
 
   protected onActionFailed(messages: string[]): void {
     this.notice.set(messages.length === 0 ? null : { failed: true, messages });
+  }
+
+  /** Anuncia lo que confirmó el backend y vuelve a consultar el flujo. */
+  private succeed(message: string): void {
+    this.notice.set({ failed: false, messages: [message] });
+    this.store.refresh();
   }
 }
