@@ -6,7 +6,10 @@ import { CatalogsApiService } from '../../services/catalogs-api.service';
 
 const LOAD_ERROR_MESSAGE = 'No se pudieron cargar las categorías. Inténtelo de nuevo más tarde.';
 
-/** Página pública con las categorías de servicio activas (`GET /catalogs/categories`). */
+/**
+ * Página pública con las categorías de servicio activas (`GET /catalogs/categories`) y las zonas
+ * activas (`GET /catalogs/zones`).
+ */
 @Component({
   selector: 'app-categories-page',
   imports: [CategoryCardComponent],
@@ -19,6 +22,8 @@ export class CategoriesPageComponent {
   protected readonly categories = rxResource({
     stream: () => this.catalogsApi.getCategories(),
   });
+
+  protected readonly zones = rxResource({ stream: () => this.catalogsApi.getZones() });
 
   /** Mensaje del error de carga, o `null` si no hay error. */
   protected readonly errorMessage = computed(() => {

@@ -28,6 +28,7 @@ const cases: LayoutCase[] = [
       ['Mis pedidos', '/cliente/mis-pedidos'],
       ['Publicar pedido', '/cliente/publicar-pedido'],
       ['Ofertas recibidas', '/cliente/ofertas'],
+      ['Buscar trabajadores', '/cliente/buscar-trabajadores'],
       ['Mi cuenta', '/cliente/mi-cuenta'],
       ['Quiero ofrecer mis servicios', '/cliente/ofrecer-servicios'],
     ],

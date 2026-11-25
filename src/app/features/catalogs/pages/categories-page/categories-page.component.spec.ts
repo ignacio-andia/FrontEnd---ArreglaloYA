@@ -52,6 +52,8 @@ describe('CategoriesPageComponent', () => {
   }
 
   async function settle(): Promise<void> {
+    // Las zonas se prueban aparte: si nadie las respondió, se responden vacías.
+    httpTesting.match(apiUrl('catalogs', 'zones')).forEach((request) => request.flush([]));
     await fixture.whenStable();
     fixture.detectChanges();
   }
@@ -60,20 +62,20 @@ describe('CategoriesPageComponent', () => {
     const req = await pendingRequest();
     fixture.detectChanges();
 
-    const status = element.querySelector('[role="status"]');
+    const status = element.querySelector('.categories__state[role="status"]');
     expect(status?.textContent).toContain('Cargando categorías');
-    expect(element.querySelector('ul')).toBeNull();
+    expect(element.querySelector('.categories__list')).toBeNull();
 
     req.flush(categories);
     await settle();
-    expect(element.querySelector('[role="status"]')).toBeNull();
+    expect(element.querySelector('.categories__state[role="status"]')).toBeNull();
   });
 
   it('renders every category returned by the API', async () => {
     (await pendingRequest()).flush(categories);
     await settle();
 
-    const items = Array.from(element.querySelectorAll('ul > li'));
+    const items = Array.from(element.querySelectorAll('.categories__list > li'));
     expect(items).toHaveLength(2);
     expect(items.map((item) => item.querySelector('h2')?.textContent)).toEqual([
       'Electricidad',
@@ -88,7 +90,7 @@ describe('CategoriesPageComponent', () => {
     await settle();
 
     expect(element.textContent).toContain('Todavía no hay categorías disponibles.');
-    expect(element.querySelector('ul')).toBeNull();
+    expect(element.querySelector('.categories__list')).toBeNull();
   });
 
   it('shows the error and retries the request', async () => {
@@ -105,7 +107,17 @@ describe('CategoriesPageComponent', () => {
     await settle();
 
     expect(element.querySelector('[role="alert"]')).toBeNull();
-    expect(element.querySelectorAll('ul > li')).toHaveLength(2);
+    expect(element.querySelectorAll('.categories__list > li')).toHaveLength(2);
+  });
+
+  it('lists the zones where orders are published', async () => {
+    (await pendingRequest()).flush(categories);
+    const zones = await vi.waitFor(() => httpTesting.expectOne(apiUrl('catalogs', 'zones')));
+    zones.flush([{ id: 'z', name: 'Zona Norte', description: null }]);
+    await settle();
+
+    expect(element.textContent).toContain('Zonas donde se publican pedidos');
+    expect(element.textContent).toContain('Zona Norte');
   });
 
   it('uses a generic message for server errors', async () => {

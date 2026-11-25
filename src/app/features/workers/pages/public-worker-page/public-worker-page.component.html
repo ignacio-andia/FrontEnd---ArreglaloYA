@@ -1,0 +1,94 @@
+<section class="offers profile" aria-labelledby="worker-title">
+  @if (fromSearch) {
+    <a class="offers__back" routerLink=".." queryParamsHandling="preserve">
+      <span aria-hidden="true">←</span> Volver a la búsqueda
+    </a>
+  }
+
+  @if (worker.isLoading() && !worker.hasValue()) {
+    <h1 id="worker-title" class="offers__title">Perfil del trabajador</h1>
+    <app-loading-state message="Cargando el perfil…" />
+  } @else if (unavailable()) {
+    <h1 id="worker-title" class="offers__title">Perfil no disponible</h1>
+    <app-empty-state heading="Este trabajador no existe o su perfil no está aprobado." />
+  } @else if (errorMessage(); as message) {
+    <h1 id="worker-title" class="offers__title">Perfil del trabajador</h1>
+    <app-error-alert [message]="message" (retry)="worker.reload()" />
+  } @else if (worker.hasValue()) {
+    @let current = worker.value();
+    @let person = current.profile;
+    <h1 id="worker-title" class="offers__title">{{ person.firstName }} {{ person.lastName }}</h1>
+    <p class="offers__muted">{{ ratingLabel(current.rating) }}</p>
+
+    <section class="offers__card" aria-labelledby="worker-about-title">
+      <h2 id="worker-about-title" class="offers__subtitle">Sobre su trabajo</h2>
+      <dl class="offers__data">
+        <div>
+          <dt>Zona</dt>
+          <dd>{{ person.zone?.name ?? 'Sin zona' }}</dd>
+        </div>
+        <div>
+          <dt>Años de experiencia</dt>
+          <dd>{{ person.yearsOfExperience }}</dd>
+        </div>
+        <div>
+          <dt>Especialidades</dt>
+          <dd>
+            @for (specialty of person.specialties; track specialty.id) {
+              {{ specialty.name }}{{ $last ? '' : ', ' }}
+            }
+          </dd>
+        </div>
+      </dl>
+      @if (person.description) {
+        <p class="profile__text">{{ person.description }}</p>
+      }
+    </section>
+
+    <section class="offers__card" aria-labelledby="worker-opinions-title">
+      <h2 id="worker-opinions-title" class="offers__subtitle">Opiniones</h2>
+      @if (opinions().length === 0) {
+        <p class="offers__muted">{{ current.rating.message ?? 'Todavía no hay opiniones.' }}</p>
+      } @else {
+        <ul class="profile__opinions">
+          @for (opinion of opinions(); track opinion.id) {
+            <li>
+              <p>
+                <strong>{{ opinion.rating }} de 5</strong> · {{ opinion.author }} ·
+                {{ opinion.createdAt | date: 'dd/MM/yyyy' : timezone }}
+              </p>
+              @if (opinion.comment) {
+                <p class="profile__text">{{ opinion.comment }}</p>
+              }
+            </li>
+          }
+        </ul>
+        @if (current.rating.count > current.recentOpinions.length && !allOpinions.hasValue()) {
+          @if (opinionsError(); as message) {
+            <app-error-alert [message]="message" (retry)="allOpinions.reload()" />
+          } @else {
+            <div>
+              <button
+                type="button"
+                class="offers__secondary"
+                [disabled]="allOpinions.isLoading()"
+                (click)="allRequested.set(true)"
+              >
+                Ver más opiniones
+              </button>
+            </div>
+          }
+        }
+      }
+    </section>
+
+    @if (fromSearch) {
+      <div class="offers__actions">
+        <a class="offers__primary" routerLink="/cliente/publicar-pedido">Publicar un pedido</a>
+        <a class="offers__secondary" [routerLink]="['/trabajadores', person.workerId]">
+          Ver su perfil público
+        </a>
+      </div>
+    }
+  }
+</section>

@@ -26,4 +26,24 @@
       </ul>
     }
   }
+
+  <section class="categories__zones" aria-labelledby="zones-title">
+    <h2 id="zones-title" class="categories__subtitle">Zonas donde se publican pedidos</h2>
+    @if (zones.isLoading()) {
+      <p class="categories__intro" role="status">Cargando zonas…</p>
+    } @else if (zones.error()) {
+      <p class="categories__intro">
+        No se pudieron cargar las zonas.
+        <button type="button" class="categories__retry" (click)="zones.reload()">Reintentar</button>
+      </p>
+    } @else if (zones.hasValue()) {
+      <ul class="categories__zone-list">
+        @for (zone of zones.value(); track zone.id) {
+          <li>{{ zone.name }}</li>
+        } @empty {
+          <li>Todavía no hay zonas disponibles.</li>
+        }
+      </ul>
+    }
+  </section>
 </section>

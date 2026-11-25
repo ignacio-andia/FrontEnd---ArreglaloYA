@@ -55,6 +55,11 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/catalogs/catalogs.routes').then((m) => m.CATALOGS_ROUTES),
       },
+      {
+        path: 'trabajadores',
+        loadChildren: () =>
+          import('./features/workers/workers.routes').then((m) => m.PUBLIC_WORKER_ROUTES),
+      },
     ],
   },
   {
@@ -89,6 +94,11 @@ export const routes: Routes = [
         path: 'ofertas',
         loadChildren: () =>
           import('./features/offers/offers.routes').then((m) => m.RECEIVED_OFFERS_ROUTES),
+      },
+      {
+        path: 'buscar-trabajadores',
+        loadChildren: () =>
+          import('./features/workers/workers.routes').then((m) => m.WORKER_SEARCH_ROUTES),
       },
       {
         path: 'ofrecer-servicios',

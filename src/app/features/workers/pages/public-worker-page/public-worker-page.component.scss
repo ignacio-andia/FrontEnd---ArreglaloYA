@@ -1,0 +1,19 @@
+@use 'tokens';
+
+// En el sitio público la página no tiene un contenedor propio.
+:host-context(app-public-layout) .profile {
+  margin: 0 auto;
+  padding: tokens.$space-6 tokens.$space-4;
+}
+
+.profile__text {
+  overflow-wrap: anywhere;
+}
+
+.profile__opinions {
+  display: grid;
+  gap: tokens.$space-3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

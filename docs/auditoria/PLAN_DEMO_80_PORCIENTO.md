@@ -298,6 +298,7 @@ Dos métricas separadas, ambas sobre 56:
 | Inicio | 28 sin ensayar (50,0 %) | 15 (26,8 %) |
 | D0 | **35 (62,5 %)** | **20 (35,7 %)** |
 | D1 | **38 (67,9 %)** | **23 (41,1 %)** |
+| D2 | **42 (75,0 %)** | **25 (44,6 %)** |
 
 ### D0 — Validación de lo construido
 
@@ -321,3 +322,15 @@ Dos métricas separadas, ambas sobre 56:
 - **Calidad:** 908 pruebas unitarias, build, ESLint y Prettier correctos; sin desbordamiento ni infracciones de axe a 360 y 375 px, también con el diálogo abierto; `public` intacta.
 - **Formal completa:** se suman 08, 10 y 56. RF-47 queda parcial por el backend (sin búsqueda por nombre ni definición para el trabajo en curso).
 - **Pendientes:** reasignar la zona de un perfil (#66) no se implementó.
+
+### D2 — Búsqueda y perfil público
+
+- **Completados (demostrables):** RF-09, RF-11, RF-16 y RF-54.
+- **Fallidos:** ninguno.
+- **Pantallas:** `/cliente/buscar-trabajadores` y su perfil; `/trabajadores/:id` para visitantes; zonas en `/categorias`; enlace al perfil desde la oferta recibida.
+- **Endpoints integrados:** #114, #106 y #107.
+- **Evidencia en pantalla:** filtros obligatorios, resultados con horarios, mensaje sin resultados, perfil desde la búsqueda y desde una oferta, perfil como visitante sin contacto, «Perfil no disponible» y redirección al inicio de sesión.
+- **Integración:** `integracion-d2.mjs` 8/8 (pendiente y suspendido no aparecen; el perfil público no expone correo ni teléfono).
+- **Calidad:** 917 pruebas unitarias, build, ESLint y Prettier correctos; sin desbordamiento ni infracciones de axe a 360 y 375 px; `public` intacta.
+- **Formal completa:** se suman 09 y 16.
+- **Pendientes:** el perfil público no tiene foto ni horarios y las calificaciones siguen deshabilitadas (RF-11); un visitante solo llega a un perfil por su enlace, porque no hay listado público (RF-54). #107 está integrado, pero solo se ve con más de cinco opiniones.

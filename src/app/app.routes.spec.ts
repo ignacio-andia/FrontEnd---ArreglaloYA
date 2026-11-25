@@ -46,6 +46,7 @@ function userWithRoles(roles: RoleName[]): User {
 /** Respuestas vacías de las peticiones que hacen las páginas de inicio. */
 const HOME_RESPONSES: Record<string, object> = {
   [apiUrl('catalogs', 'categories')]: [],
+  [apiUrl('catalogs', 'zones')]: [],
   [apiUrl('orders', 'me')]: { data: [], meta: { page: 1, limit: 3, total: 0, totalPages: 0 } },
   [apiUrl('worker-profile', 'me', 'eligibility')]: {
     eligible: false,

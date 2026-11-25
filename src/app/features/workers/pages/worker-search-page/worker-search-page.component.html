@@ -1,0 +1,101 @@
+<section class="offers" aria-labelledby="search-title">
+  <h1 id="search-title" class="offers__title">Buscar trabajadores</h1>
+  <p class="offers__intro">
+    Elija una categoría y una zona. Solo aparecen trabajadores con perfil aprobado.
+  </p>
+
+  @if (catalogsError(); as message) {
+    <app-error-alert [message]="message" (retry)="retryCatalogs()" />
+  }
+
+  <form class="offers__filters" [formGroup]="form" (ngSubmit)="search()" novalidate>
+    <label for="search-category">Categoría</label>
+    <select id="search-category" formControlName="categoryId" required>
+      <option value="">Seleccione una categoría</option>
+      @for (category of categoryOptions(); track category.id) {
+        <option [value]="category.id">{{ category.name }}</option>
+      }
+    </select>
+    <label for="search-zone">Zona</label>
+    <select id="search-zone" formControlName="zoneId" required>
+      <option value="">Seleccione una zona</option>
+      @for (zone of zoneOptions(); track zone.id) {
+        <option [value]="zone.id">{{ zone.name }}</option>
+      }
+    </select>
+    <button type="submit" class="offers__primary" [disabled]="results.isLoading()">Buscar</button>
+  </form>
+  @if (attempted() && form.invalid) {
+    <p class="offers__error" role="alert">Elija la categoría y la zona.</p>
+  }
+
+  @if (!searched()) {
+    <p class="offers__muted">Todavía no realizó una búsqueda.</p>
+  } @else if (results.isLoading() && !results.hasValue()) {
+    <app-loading-state message="Buscando trabajadores…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="results.reload()" />
+  } @else if (items().length === 0) {
+    @if (page() > 1) {
+      <app-empty-state heading="No hay trabajadores en esta página.">
+        <button type="button" class="offers__secondary" (click)="goToPage(1)">
+          Volver a la primera página
+        </button>
+      </app-empty-state>
+    } @else {
+      <app-empty-state [heading]="emptyMessage() ?? 'No encontramos trabajadores.'">
+        <a class="offers__primary" routerLink="/cliente/publicar-pedido">Publicar un pedido</a>
+      </app-empty-state>
+    }
+  } @else {
+    <p class="offers__muted">
+      Los horarios son de atención: no reservan una cita ni garantizan disponibilidad.
+    </p>
+    <ul class="offers__list">
+      @for (worker of items(); track worker.workerId) {
+        <li class="result">
+          <h2 class="result__name">
+            <a [routerLink]="[worker.workerId]" queryParamsHandling="preserve">
+              {{ worker.firstName }} {{ worker.lastName }}
+            </a>
+          </h2>
+          <p>
+            {{ worker.yearsOfExperience }}
+            {{ worker.yearsOfExperience === 1 ? 'año' : 'años' }} de experiencia
+            @if (worker.zone) {
+              · {{ worker.zone.name }}
+            }
+          </p>
+          <p>
+            @for (specialty of worker.specialties; track specialty.id) {
+              {{ specialty.name }}{{ $last ? '' : ', ' }}
+            }
+          </p>
+          <p class="offers__muted">{{ ratingLabel(worker.rating) }}</p>
+          @if (worker.schedules.length > 0) {
+            <ul class="result__schedules">
+              @for (schedule of worker.schedules; track $index) {
+                <li>
+                  {{ dayLabels[schedule.dayOfWeek] }}: {{ schedule.startTime }} a
+                  {{ schedule.endTime }}
+                </li>
+              }
+            </ul>
+          }
+        </li>
+      }
+    </ul>
+    @if (meta(); as current) {
+      @if (current.totalPages > 1) {
+        <app-paginator
+          label="Páginas de trabajadores"
+          [page]="current.page"
+          [totalPages]="current.totalPages"
+          [total]="current.total"
+          [busy]="results.isLoading()"
+          (pageChange)="goToPage($event)"
+        />
+      }
+    }
+  }
+</section>

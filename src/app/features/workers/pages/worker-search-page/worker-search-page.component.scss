@@ -1,0 +1,28 @@
+@use 'tokens';
+
+.result {
+  display: grid;
+  align-content: start;
+  gap: tokens.$space-2;
+  min-width: 0;
+  padding: tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+  overflow-wrap: anywhere;
+}
+
+.result__name {
+  font-size: 1.0625rem;
+
+  a {
+    color: var(--color-primary-dark);
+  }
+}
+
+.result__schedules {
+  margin: 0;
+  padding-left: tokens.$space-4;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
