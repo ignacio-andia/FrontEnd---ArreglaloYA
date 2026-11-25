@@ -93,7 +93,29 @@
               </ul>
             }
 
-            @if (card.availability.allowed) {
+            @if (card.visitToCollect; as amount) {
+              @let worker = clearance();
+              @switch (worker.state) {
+                @case ('approved') {
+                  <app-confirm-visit-payment
+                    [orderId]="current.orderId"
+                    [amount]="amount"
+                    (collected)="onVisitCollected()"
+                    (failed)="onFailed($event)"
+                    (stale)="changed.emit(); retryClearance.emit()"
+                  />
+                }
+                @case ('checking') {
+                  <app-loading-state message="Comprobando su perfil…" />
+                }
+                @case ('denied') {
+                  <p class="offers__muted">No puede confirmar el cobro: {{ worker.message }}</p>
+                }
+                @case ('unavailable') {
+                  <app-error-alert [message]="worker.message" (retry)="retryClearance.emit()" />
+                }
+              }
+            } @else if (card.availability.allowed) {
               <app-declare-payment-form
                 [orderId]="current.orderId"
                 [payment]="card.payment"

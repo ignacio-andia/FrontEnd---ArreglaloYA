@@ -28,6 +28,18 @@ describe('workflow APIs', () => {
     request.flush({});
   });
 
+  it.each([
+    ['registerVisit', ['visit']],
+    ['confirmVisitPayment', ['visit', 'payment-confirmation']],
+  ] as const)('%s posts without a body', (method, path) => {
+    TestBed.inject(WorkflowApiService)[method](ORDER_ID).subscribe();
+
+    const request = http.expectOne(apiUrl('orders', ORDER_ID, ...path));
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBeNull();
+    request.flush({});
+  });
+
   it('asks the timeline with the page size and, afterwards, the opaque cursor', () => {
     const api = TestBed.inject(TimelineApiService);
     const url = apiUrl('orders', ORDER_ID, 'timeline');

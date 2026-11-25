@@ -168,6 +168,30 @@ describe('PaymentsSectionComponent', () => {
     expect(root().querySelector('app-declare-payment-form')).toBeNull();
   });
 
+  it('never offers the client to confirm the collection of the visit', async () => {
+    fixture = TestBed.createComponent(PaymentsSectionComponent);
+    fixture.componentRef.setInput('viewer', 'CLIENTE');
+    fixture.componentRef.setInput(
+      'workflow',
+      workflow('VISITA_REALIZADA', {
+        visit: { orderId: ORDER_ID, performedAt: '2026-11-21T14:00:00Z', visitCost: '30.00' },
+      }),
+    );
+    fixture.componentRef.setInput('clearance', { state: 'approved' });
+    fixture.detectChanges();
+    http.expectOne(PAYMENTS).flush(
+      overview({
+        orderStatus: 'VISITA_REALIZADA',
+        payments: [payment({ concept: 'VISITA', expectedAmount: '30.00' })],
+      }),
+    );
+    http.expectOne(RECEIPTS).flush(receipts());
+    await render();
+
+    expect(root().querySelector('app-confirm-visit-payment')).toBeNull();
+    expect(content()).toContain('ya pagué');
+  });
+
   it('fixes the advance the worker confirms to the expected amount', async () => {
     await open('TRABAJADOR');
 

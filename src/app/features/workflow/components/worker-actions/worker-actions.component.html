@@ -1,0 +1,72 @@
+<section class="offers__card" aria-labelledby="visit-title">
+  <h2 id="visit-title" class="offers__subtitle">Visita de evaluación</h2>
+
+  @if (offerLoading()) {
+    <app-loading-state message="Consultando si el acuerdo requiere visita…" />
+  } @else if (!offer()) {
+    <p class="offers__notice offers__notice--waiting">
+      Información no disponible: no se pudo determinar si la oferta aceptada requiere visita, por
+      eso no se ofrece registrarla.
+    </p>
+    <div class="offers__actions">
+      <button type="button" class="offers__secondary" (click)="retryOffer.emit()">
+        Volver a consultar el acuerdo
+      </button>
+    </div>
+  } @else {
+    <p>
+      El acuerdo requiere una visita. Costo acordado: <strong>{{ cost() }}</strong>
+    </p>
+
+    @if (workflow().status === 'ACORDADO') {
+      <p class="offers__muted">
+        Podrá registrarla cuando confirme, en «Pagos», que recibió el anticipo.
+      </p>
+    } @else {
+      @let worker = clearance();
+      @switch (worker.state) {
+        @case ('approved') {
+          <p class="offers__muted">Regístrela cuando ya haya realizado la visita.</p>
+          <div class="offers__actions">
+            <button
+              type="button"
+              class="offers__primary visit__register"
+              [disabled]="sending() || sent()"
+              (click)="ask()"
+            >
+              {{ sent() ? 'Actualizando…' : 'Registrar visita realizada' }}
+            </button>
+          </div>
+        }
+        @case ('checking') {
+          <app-loading-state message="Comprobando su perfil…" />
+        }
+        @case ('denied') {
+          <p class="offers__muted">No puede registrar la visita: {{ worker.message }}</p>
+        }
+        @case ('unavailable') {
+          <app-error-alert [message]="worker.message" (retry)="retryClearance.emit()" />
+        }
+      }
+    }
+  }
+</section>
+
+<app-confirm-dialog
+  heading="¿Registrar la visita realizada?"
+  confirmLabel="Sí, registrar visita"
+  dismissLabel="Volver"
+  tone="primary"
+  titleId="visit-confirm-title"
+  [open]="confirming()"
+  [busy]="sending()"
+  (confirmed)="register()"
+  (cancelled)="confirming.set(false)"
+>
+  <p>
+    Confirmará que ya realizó la visita. Se registrará con la fecha y hora actuales y el costo
+    acordado (<strong>{{ cost() }}</strong
+    >), y el pedido pasará a «Visita realizada».
+  </p>
+  <p>El registro no se puede deshacer desde la plataforma.</p>
+</app-confirm-dialog>

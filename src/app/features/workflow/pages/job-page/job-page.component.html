@@ -3,6 +3,19 @@
     <span aria-hidden="true">←</span> Volver a trabajos asignados
   </a>
 
+  @if (notice(); as result) {
+    <div
+      id="job-notice"
+      tabindex="-1"
+      [class]="result.failed ? 'offers__error' : 'offers__notice'"
+      [attr.role]="result.failed ? 'alert' : 'status'"
+    >
+      @for (message of result.messages; track $index) {
+        <p>{{ message }}</p>
+      }
+    </div>
+  }
+
   @if (store.workflow.isLoading() && !store.current()) {
     <h1 id="job-title" class="offers__title">Trabajo</h1>
     <app-loading-state message="Cargando el trabajo…" />
@@ -19,6 +32,20 @@
     </div>
 
     <app-work-summary [workflow]="current" />
+
+    @if (visitPending()) {
+      <app-worker-actions
+        [workflow]="current"
+        [offer]="accepted()"
+        [offerLoading]="offer.isLoading()"
+        [clearance]="clearance()"
+        (registered)="onVisitRegistered()"
+        (failed)="onActionFailed($event)"
+        (stale)="reload()"
+        (retryOffer)="offer.reload()"
+        (retryClearance)="reloadEligibility()"
+      />
+    }
 
     <section class="offers__card" aria-labelledby="job-agreement-title">
       <h2 id="job-agreement-title" class="offers__subtitle">Acuerdo</h2>
@@ -65,7 +92,13 @@
       </p>
     }
 
-    <app-payments-section [workflow]="current" viewer="TRABAJADOR" (changed)="store.refresh()" />
+    <app-payments-section
+      viewer="TRABAJADOR"
+      [workflow]="current"
+      [clearance]="clearance()"
+      (changed)="store.refresh()"
+      (retryClearance)="reloadEligibility()"
+    />
 
     <app-service-history viewer="TRABAJADOR" />
   }

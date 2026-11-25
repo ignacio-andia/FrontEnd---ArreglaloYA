@@ -52,6 +52,35 @@ export interface NoShowReport {
   reportedAt: string;
 }
 
+/** Respuesta de `POST /orders/:orderId/visit`. */
+export interface VisitRegistration {
+  status: OrderStatus;
+  visit: Visit;
+}
+
+/** Respuesta de `POST /orders/:orderId/visit/payment-confirmation`. */
+export interface VisitPaymentConfirmation {
+  visit: Visit;
+}
+
+/** La visita tiene un cobro: `null` y `"0.00"` son visitas sin costo. */
+export function hasVisitCost(cost: string | null): cost is string {
+  return cost !== null && Number(cost) > 0;
+}
+
+/**
+ * Si el trabajador que mira puede usar las acciones de un trabajo acordado, según la
+ * elegibilidad que responde el backend. El backend vuelve a decidir en cada acción.
+ */
+export type WorkerClearance =
+  | { state: 'checking' }
+  | { state: 'approved' }
+  | { state: 'denied'; message: string }
+  | { state: 'unavailable'; message: string };
+
+/** Respuestas a una acción que indican que lo mostrado puede estar desactualizado. */
+export const STALE_ACTION_STATUSES: readonly number[] = [403, 404, 409];
+
 /** `GET /orders/:orderId/workflow` (`WorkflowView`), para el cliente dueño o el asignado. */
 export interface Workflow {
   orderId: string;

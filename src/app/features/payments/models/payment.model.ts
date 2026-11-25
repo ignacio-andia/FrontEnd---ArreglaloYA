@@ -140,12 +140,23 @@ export function declarationAvailability(
 ): { allowed: true } | { allowed: false; reason: string } {
   const deny = (reason: string) => ({ allowed: false, reason }) as const;
   const { concept } = payment;
+  const collectsVisit = concept === 'VISITA' && context.viewer === 'TRABAJADOR';
   if (payment.declarations.some((item) => item.declaredBy === context.viewer)) {
-    return deny('Ya registró su declaración: no se edita ni se repite.');
-  }
-  if (concept === 'VISITA' && context.viewer === 'TRABAJADOR') {
     return deny(
-      'Su cobro de la visita se confirma desde el registro de la visita, que todavía no está disponible en esta versión.',
+      collectsVisit
+        ? 'Ya confirmó el cobro de la visita: no se edita ni se repite.'
+        : 'Ya registró su declaración: no se edita ni se repite.',
+    );
+  }
+  // El trabajador no declara la visita: confirma su cobro (#84), por el monto acordado.
+  if (collectsVisit) {
+    if (context.visitRegistered) {
+      return deny('El cobro de la visita se confirma por el monto acordado.');
+    }
+    return deny(
+      context.status === 'CANCELADO' || context.status === 'CERRADO'
+        ? 'No hay una visita registrada: no hay cobro que confirmar.'
+        : 'Podrá confirmar el cobro cuando registre la visita.',
     );
   }
   if (concept === 'SALDO' && context.balance === 'NO_APLICA') {
