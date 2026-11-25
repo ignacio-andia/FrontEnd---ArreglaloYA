@@ -1,0 +1,93 @@
+<section class="offers" aria-labelledby="catalog-title">
+  <h1 id="catalog-title" class="offers__title">{{ copy().title }}</h1>
+  <p class="offers__intro">{{ copy().intro }}</p>
+
+  <app-action-notice [notice]="notice()" />
+
+  <section class="offers__card" aria-labelledby="catalog-create-title">
+    <h2 id="catalog-create-title" class="offers__subtitle">{{ copy().createHeading }}</h2>
+    <app-catalog-item-form [kind]="kind()" (saved)="onCreated()" />
+  </section>
+
+  <div class="offers__filters">
+    <label for="catalog-state">Mostrar</label>
+    <select id="catalog-state" [formControl]="stateFilter">
+      <option value="all">Todos</option>
+      <option value="active">Solo activos</option>
+      <option value="inactive">Solo inactivos</option>
+    </select>
+    <button
+      type="button"
+      class="offers__secondary"
+      [disabled]="items.isLoading()"
+      (click)="items.reload()"
+    >
+      Actualizar
+    </button>
+  </div>
+
+  @if (items.isLoading() && !items.hasValue()) {
+    <app-loading-state message="Cargando el catálogo…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="items.reload()" />
+  } @else if (items.hasValue()) {
+    @if (items.value().length === 0) {
+      <app-empty-state [heading]="copy().empty" />
+    } @else {
+      <ul class="offers__list">
+        @for (item of items.value(); track item.id) {
+          <li class="catalog-row">
+            <div class="catalog-row__top">
+              <h2 class="catalog-row__name">{{ item.name }}</h2>
+              <span class="catalog-row__state">{{ item.isActive ? 'Activo' : 'Inactivo' }}</span>
+            </div>
+            @if (editing() === item.id) {
+              <app-catalog-item-form
+                [kind]="kind()"
+                [item]="item"
+                (saved)="onUpdated()"
+                (cancelled)="editing.set(null)"
+              />
+            } @else {
+              <p class="offers__muted">{{ item.description ?? 'Sin descripción' }}</p>
+              <div class="offers__actions">
+                <button
+                  type="button"
+                  class="offers__secondary"
+                  [attr.aria-label]="'Editar ' + item.name"
+                  (click)="edit(item)"
+                >
+                  Editar
+                </button>
+                @if (item.isActive) {
+                  <button
+                    type="button"
+                    class="catalog-row__deactivate"
+                    [attr.aria-label]="'Desactivar ' + item.name"
+                    (click)="askDeactivate(item)"
+                  >
+                    Desactivar
+                  </button>
+                }
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>
+
+<app-confirm-dialog
+  [heading]="'¿Desactivar «' + (deactivating()?.name ?? '') + '»?'"
+  confirmLabel="Sí, desactivar"
+  dismissLabel="Volver"
+  titleId="catalog-deactivate-title"
+  [open]="deactivating() !== null"
+  [busy]="sending()"
+  (confirmed)="deactivate()"
+  (cancelled)="deactivating.set(null)"
+>
+  <p>{{ copy().deactivation }}</p>
+  <p><strong>No se puede reactivar.</strong></p>
+</app-confirm-dialog>

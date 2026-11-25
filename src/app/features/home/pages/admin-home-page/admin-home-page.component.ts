@@ -63,9 +63,16 @@ import { ActionCardComponent } from '../../../../shared/components/action-card/a
           </li>
           <li>
             <app-action-card
-              heading="Categorías publicadas"
-              description="Vea las categorías activas tal como las ve el público."
-              path="/categorias"
+              heading="Categorías"
+              description="Cree, edite o desactive las categorías de servicio."
+              path="/admin/categorias"
+            />
+          </li>
+          <li>
+            <app-action-card
+              heading="Zonas"
+              description="Cree, edite o desactive las zonas de atención."
+              path="/admin/zonas"
             />
           </li>
         </ul>

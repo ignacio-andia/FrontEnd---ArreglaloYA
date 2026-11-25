@@ -1,0 +1,30 @@
+@use 'tokens';
+@use 'buttons';
+@use 'form-controls';
+
+@include form-controls.base;
+@include form-controls.textarea;
+@include form-controls.alerts;
+
+:host {
+  display: block;
+}
+
+.catalog-form {
+  display: grid;
+  gap: tokens.$space-3;
+}
+
+.catalog-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-3;
+}
+
+.catalog-form__save {
+  @include buttons.primary;
+}
+
+.catalog-form__cancel {
+  @include buttons.secondary;
+}

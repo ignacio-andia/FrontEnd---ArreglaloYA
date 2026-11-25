@@ -1,0 +1,59 @@
+@let prefix = item()?.id ?? 'new';
+<form class="catalog-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+  @if (errors().length > 0) {
+    <div class="form-alert" role="alert">
+      @for (message of errors(); track $index) {
+        <p>{{ message }}</p>
+      }
+    </div>
+  }
+  <div class="field">
+    <label class="field__label" [for]="'catalog-name-' + prefix">Nombre</label>
+    <input
+      class="field__input"
+      type="text"
+      formControlName="name"
+      required
+      [id]="'catalog-name-' + prefix"
+      [attr.aria-invalid]="nameError() ? 'true' : null"
+      [attr.aria-describedby]="nameError() ? 'catalog-name-error-' + prefix : null"
+    />
+    @if (nameError(); as message) {
+      <p class="field__error" [id]="'catalog-name-error-' + prefix">{{ message }}</p>
+    }
+  </div>
+  <div class="field">
+    <label class="field__label" [for]="'catalog-description-' + prefix">
+      Descripción <span class="field__optional">(opcional)</span>
+    </label>
+    <textarea
+      class="field__input"
+      rows="2"
+      formControlName="description"
+      [id]="'catalog-description-' + prefix"
+      [attr.aria-invalid]="descriptionError() ? 'true' : null"
+      [attr.aria-describedby]="'catalog-description-hint-' + prefix"
+    ></textarea>
+    @if (descriptionError(); as message) {
+      <p class="field__error">{{ message }}</p>
+    }
+    <p class="field__hint" [id]="'catalog-description-hint-' + prefix">
+      Hasta {{ descriptionMax }} caracteres.
+    </p>
+  </div>
+  <div class="catalog-form__actions">
+    <button type="submit" class="catalog-form__save" [disabled]="sending()">
+      {{ item() ? 'Guardar cambios' : 'Crear' }}
+    </button>
+    @if (item()) {
+      <button
+        type="button"
+        class="catalog-form__cancel"
+        [disabled]="sending()"
+        (click)="cancelled.emit()"
+      >
+        Cancelar
+      </button>
+    }
+  </div>
+</form>

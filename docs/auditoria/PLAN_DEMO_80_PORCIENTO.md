@@ -300,6 +300,7 @@ Dos métricas separadas, ambas sobre 56:
 | D1 | **38 (67,9 %)** | **23 (41,1 %)** |
 | D2 | **42 (75,0 %)** | **25 (44,6 %)** |
 | D3 | **45 (80,4 %)** | **26 (46,4 %)** |
+| D4 | **47 (83,9 %)** | **28 (50,0 %)** |
 
 ### D0 — Validación de lo construido
 
@@ -348,3 +349,15 @@ Dos métricas separadas, ambas sobre 56:
 - **Formal completa:** se suma 52.
 - **Pendientes:** los pedidos solo se filtran por estado (RF-50) y el backend no registra algunas acciones (RF-53). La bitácora responde vacía, sin error, si la fecha final es el día anterior a la inicial y se envían sin hora (la pantalla lo impide antes).
 - **Entorno:** `integracion-e32.mjs` falló una vez por un cruce de horarios al azar (RF-30); ahora usa horarios únicos.
+
+### D4 — Categorías y zonas
+
+- **Completados (demostrables):** RF-48 y RF-49.
+- **Fallidos:** ninguno.
+- **Pantallas:** `/admin/categorias` y `/admin/zonas` (un componente común): alta, edición, filtro de activos e inactivos y desactivación con confirmación.
+- **Endpoints integrados:** #12, #14 y #16–#21.
+- **Evidencia en pantalla:** alta, nombre repetido, edición, opción visible al publicar un pedido, desactivación que la retira y entradas en la bitácora.
+- **Integración:** `integracion-d4.mjs` 12/12 (solo crea y desactiva elementos propios).
+- **Calidad:** 940 pruebas unitarias, build, ESLint y Prettier correctos; sin desbordamiento ni infracciones de axe a 360 y 375 px, también con el diálogo y la edición abiertos; `public` intacta.
+- **Formal completa:** se suman 48 y 49.
+- **Pendientes:** no existe la reactivación; #13 y #15 (consulta de un elemento) no se usan.

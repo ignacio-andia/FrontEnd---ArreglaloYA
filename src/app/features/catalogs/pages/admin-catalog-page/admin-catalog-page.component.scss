@@ -1,0 +1,39 @@
+@use 'tokens';
+@use 'buttons';
+
+.catalog-row {
+  display: grid;
+  align-content: start;
+  gap: tokens.$space-3;
+  min-width: 0;
+  padding: tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+  overflow-wrap: anywhere;
+}
+
+.catalog-row__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$space-2;
+}
+
+.catalog-row__name {
+  color: var(--color-primary-dark);
+  font-size: 1.0625rem;
+}
+
+.catalog-row__state {
+  padding: 0.125rem tokens.$space-2;
+  border: 1px solid var(--color-control-border);
+  border-radius: tokens.$radius-sm;
+  font-size: 0.8125rem;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.catalog-row__deactivate {
+  @include buttons.danger;
+}
