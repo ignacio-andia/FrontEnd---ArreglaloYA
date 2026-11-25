@@ -91,15 +91,15 @@ export class JobPageComponent {
     return error === undefined ? null : apiErrorMessages(error, AGREEMENT_ERROR).join(' ');
   });
 
-  /** Hay una visita sin registrar en un estado anterior a ella. */
-  protected readonly visitPending = computed(() => {
-    const current = this.store.current();
+  /** Hay una acción del trabajador (visita, inicio o finalización) que mostrar. */
+  protected readonly hasWorkerStep = computed(() => {
+    const status = this.store.current()?.status;
+    if (status === 'ACORDADO') {
+      // Antes del anticipo solo se avisa de la visita; si el acuerdo no la requiere, nada.
+      return this.accepted()?.requiresVisit !== false;
+    }
     return (
-      current !== null &&
-      current.visit === null &&
-      (current.status === 'ACORDADO' || current.status === 'ANTICIPO_REGISTRADO') &&
-      // Sin saber si requiere visita se muestra el aviso; si no la requiere, nada.
-      this.accepted()?.requiresVisit !== false
+      status === 'ANTICIPO_REGISTRADO' || status === 'VISITA_REALIZADA' || status === 'EN_EJECUCION'
     );
   });
 
@@ -120,7 +120,7 @@ export class JobPageComponent {
     if (current.visit !== null) {
       return hasVisitCost(current.visit.visitCost);
     }
-    return current.status === 'ANTICIPO_REGISTRADO' && this.accepted()?.requiresVisit === true;
+    return current.status === 'ANTICIPO_REGISTRADO' && this.accepted() !== null;
   });
   private readonly eligibility = rxResource({
     params: () => (this.needsClearance() ? true : undefined),
@@ -172,6 +172,14 @@ export class JobPageComponent {
 
   protected onVisitRegistered(): void {
     this.succeed('Visita registrada. El pedido pasó a «Visita realizada».');
+  }
+
+  protected onStarted(): void {
+    this.succeed('Trabajo iniciado. El pedido pasó a «En ejecución».');
+  }
+
+  protected onFinished(): void {
+    this.succeed('Trabajo marcado como terminado. El pedido pasó a «Terminado».');
   }
 
   protected onBudgetProposed({ budget }: BudgetResult): void {

@@ -56,7 +56,8 @@ describe('JobPageComponent: additional budgets', () => {
     budgets: AdditionalBudget[] = [],
     eligibility: object | null = ELIGIBLE,
   ): Promise<void> {
-    const inProgress = status === 'VISITA_REALIZADA' || status === 'EN_EJECUCION';
+    // Estados con alguna acción del trabajador: se comprueba su perfil.
+    const inProgress = ['ANTICIPO_REGISTRADO', 'VISITA_REALIZADA', 'EN_EJECUCION'].includes(status);
     await view.visit(`/trabajador/trabajos/${ORDER_ID}`);
     await view.answer(WORKFLOW, workflow(status, { additionalBudgets: budgets }));
     await view.answer(TIMELINE, timeline());

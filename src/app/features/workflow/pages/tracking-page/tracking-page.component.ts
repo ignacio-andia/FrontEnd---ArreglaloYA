@@ -15,6 +15,7 @@ import {
   ActionNoticeComponent,
 } from '../../components/action-notice/action-notice.component';
 import { AdditionalBudgetListComponent } from '../../components/additional-budget-list/additional-budget-list.component';
+import { ConformityPanelComponent } from '../../components/conformity-panel/conformity-panel.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
 import { BudgetResult, SERVICE_AGREEMENT_STATUSES } from '../../models/workflow.model';
@@ -29,6 +30,7 @@ const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
     RouterLink,
     ActionNoticeComponent,
     AdditionalBudgetListComponent,
+    ConformityPanelComponent,
     EmptyStateComponent,
     ErrorAlertComponent,
     LoadingStateComponent,
@@ -112,6 +114,14 @@ export class TrackingPageComponent {
     this.notice.set({
       failed: false,
       messages: [`Presupuesto adicional de Bs ${budget.amount} ${outcome}`],
+    });
+    this.store.refresh();
+  }
+
+  protected onConformityConfirmed(): void {
+    this.notice.set({
+      failed: false,
+      messages: ['Conformidad confirmada. El pedido quedó cerrado.'],
     });
     this.store.refresh();
   }

@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
 import { OffersApiService } from '../../offers/services/offers-api.service';
 import { ORDER_ID, offer } from '../../offers/testing/offers.fixtures';
@@ -31,8 +32,12 @@ describe('workflow APIs', () => {
   it.each([
     ['registerVisit', ['visit']],
     ['confirmVisitPayment', ['visit', 'payment-confirmation']],
+    ['startWork', ['start']],
+    ['finishWork', ['finish']],
+    ['confirmConformity', ['confirm-conformity']],
   ] as const)('%s posts without a body', (method, path) => {
-    TestBed.inject(WorkflowApiService)[method](ORDER_ID).subscribe();
+    const result: Observable<unknown> = TestBed.inject(WorkflowApiService)[method](ORDER_ID);
+    result.subscribe();
 
     const request = http.expectOne(apiUrl('orders', ORDER_ID, ...path));
     expect(request.request.method).toBe('POST');

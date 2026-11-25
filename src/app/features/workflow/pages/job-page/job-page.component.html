@@ -22,13 +22,16 @@
 
     <app-work-summary [workflow]="current" />
 
-    @if (visitPending()) {
+    @if (hasWorkerStep()) {
       <app-worker-actions
         [workflow]="current"
         [offer]="accepted()"
         [offerLoading]="offer.isLoading()"
         [clearance]="clearance()"
+        [refreshing]="store.workflow.isLoading()"
         (registered)="onVisitRegistered()"
+        (started)="onStarted()"
+        (finished)="onFinished()"
         (failed)="onActionFailed($event)"
         (stale)="reload()"
         (retryOffer)="offer.reload()"
@@ -43,6 +46,7 @@
       <app-additional-budget-form
         [workflow]="current"
         [clearance]="clearance()"
+        [refreshing]="store.workflow.isLoading()"
         (proposed)="onBudgetProposed($event)"
         (failed)="onActionFailed($event)"
         (stale)="reload()"

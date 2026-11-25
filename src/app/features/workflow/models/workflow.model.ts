@@ -63,6 +63,12 @@ export interface VisitPaymentConfirmation {
   visit: Visit;
 }
 
+/** Respuesta de iniciar, terminar o confirmar la conformidad. */
+export interface ExecutionResult {
+  status: OrderStatus;
+  execution: Execution;
+}
+
 /** Límites de `CreateAdditionalBudgetDto` y `RejectAdditionalBudgetDto`. */
 export const BUDGET_TEXT_MAX_LENGTH = 1000;
 export const BUDGET_REJECT_REASON_MAX_LENGTH = 400;

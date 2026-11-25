@@ -156,10 +156,11 @@ describe('JobPageComponent: visit and its payment', () => {
       expect(registerButton()).toBeNull();
     });
 
-    it('shows nothing when the agreement has no visit', async () => {
-      await open('ANTICIPO_REGISTRADO', { accepted: NO_VISIT, eligibility: null });
+    it('never offers it when the agreement has no visit', async () => {
+      await open('ANTICIPO_REGISTRADO', { accepted: NO_VISIT });
 
-      expect(panel()).toBeNull();
+      expect(registerButton()).toBeNull();
+      expect(panel()?.textContent).not.toContain('Visita de evaluación');
     });
 
     it.each(['VISITA_REALIZADA', 'EN_EJECUCION', 'TERMINADO', 'CANCELADO', 'CERRADO'] as const)(
@@ -172,7 +173,7 @@ describe('JobPageComponent: visit and its payment', () => {
           eligibility: inProgress ? ELIGIBLE : null,
         });
 
-        expect(panel()).toBeNull();
+        expect(registerButton()).toBeNull();
       },
     );
 
@@ -251,7 +252,9 @@ describe('JobPageComponent: visit and its payment', () => {
       await view.answer(PAYMENTS, visitPayment('VISITA_REALIZADA'));
       await view.answer(RECEIPTS, receipts());
 
-      expect(panel()).toBeNull();
+      expect(registerButton()).toBeNull();
+      // El paso siguiente es iniciar el trabajo.
+      expect(panel()?.textContent).toContain('Iniciar trabajo');
       expect(view.content()).toContain('Visita realizada. Costo Bs 30.00');
       expect(collectButton()).not.toBeNull();
       const notice = view.element('#action-notice');

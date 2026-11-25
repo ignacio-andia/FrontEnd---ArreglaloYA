@@ -1,12 +1,12 @@
-<section class="offers__card" aria-labelledby="visit-title">
-  <h2 id="visit-title" class="offers__subtitle">Visita de evaluación</h2>
+<section class="offers__card" aria-labelledby="work-action-title">
+  <h2 id="work-action-title" class="offers__subtitle">{{ texts().title }}</h2>
 
-  @if (offerLoading()) {
+  @if (needsOffer() && offerLoading()) {
     <app-loading-state message="Consultando si el acuerdo requiere visita…" />
-  } @else if (!offer()) {
+  } @else if (needsOffer() && !offer()) {
     <p class="offers__notice offers__notice--waiting">
       Información no disponible: no se pudo determinar si la oferta aceptada requiere visita, por
-      eso no se ofrece registrarla.
+      eso no se ofrece registrarla ni iniciar el trabajo.
     </p>
     <div class="offers__actions">
       <button type="button" class="offers__secondary" (click)="retryOffer.emit()">
@@ -14,9 +14,11 @@
       </button>
     </div>
   } @else {
-    <p>
-      El acuerdo requiere una visita. Costo acordado: <strong>{{ cost() }}</strong>
-    </p>
+    @if (step() === 'visit') {
+      <p>
+        El acuerdo requiere una visita. Costo acordado: <strong>{{ cost() }}</strong>
+      </p>
+    }
 
     @if (workflow().status === 'ACORDADO') {
       <p class="offers__muted">
@@ -26,15 +28,16 @@
       @let worker = clearance();
       @switch (worker.state) {
         @case ('approved') {
-          <p class="offers__muted">Regístrela cuando ya haya realizado la visita.</p>
+          <p class="offers__muted">{{ texts().hint }}</p>
           <div class="offers__actions">
             <button
               type="button"
-              class="offers__primary visit__register"
-              [disabled]="sending() || sent()"
+              class="offers__primary work__action"
+              [class.visit__register]="step() === 'visit'"
+              [disabled]="sending() || sent() || refreshing()"
               (click)="ask()"
             >
-              {{ sent() ? 'Actualizando…' : 'Registrar visita realizada' }}
+              {{ sent() ? 'Actualizando…' : texts().button }}
             </button>
           </div>
         }
@@ -42,7 +45,7 @@
           <app-loading-state message="Comprobando su perfil…" />
         }
         @case ('denied') {
-          <p class="offers__muted">No puede registrar la visita: {{ worker.message }}</p>
+          <p class="offers__muted">No puede {{ texts().verb }}: {{ worker.message }}</p>
         }
         @case ('unavailable') {
           <app-error-alert [message]="worker.message" (retry)="retryClearance.emit()" />
@@ -53,20 +56,35 @@
 </section>
 
 <app-confirm-dialog
-  heading="¿Registrar la visita realizada?"
-  confirmLabel="Sí, registrar visita"
   dismissLabel="Volver"
   tone="primary"
-  titleId="visit-confirm-title"
+  titleId="work-action-confirm-title"
+  [heading]="texts().heading"
+  [confirmLabel]="texts().confirm"
   [open]="confirming()"
   [busy]="sending()"
-  (confirmed)="register()"
+  (confirmed)="send()"
   (cancelled)="confirming.set(false)"
 >
-  <p>
-    Confirmará que ya realizó la visita. Se registrará con la fecha y hora actuales y el costo
-    acordado (<strong>{{ cost() }}</strong
-    >), y el pedido pasará a «Visita realizada».
-  </p>
+  @switch (step()) {
+    @case ('visit') {
+      <p>
+        Confirmará que ya realizó la visita. Se registrará con la fecha y hora actuales y el costo
+        acordado (<strong>{{ cost() }}</strong
+        >), y el pedido pasará a «Visita realizada».
+      </p>
+    }
+    @case ('start') {
+      <p>
+        Se registrará el inicio con la fecha y hora actuales, y el pedido pasará a «En ejecución».
+      </p>
+    }
+    @case ('finish') {
+      <p>
+        El pedido pasará a «Terminado» y el cliente podrá revisar el resultado y confirmar su
+        conformidad. El plazo lo fija la plataforma.
+      </p>
+    }
+  }
   <p>El registro no se puede deshacer desde la plataforma.</p>
 </app-confirm-dialog>

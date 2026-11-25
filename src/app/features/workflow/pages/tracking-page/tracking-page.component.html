@@ -27,6 +27,16 @@
 
     <app-work-summary [workflow]="current" />
 
+    @if (current.status === 'TERMINADO') {
+      <app-conformity-panel
+        [workflow]="current"
+        [refreshing]="store.workflow.isLoading()"
+        (confirmed)="onConformityConfirmed()"
+        (failed)="onActionFailed($event)"
+        (stale)="store.refresh()"
+      />
+    }
+
     @if (current.additionalBudgets.length > 0) {
       <app-additional-budget-list
         viewer="CLIENTE"

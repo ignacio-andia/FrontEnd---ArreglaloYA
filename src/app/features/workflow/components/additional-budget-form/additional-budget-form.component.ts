@@ -53,6 +53,8 @@ export class AdditionalBudgetFormComponent {
 
   readonly workflow = input.required<Workflow>();
   readonly clearance = input.required<WorkerClearance>();
+  /** El flujo se está volviendo a consultar: lo mostrado puede estar desactualizado. */
+  readonly refreshing = input(false);
 
   readonly proposed = output<BudgetResult>();
   /** Mensajes de un envío rechazado; vacío al volver a intentarlo. */
@@ -110,7 +112,7 @@ export class AdditionalBudgetFormComponent {
 
   protected send(): void {
     const request = this.pending();
-    if (request === null || this.sending() || this.sent()) {
+    if (request === null || this.sending() || this.sent() || this.refreshing()) {
       return;
     }
     this.sending.set(true);

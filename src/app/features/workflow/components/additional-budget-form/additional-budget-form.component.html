@@ -59,7 +59,11 @@
           }
         </div>
 
-        <button type="submit" class="proposal__submit" [disabled]="sending() || sent()">
+        <button
+          type="submit"
+          class="proposal__submit"
+          [disabled]="sending() || sent() || refreshing()"
+        >
           {{ sent() ? 'Actualizando…' : 'Enviar presupuesto' }}
         </button>
       </form>

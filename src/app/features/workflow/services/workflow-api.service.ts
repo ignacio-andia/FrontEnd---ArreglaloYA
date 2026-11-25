@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
 import {
   BudgetResult,
+  ExecutionResult,
   ProposeBudgetRequest,
   VisitPaymentConfirmation,
   VisitRegistration,
@@ -34,6 +35,21 @@ export class WorkflowApiService {
       apiUrl('orders', orderId, 'visit', 'payment-confirmation'),
       null,
     );
+  }
+
+  /** `POST /orders/:orderId/start`, sin cuerpo: trabajador aprobado y asignado. */
+  startWork(orderId: string): Observable<ExecutionResult> {
+    return this.http.post<ExecutionResult>(apiUrl('orders', orderId, 'start'), null);
+  }
+
+  /** `POST /orders/:orderId/finish`, sin cuerpo: el backend fija el plazo de conformidad. */
+  finishWork(orderId: string): Observable<ExecutionResult> {
+    return this.http.post<ExecutionResult>(apiUrl('orders', orderId, 'finish'), null);
+  }
+
+  /** `POST /orders/:orderId/confirm-conformity`, sin cuerpo: cliente dueño; cierra el pedido. */
+  confirmConformity(orderId: string): Observable<ExecutionResult> {
+    return this.http.post<ExecutionResult>(apiUrl('orders', orderId, 'confirm-conformity'), null);
   }
 
   /** `POST /orders/:orderId/additional-budgets` (201): trabajador aprobado y asignado. */
