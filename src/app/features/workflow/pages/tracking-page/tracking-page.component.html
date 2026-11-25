@@ -3,6 +3,8 @@
     <span aria-hidden="true">←</span> Volver al pedido
   </a>
 
+  <app-action-notice [notice]="notice()" />
+
   @if (store.workflow.isLoading() && !store.current()) {
     <h1 id="tracking-title" class="offers__title">Seguimiento</h1>
     <app-loading-state message="Cargando el seguimiento…" />
@@ -11,7 +13,7 @@
     <app-empty-state heading="El pedido no existe o no pertenece a su cuenta." />
   } @else if (store.errorMessage(); as message) {
     <h1 id="tracking-title" class="offers__title">Seguimiento</h1>
-    <app-error-alert [message]="message" (retry)="refresh()" />
+    <app-error-alert [message]="message" (retry)="reload()" />
   } @else if (store.current(); as current) {
     <h1 id="tracking-title" class="offers__title">
       Seguimiento
@@ -24,6 +26,26 @@
     </div>
 
     <app-work-summary [workflow]="current" />
+
+    @if (current.status === 'TERMINADO') {
+      <app-conformity-panel
+        [workflow]="current"
+        [refreshing]="store.workflow.isLoading()"
+        (confirmed)="onConformityConfirmed()"
+        (failed)="onActionFailed($event)"
+        (stale)="store.refresh()"
+      />
+    }
+
+    @if (current.additionalBudgets.length > 0) {
+      <app-additional-budget-list
+        viewer="CLIENTE"
+        [workflow]="current"
+        (responded)="onBudgetResponded($event)"
+        (failed)="onActionFailed($event)"
+        (stale)="store.refresh()"
+      />
+    }
 
     <section class="offers__card" aria-labelledby="tracking-worker-title">
       <h2 id="tracking-worker-title" class="offers__subtitle">Trabajador asignado</h2>

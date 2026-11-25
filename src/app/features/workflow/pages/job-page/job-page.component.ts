@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, inject, untracked } from '@angular/core';
+import { Component, computed, effect, inject, linkedSignal, untracked } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
@@ -13,12 +13,27 @@ import { WhatsappContactComponent } from '../../../offers/components/whatsapp-co
 import { formatDuration } from '../../../offers/models/offer.model';
 import { OffersApiService } from '../../../offers/services/offers-api.service';
 import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
+import { WorkerProfileApiService } from '../../../worker-profile/services/worker-profile-api.service';
+import {
+  ActionNotice,
+  ActionNoticeComponent,
+} from '../../components/action-notice/action-notice.component';
+import { AdditionalBudgetFormComponent } from '../../components/additional-budget-form/additional-budget-form.component';
+import { AdditionalBudgetListComponent } from '../../components/additional-budget-list/additional-budget-list.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
-import { SERVICE_AGREEMENT_STATUSES } from '../../models/workflow.model';
+import { WorkerActionsComponent } from '../../components/worker-actions/worker-actions.component';
+import {
+  BUDGET_ORIGIN_STATUSES,
+  BudgetResult,
+  SERVICE_AGREEMENT_STATUSES,
+  WorkerClearance,
+  hasVisitCost,
+} from '../../models/workflow.model';
 import { ServiceWorkStore } from '../../services/service-work.store';
 
 const AGREEMENT_ERROR = 'No se pudo consultar el acuerdo.';
+const ELIGIBILITY_ERROR = 'No se pudo comprobar su perfil de trabajador.';
 
 /**
  * Seguimiento de un trabajo para el asignado (`/trabajador/trabajos/:orderId`). El estado y el
@@ -30,6 +45,9 @@ const AGREEMENT_ERROR = 'No se pudo consultar el acuerdo.';
   imports: [
     DatePipe,
     RouterLink,
+    ActionNoticeComponent,
+    AdditionalBudgetFormComponent,
+    AdditionalBudgetListComponent,
     AssignedOrderComponent,
     EmptyStateComponent,
     ErrorAlertComponent,
@@ -38,6 +56,7 @@ const AGREEMENT_ERROR = 'No se pudo consultar el acuerdo.';
     ServiceHistoryComponent,
     WhatsappContactComponent,
     WorkSummaryComponent,
+    WorkerActionsComponent,
   ],
   providers: [ServiceWorkStore],
   templateUrl: './job-page.component.html',
@@ -45,6 +64,7 @@ const AGREEMENT_ERROR = 'No se pudo consultar el acuerdo.';
 })
 export class JobPageComponent {
   private readonly offersApi = inject(OffersApiService);
+  private readonly workerApi = inject(WorkerProfileApiService);
   protected readonly store = inject(ServiceWorkStore);
 
   protected readonly timezone = DISPLAY_TIMEZONE;
@@ -71,6 +91,62 @@ export class JobPageComponent {
     return error === undefined ? null : apiErrorMessages(error, AGREEMENT_ERROR).join(' ');
   });
 
+  /** Hay una acción del trabajador (visita, inicio o finalización) que mostrar. */
+  protected readonly hasWorkerStep = computed(() => {
+    const status = this.store.current()?.status;
+    if (status === 'ACORDADO') {
+      // Antes del anticipo solo se avisa de la visita; si el acuerdo no la requiere, nada.
+      return this.accepted()?.requiresVisit !== false;
+    }
+    return (
+      status === 'ANTICIPO_REGISTRADO' || status === 'VISITA_REALIZADA' || status === 'EN_EJECUCION'
+    );
+  });
+
+  protected readonly canPropose = computed(() => {
+    const current = this.store.current();
+    return current !== null && BUDGET_ORIGIN_STATUSES.includes(current.status);
+  });
+
+  /** La elegibilidad solo se consulta si hay una acción del trabajador que ofrecer. */
+  private readonly needsClearance = computed(() => {
+    const current = this.store.current();
+    if (current === null) {
+      return false;
+    }
+    if (this.canPropose()) {
+      return true;
+    }
+    if (current.visit !== null) {
+      return hasVisitCost(current.visit.visitCost);
+    }
+    return current.status === 'ANTICIPO_REGISTRADO' && this.accepted() !== null;
+  });
+  private readonly eligibility = rxResource({
+    params: () => (this.needsClearance() ? true : undefined),
+    stream: () => this.workerApi.getEligibility(),
+  });
+  protected readonly clearance = computed((): WorkerClearance => {
+    const error = this.eligibility.error();
+    if (error !== undefined) {
+      return {
+        state: 'unavailable',
+        message: apiErrorMessages(error, ELIGIBILITY_ERROR).join(' '),
+      };
+    }
+    if (!this.eligibility.hasValue()) {
+      return { state: 'checking' };
+    }
+    const { eligible, message } = this.eligibility.value();
+    return eligible ? { state: 'approved' } : { state: 'denied', message };
+  });
+
+  /** Se borra al pasar a otro trabajo. */
+  protected readonly notice = linkedSignal<string, ActionNotice | null>({
+    source: this.orderId,
+    computation: () => null,
+  });
+
   constructor() {
     effect(() => {
       const orderId = this.orderId();
@@ -78,8 +154,47 @@ export class JobPageComponent {
     });
   }
 
+  /** «Actualizar» y «Reintentar»: se vuelve a consultar todo y se retira el aviso. */
   protected refresh(): void {
+    this.notice.set(null);
+    this.reload();
+  }
+
+  protected reload(): void {
     this.store.refresh();
     this.offer.reload();
+    this.eligibility.reload();
+  }
+
+  protected reloadEligibility(): void {
+    this.eligibility.reload();
+  }
+
+  protected onVisitRegistered(): void {
+    this.succeed('Visita registrada. El pedido pasó a «Visita realizada».');
+  }
+
+  protected onStarted(): void {
+    this.succeed('Trabajo iniciado. El pedido pasó a «En ejecución».');
+  }
+
+  protected onFinished(): void {
+    this.succeed('Trabajo marcado como terminado. El pedido pasó a «Terminado».');
+  }
+
+  protected onBudgetProposed({ budget }: BudgetResult): void {
+    this.succeed(
+      `Presupuesto adicional de Bs ${budget.amount} enviado. El pedido quedó pendiente de la respuesta del cliente.`,
+    );
+  }
+
+  protected onActionFailed(messages: string[]): void {
+    this.notice.set(messages.length === 0 ? null : { failed: true, messages });
+  }
+
+  /** Anuncia lo que confirmó el backend y vuelve a consultar el flujo. */
+  private succeed(message: string): void {
+    this.notice.set({ failed: false, messages: [message] });
+    this.store.refresh();
   }
 }

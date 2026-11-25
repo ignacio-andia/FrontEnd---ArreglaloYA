@@ -1,0 +1,69 @@
+<div class="response">
+  <button
+    type="button"
+    class="response__accept"
+    [disabled]="sending() || sent()"
+    (click)="ask('accept')"
+  >
+    Aceptar presupuesto
+  </button>
+  <button
+    type="button"
+    class="response__reject"
+    [disabled]="sending() || sent()"
+    (click)="ask('reject')"
+  >
+    Rechazar presupuesto
+  </button>
+</div>
+
+<app-confirm-dialog
+  heading="¿Aceptar el presupuesto adicional?"
+  confirmLabel="Sí, aceptar"
+  dismissLabel="Volver"
+  tone="primary"
+  titleId="budget-accept-title"
+  [open]="confirming() === 'accept'"
+  [busy]="sending()"
+  (confirmed)="accept()"
+  (cancelled)="confirming.set(null)"
+>
+  <p>
+    Aceptará un adicional de <strong>Bs {{ budget().amount }}</strong
+    >. Se sumará al total acordado y el pedido pasará a «En ejecución».
+  </p>
+</app-confirm-dialog>
+
+<app-confirm-dialog
+  heading="¿Rechazar el presupuesto y cerrar el pedido?"
+  confirmLabel="Sí, rechazar y cerrar"
+  dismissLabel="Volver"
+  titleId="budget-reject-title"
+  [open]="confirming() === 'reject'"
+  [busy]="sending()"
+  (confirmed)="reject()"
+  (cancelled)="confirming.set(null)"
+>
+  <p>
+    Rechazará el adicional de <strong>Bs {{ budget().amount }}</strong
+    >. <strong>El pedido se cerrará</strong>: el trabajo se detiene, no se puede reabrir ni hay una
+    contraoferta, y no se calculará un saldo.
+  </p>
+  <div class="field">
+    <label class="field__label" for="budget-reject-reason">
+      Motivo <span class="field__optional">(opcional)</span>
+    </label>
+    <textarea
+      #reasonField
+      id="budget-reject-reason"
+      class="field__input"
+      rows="3"
+      [formControl]="reason"
+      [attr.aria-invalid]="reason.touched && reason.invalid ? 'true' : null"
+      aria-describedby="budget-reject-hint"
+    ></textarea>
+    <p id="budget-reject-hint" [class]="reason.invalid ? 'field__error' : 'field__hint'">
+      Hasta 400 caracteres.
+    </p>
+  </div>
+</app-confirm-dialog>

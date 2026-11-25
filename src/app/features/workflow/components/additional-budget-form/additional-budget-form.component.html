@@ -1,0 +1,106 @@
+<section class="proposal" aria-labelledby="proposal-title">
+  <h2 id="proposal-title" class="proposal__title">Proponer un presupuesto adicional</h2>
+
+  @let worker = clearance();
+  @switch (worker.state) {
+    @case ('approved') {
+      <p class="proposal__muted">
+        Solo para un costo que no está en el acuerdo. El monto original no cambia y el cliente debe
+        responder antes de que pueda proponer otro.
+      </p>
+      <form class="proposal__form" [formGroup]="form" (ngSubmit)="review()" novalidate>
+        <div class="field proposal__short">
+          <label class="field__label" for="budget-amount">Monto adicional (Bs)</label>
+          <input
+            id="budget-amount"
+            class="field__input"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            formControlName="amount"
+            required
+            [attr.aria-invalid]="error('amount') ? 'true' : null"
+            [attr.aria-describedby]="error('amount') ? 'budget-amount-error' : null"
+          />
+          @if (error('amount'); as message) {
+            <p id="budget-amount-error" class="field__error">{{ message }}</p>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="budget-reason">Motivo</label>
+          <textarea
+            id="budget-reason"
+            class="field__input"
+            rows="3"
+            formControlName="reason"
+            required
+            [attr.aria-invalid]="error('reason') ? 'true' : null"
+            [attr.aria-describedby]="error('reason') ? 'budget-reason-error' : null"
+          ></textarea>
+          @if (error('reason'); as message) {
+            <p id="budget-reason-error" class="field__error">{{ message }}</p>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="budget-materials">Materiales</label>
+          <textarea
+            id="budget-materials"
+            class="field__input"
+            rows="3"
+            formControlName="materials"
+            required
+            [attr.aria-invalid]="error('materials') ? 'true' : null"
+            [attr.aria-describedby]="error('materials') ? 'budget-materials-error' : null"
+          ></textarea>
+          @if (error('materials'); as message) {
+            <p id="budget-materials-error" class="field__error">{{ message }}</p>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="proposal__submit"
+          [disabled]="sending() || sent() || refreshing()"
+        >
+          {{ sent() ? 'Actualizando…' : 'Enviar presupuesto' }}
+        </button>
+      </form>
+    }
+    @case ('checking') {
+      <app-loading-state message="Comprobando su perfil…" />
+    }
+    @case ('denied') {
+      <p class="proposal__muted">No puede proponer un presupuesto: {{ worker.message }}</p>
+    }
+    @case ('unavailable') {
+      <app-error-alert [message]="worker.message" (retry)="retryClearance.emit()" />
+    }
+  }
+</section>
+
+<app-confirm-dialog
+  heading="¿Enviar el presupuesto adicional?"
+  confirmLabel="Sí, enviar"
+  dismissLabel="Volver"
+  tone="primary"
+  titleId="budget-propose-title"
+  [open]="pending() !== null"
+  [busy]="sending()"
+  (confirmed)="send()"
+  (cancelled)="pending.set(null)"
+>
+  @if (pending(); as request) {
+    <p>
+      Propondrá un adicional de <strong>Bs {{ request.amount }}</strong
+      >.
+    </p>
+    <p class="proposal__review">Motivo: {{ request.reason }}</p>
+    <p class="proposal__review">Materiales: {{ request.materials }}</p>
+    <p>
+      El pedido quedará detenido hasta que el cliente responda; si lo rechaza, se cerrará. No podrá
+      editarlo ni retirarlo.
+    </p>
+  }
+</app-confirm-dialog>

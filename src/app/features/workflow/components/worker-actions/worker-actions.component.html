@@ -1,0 +1,90 @@
+<section class="offers__card" aria-labelledby="work-action-title">
+  <h2 id="work-action-title" class="offers__subtitle">{{ texts().title }}</h2>
+
+  @if (needsOffer() && offerLoading()) {
+    <app-loading-state message="Consultando si el acuerdo requiere visita…" />
+  } @else if (needsOffer() && !offer()) {
+    <p class="offers__notice offers__notice--waiting">
+      Información no disponible: no se pudo determinar si la oferta aceptada requiere visita, por
+      eso no se ofrece registrarla ni iniciar el trabajo.
+    </p>
+    <div class="offers__actions">
+      <button type="button" class="offers__secondary" (click)="retryOffer.emit()">
+        Volver a consultar el acuerdo
+      </button>
+    </div>
+  } @else {
+    @if (step() === 'visit') {
+      <p>
+        El acuerdo requiere una visita. Costo acordado: <strong>{{ cost() }}</strong>
+      </p>
+    }
+
+    @if (workflow().status === 'ACORDADO') {
+      <p class="offers__muted">
+        Podrá registrarla cuando confirme, en «Pagos», que recibió el anticipo.
+      </p>
+    } @else {
+      @let worker = clearance();
+      @switch (worker.state) {
+        @case ('approved') {
+          <p class="offers__muted">{{ texts().hint }}</p>
+          <div class="offers__actions">
+            <button
+              type="button"
+              class="offers__primary work__action"
+              [class.visit__register]="step() === 'visit'"
+              [disabled]="sending() || sent() || refreshing()"
+              (click)="ask()"
+            >
+              {{ sent() ? 'Actualizando…' : texts().button }}
+            </button>
+          </div>
+        }
+        @case ('checking') {
+          <app-loading-state message="Comprobando su perfil…" />
+        }
+        @case ('denied') {
+          <p class="offers__muted">No puede {{ texts().verb }}: {{ worker.message }}</p>
+        }
+        @case ('unavailable') {
+          <app-error-alert [message]="worker.message" (retry)="retryClearance.emit()" />
+        }
+      }
+    }
+  }
+</section>
+
+<app-confirm-dialog
+  dismissLabel="Volver"
+  tone="primary"
+  titleId="work-action-confirm-title"
+  [heading]="texts().heading"
+  [confirmLabel]="texts().confirm"
+  [open]="confirming()"
+  [busy]="sending()"
+  (confirmed)="send()"
+  (cancelled)="confirming.set(false)"
+>
+  @switch (step()) {
+    @case ('visit') {
+      <p>
+        Confirmará que ya realizó la visita. Se registrará con la fecha y hora actuales y el costo
+        acordado (<strong>{{ cost() }}</strong
+        >), y el pedido pasará a «Visita realizada».
+      </p>
+    }
+    @case ('start') {
+      <p>
+        Se registrará el inicio con la fecha y hora actuales, y el pedido pasará a «En ejecución».
+      </p>
+    }
+    @case ('finish') {
+      <p>
+        El pedido pasará a «Terminado» y el cliente podrá revisar el resultado y confirmar su
+        conformidad. El plazo lo fija la plataforma.
+      </p>
+    }
+  }
+  <p>El registro no se puede deshacer desde la plataforma.</p>
+</app-confirm-dialog>

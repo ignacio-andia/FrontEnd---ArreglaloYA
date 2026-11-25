@@ -57,6 +57,19 @@ describe('declarationAvailability', () => {
     expect(result.allowed).toBe(false);
   });
 
+  it.each([
+    ['ANTICIPO_REGISTRADO', false, 'cuando registre la visita'],
+    ['CANCELADO', false, 'no hay cobro que confirmar'],
+    ['VISITA_REALIZADA', true, 'por el monto acordado'],
+  ] as const)('explains the visit to the worker in %s', (status, visitRegistered, text) => {
+    const result = declarationAvailability(
+      payment({ concept: 'VISITA' }),
+      context({ viewer: 'TRABAJADOR', status, visitRegistered }),
+    );
+
+    expect(result).toEqual({ allowed: false, reason: expect.stringContaining(text) });
+  });
+
   it('allows one declaration per party, independently of the other', () => {
     const declared = payment({ declarations: [declaration()] });
 

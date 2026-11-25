@@ -1,0 +1,20 @@
+@use 'tokens';
+@use 'buttons';
+@use 'form-controls';
+
+@include form-controls.base;
+@include form-controls.textarea;
+
+.response {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-3;
+}
+
+.response__accept {
+  @include buttons.primary;
+}
+
+.response__reject {
+  @include buttons.secondary;
+}

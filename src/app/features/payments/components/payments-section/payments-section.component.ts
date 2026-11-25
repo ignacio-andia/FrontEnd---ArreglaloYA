@@ -18,7 +18,7 @@ import { LoadingStateComponent } from '../../../../shared/components/loading-sta
 import { apiErrorMessages } from '../../../../shared/utils/api-error-message';
 import { DISPLAY_TIMEZONE } from '../../../../shared/utils/display-timezone';
 import { OfferParty } from '../../../offers/models/offer.model';
-import { Workflow } from '../../../workflow/models/workflow.model';
+import { Workflow, WorkerClearance, hasVisitCost } from '../../../workflow/models/workflow.model';
 import {
   COMPARISON_LABELS,
   CONCEPT_LABELS,
@@ -30,6 +30,7 @@ import {
   declarationAvailability,
 } from '../../models/payment.model';
 import { PaymentsApiService } from '../../services/payments-api.service';
+import { ConfirmVisitPaymentComponent } from '../confirm-visit-payment/confirm-visit-payment.component';
 import { DeclarePaymentFormComponent } from '../declare-payment-form/declare-payment-form.component';
 import { ReceiptsListComponent } from '../receipts-list/receipts-list.component';
 
@@ -37,7 +38,8 @@ const OVERVIEW_ERROR = 'No se pudieron cargar los pagos.';
 const RECEIPTS_ERROR = 'No se pudieron cargar las constancias.';
 
 /**
- * Pagos (#99), declaraciones (#101) y constancias (#100) dentro del seguimiento de un pedido.
+ * Pagos (#99), declaraciones (#101), cobro de la visita (#84) y constancias (#100) dentro del
+ * seguimiento de un pedido.
  * Se vuelve a consultar cada vez que la página actualiza el flujo; los montos, la comparación y
  * el saldo son los del backend.
  */
@@ -45,6 +47,7 @@ const RECEIPTS_ERROR = 'No se pudieron cargar las constancias.';
   selector: 'app-payments-section',
   imports: [
     DatePipe,
+    ConfirmVisitPaymentComponent,
     DeclarePaymentFormComponent,
     ErrorAlertComponent,
     LoadingStateComponent,
@@ -61,8 +64,12 @@ export class PaymentsSectionComponent {
   readonly workflow = input.required<Workflow>();
   readonly viewer = input.required<OfferParty>();
 
+  /** Del trabajador que mira: sin perfil aprobado no se ofrece confirmar el cobro. */
+  readonly clearance = input<WorkerClearance>({ state: 'checking' });
+
   /** Una declaración cambió el pedido o lo mostrado quedó desactualizado. */
   readonly changed = output();
+  readonly retryClearance = output();
 
   protected readonly timezone = DISPLAY_TIMEZONE;
   protected readonly concepts = CONCEPT_LABELS;
@@ -108,6 +115,7 @@ export class PaymentsSectionComponent {
       }),
       suggested: suggestedAmount(payment, overview),
       confirmed: payment.declarations.some((item) => item.declaredBy === 'TRABAJADOR'),
+      visitToCollect: this.visitToCollect(payment),
     }));
   });
 
@@ -140,12 +148,29 @@ export class PaymentsSectionComponent {
     this.focusAfterRender('#payments-success');
   }
 
+  protected onVisitCollected(): void {
+    this.errors.set([]);
+    this.success.set('Cobro de la visita confirmado.');
+    this.changed.emit();
+    this.focusAfterRender('#payments-success');
+  }
+
   protected onFailed(messages: string[]): void {
     this.errors.set(messages);
     if (messages.length > 0) {
       this.success.set(null);
       this.focusAfterRender('#payments-error');
     }
+  }
+
+  /** Monto de la visita que el trabajador todavía puede confirmar como cobrado, o `null`. */
+  private visitToCollect(payment: Payment): string | null {
+    const cost = this.workflow().visit?.visitCost ?? null;
+    const pending =
+      payment.concept === 'VISITA' &&
+      this.viewer() === 'TRABAJADOR' &&
+      !payment.declarations.some((item) => item.declaredBy === 'TRABAJADOR');
+    return pending && hasVisitCost(cost) ? cost : null;
   }
 
   private focusAfterRender(selector: string): void {

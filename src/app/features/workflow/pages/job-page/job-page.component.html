@@ -3,6 +3,8 @@
     <span aria-hidden="true">←</span> Volver a trabajos asignados
   </a>
 
+  <app-action-notice [notice]="notice()" />
+
   @if (store.workflow.isLoading() && !store.current()) {
     <h1 id="job-title" class="offers__title">Trabajo</h1>
     <app-loading-state message="Cargando el trabajo…" />
@@ -11,7 +13,7 @@
     <app-empty-state heading="El trabajo no existe o no está asignado a su cuenta." />
   } @else if (store.errorMessage(); as message) {
     <h1 id="job-title" class="offers__title">Trabajo</h1>
-    <app-error-alert [message]="message" (retry)="refresh()" />
+    <app-error-alert [message]="message" (retry)="reload()" />
   } @else if (store.current(); as current) {
     <h1 id="job-title" class="offers__title">Seguimiento del trabajo</h1>
     <div class="offers__actions">
@@ -19,6 +21,38 @@
     </div>
 
     <app-work-summary [workflow]="current" />
+
+    @if (hasWorkerStep()) {
+      <app-worker-actions
+        [workflow]="current"
+        [offer]="accepted()"
+        [offerLoading]="offer.isLoading()"
+        [clearance]="clearance()"
+        [refreshing]="store.workflow.isLoading()"
+        (registered)="onVisitRegistered()"
+        (started)="onStarted()"
+        (finished)="onFinished()"
+        (failed)="onActionFailed($event)"
+        (stale)="reload()"
+        (retryOffer)="offer.reload()"
+        (retryClearance)="reloadEligibility()"
+      />
+    }
+
+    @if (current.additionalBudgets.length > 0) {
+      <app-additional-budget-list viewer="TRABAJADOR" [workflow]="current" />
+    }
+    @if (canPropose()) {
+      <app-additional-budget-form
+        [workflow]="current"
+        [clearance]="clearance()"
+        [refreshing]="store.workflow.isLoading()"
+        (proposed)="onBudgetProposed($event)"
+        (failed)="onActionFailed($event)"
+        (stale)="reload()"
+        (retryClearance)="reloadEligibility()"
+      />
+    }
 
     <section class="offers__card" aria-labelledby="job-agreement-title">
       <h2 id="job-agreement-title" class="offers__subtitle">Acuerdo</h2>
@@ -65,7 +99,13 @@
       </p>
     }
 
-    <app-payments-section [workflow]="current" viewer="TRABAJADOR" (changed)="store.refresh()" />
+    <app-payments-section
+      viewer="TRABAJADOR"
+      [workflow]="current"
+      [clearance]="clearance()"
+      (changed)="store.refresh()"
+      (retryClearance)="reloadEligibility()"
+    />
 
     <app-service-history viewer="TRABAJADOR" />
   }

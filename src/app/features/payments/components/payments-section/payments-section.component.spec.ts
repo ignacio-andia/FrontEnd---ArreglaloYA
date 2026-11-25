@@ -104,7 +104,7 @@ describe('PaymentsSectionComponent', () => {
 
     const text = content();
     expect(text).toContain('El pago se realiza directamente al trabajador');
-    expect(text).toContain('Monto acordadoBs 100.00');
+    expect(text).toContain('Monto original acordadoBs 100.00');
     expect(text).toContain('Saldo esperadoBs 75.00');
     expect(text).toContain('Anticipo (25 %)');
     expect(text).toContain('Bs 25.00');
@@ -166,6 +166,30 @@ describe('PaymentsSectionComponent', () => {
 
     expect(content()).toContain('no indican un cobro ni una devolución pendiente');
     expect(root().querySelector('app-declare-payment-form')).toBeNull();
+  });
+
+  it('never offers the client to confirm the collection of the visit', async () => {
+    fixture = TestBed.createComponent(PaymentsSectionComponent);
+    fixture.componentRef.setInput('viewer', 'CLIENTE');
+    fixture.componentRef.setInput(
+      'workflow',
+      workflow('VISITA_REALIZADA', {
+        visit: { orderId: ORDER_ID, performedAt: '2026-11-21T14:00:00Z', visitCost: '30.00' },
+      }),
+    );
+    fixture.componentRef.setInput('clearance', { state: 'approved' });
+    fixture.detectChanges();
+    http.expectOne(PAYMENTS).flush(
+      overview({
+        orderStatus: 'VISITA_REALIZADA',
+        payments: [payment({ concept: 'VISITA', expectedAmount: '30.00' })],
+      }),
+    );
+    http.expectOne(RECEIPTS).flush(receipts());
+    await render();
+
+    expect(root().querySelector('app-confirm-visit-payment')).toBeNull();
+    expect(content()).toContain('ya pagué');
   });
 
   it('fixes the advance the worker confirms to the expected amount', async () => {
@@ -295,6 +319,6 @@ describe('PaymentsSectionComponent', () => {
     http.expectOne(PAYMENTS).flush(overview());
     http.expectOne(RECEIPTS).flush(receipts());
     await render();
-    expect(content()).toContain('Monto acordado');
+    expect(content()).toContain('Monto original acordado');
   });
 });

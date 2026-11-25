@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
 import { OffersApiService } from '../../offers/services/offers-api.service';
 import { ORDER_ID, offer } from '../../offers/testing/offers.fixtures';
@@ -26,6 +27,44 @@ describe('workflow APIs', () => {
     const request = http.expectOne(apiUrl('orders', ORDER_ID, 'workflow'));
     expect(request.request.method).toBe('GET');
     request.flush({});
+  });
+
+  it.each([
+    ['registerVisit', ['visit']],
+    ['confirmVisitPayment', ['visit', 'payment-confirmation']],
+    ['startWork', ['start']],
+    ['finishWork', ['finish']],
+    ['confirmConformity', ['confirm-conformity']],
+  ] as const)('%s posts without a body', (method, path) => {
+    const result: Observable<unknown> = TestBed.inject(WorkflowApiService)[method](ORDER_ID);
+    result.subscribe();
+
+    const request = http.expectOne(apiUrl('orders', ORDER_ID, ...path));
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBeNull();
+    request.flush({});
+  });
+
+  it('sends only the fields of the budget DTOs', () => {
+    const api = TestBed.inject(WorkflowApiService);
+    const url = (...path: string[]) =>
+      apiUrl('orders', ORDER_ID, ...(['additional-budgets', ...path] as [string]));
+    const send = (path: string, body: unknown) => {
+      const request = http.expectOne(path);
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual(body);
+      request.flush({});
+    };
+    const budget = { amount: '10', reason: 'r', materials: 'm' };
+
+    api.proposeBudget(ORDER_ID, { ...budget, extra: 'x' } as typeof budget).subscribe();
+    send(url(), budget);
+    api.acceptBudget(ORDER_ID, 'b1').subscribe();
+    send(url('b1', 'accept'), null);
+    api.rejectBudget(ORDER_ID, 'b1', '').subscribe();
+    send(url('b1', 'reject'), {});
+    api.rejectBudget(ORDER_ID, 'b1', 'Caro').subscribe();
+    send(url('b1', 'reject'), { reason: 'Caro' });
   });
 
   it('asks the timeline with the page size and, afterwards, the opaque cursor', () => {

@@ -42,6 +42,10 @@ describe('JobPageComponent', () => {
     await view.answer(timelinePath, history);
     await view.answer('offers/me', page([ACCEPTED]));
     await payments();
+    // Con el trabajo en curso se puede proponer un adicional: se comprueba el perfil.
+    if (status === 'EN_EJECUCION') {
+      await view.answer('worker-profile/me/eligibility', { eligible: true, message: '' });
+    }
   }
 
   const entries = () =>
@@ -64,7 +68,7 @@ describe('JobPageComponent', () => {
     expect(content).toContain('Av. Ejemplo 123');
     expect(view.element('.contact__link')?.getAttribute('href')).toBe(CONTACT.url);
     expect(entries()).toHaveLength(1);
-    // Todavía no hay acciones del trabajo.
+    // Ya en ejecución, no se vuelve a ofrecer el inicio.
     expect(content).not.toContain('Iniciar trabajo');
   });
 

@@ -52,6 +52,61 @@ export interface NoShowReport {
   reportedAt: string;
 }
 
+/** Respuesta de `POST /orders/:orderId/visit`. */
+export interface VisitRegistration {
+  status: OrderStatus;
+  visit: Visit;
+}
+
+/** Respuesta de `POST /orders/:orderId/visit/payment-confirmation`. */
+export interface VisitPaymentConfirmation {
+  visit: Visit;
+}
+
+/** Respuesta de iniciar, terminar o confirmar la conformidad. */
+export interface ExecutionResult {
+  status: OrderStatus;
+  execution: Execution;
+}
+
+/** Límites de `CreateAdditionalBudgetDto` y `RejectAdditionalBudgetDto`. */
+export const BUDGET_TEXT_MAX_LENGTH = 1000;
+export const BUDGET_REJECT_REASON_MAX_LENGTH = 400;
+
+/** Estados en los que el backend admite proponer un adicional. */
+export const BUDGET_ORIGIN_STATUSES: readonly OrderStatus[] = ['VISITA_REALIZADA', 'EN_EJECUCION'];
+
+/** Cuerpo de `POST /orders/:orderId/additional-budgets`. */
+export interface ProposeBudgetRequest {
+  amount: string;
+  reason: string;
+  materials: string;
+}
+
+/** Respuesta de proponer, aceptar o rechazar un adicional. */
+export interface BudgetResult {
+  status: OrderStatus;
+  budget: AdditionalBudget;
+}
+
+/** La visita tiene un cobro: `null` y `"0.00"` son visitas sin costo. */
+export function hasVisitCost(cost: string | null): cost is string {
+  return cost !== null && Number(cost) > 0;
+}
+
+/**
+ * Si el trabajador que mira puede usar las acciones de un trabajo acordado, según la
+ * elegibilidad que responde el backend. El backend vuelve a decidir en cada acción.
+ */
+export type WorkerClearance =
+  | { state: 'checking' }
+  | { state: 'approved' }
+  | { state: 'denied'; message: string }
+  | { state: 'unavailable'; message: string };
+
+/** Respuestas a una acción que indican que lo mostrado puede estar desactualizado. */
+export const STALE_ACTION_STATUSES: readonly number[] = [403, 404, 409];
+
 /** `GET /orders/:orderId/workflow` (`WorkflowView`), para el cliente dueño o el asignado. */
 export interface Workflow {
   orderId: string;

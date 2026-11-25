@@ -49,21 +49,6 @@
     </dl>
   }
 
-  @if (current.additionalBudgets.length > 0) {
-    <h3 class="summary__subtitle">Presupuestos adicionales</h3>
-    <ul class="summary__list">
-      @for (budget of current.additionalBudgets; track budget.id) {
-        <li>
-          <p>
-            <strong>Bs {{ budget.amount }}</strong> · {{ budgetLabels[budget.status] }}
-          </p>
-          <p class="summary__help">Motivo: {{ budget.reason }}</p>
-          <p class="summary__help">Materiales: {{ budget.materials }}</p>
-        </li>
-      }
-    </ul>
-  }
-
   @if (current.noShowReport; as report) {
     <h3 class="summary__subtitle">Inasistencia reportada</h3>
     <p>{{ report.reportedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</p>
