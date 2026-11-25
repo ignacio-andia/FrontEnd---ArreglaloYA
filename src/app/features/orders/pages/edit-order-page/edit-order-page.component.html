@@ -1,0 +1,215 @@
+<section class="edit" aria-labelledby="edit-order-title">
+  <a class="edit__back" [routerLink]="['/cliente/mis-pedidos', orderId()]" [state]="listState">
+    <span aria-hidden="true">←</span> Volver al pedido
+  </a>
+
+  <h1 id="edit-order-title" class="edit__title">Editar pedido</h1>
+
+  @if (errors().length > 0) {
+    <div id="edit-error-summary" class="form-alert" role="alert" tabindex="-1">
+      <p>{{ errors()[0] }}</p>
+      @if (errors().length > 1) {
+        <ul>
+          @for (message of errors().slice(1); track $index) {
+            <li>{{ message }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  @if (order.isLoading() && !order.hasValue()) {
+    <app-loading-state message="Cargando el pedido…" />
+  } @else if (notFound()) {
+    <app-empty-state heading="Pedido no encontrado">
+      <p>El pedido no existe o no pertenece a su cuenta.</p>
+      <a class="edit__link" routerLink="/cliente/mis-pedidos">Ver mis pedidos</a>
+    </app-empty-state>
+  } @else if (loadError(); as message) {
+    <app-error-alert [message]="message" (retry)="refresh()" />
+  } @else if (current(); as order) {
+    @if (!order.canEdit) {
+      <app-empty-state heading="Este pedido ya no se puede editar">
+        <p>
+          Está en estado «{{ statusLabels[order.status] }}». Solo se editan los pedidos publicados o
+          en negociación que no hayan vencido.
+        </p>
+        <a class="edit__link" [routerLink]="['/cliente/mis-pedidos', order.id]" [state]="listState">
+          Ver el pedido
+        </a>
+      </app-empty-state>
+    } @else {
+      <p class="form-notice">
+        Puede cambiar la categoría, la descripción, el presupuesto, la dirección y las fotografías.
+        La zona no se puede cambiar. Editar no reinicia la vigencia: el pedido vence el
+        {{ order.expiresAt | date: 'dd/MM/yyyy HH:mm' : timezone }}.
+        @if (order.status === 'EN_NEGOCIACION') {
+          Las ofertas que ya recibió siguen vigentes.
+        }
+      </p>
+
+      @if (statusMessage(); as message) {
+        <p id="edit-saved" class="form-notice" role="status" tabindex="-1">{{ message }}</p>
+      }
+      @if (warnings().length > 0) {
+        <app-order-warnings [warnings]="warnings()" headingId="edit-warnings-title" />
+      }
+
+      <div class="order-form__card">
+        <h2 class="order-form__subtitle">Datos del pedido</h2>
+        <form class="order-form__form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <fieldset class="order-form__group">
+            <legend class="order-form__legend">Servicio</legend>
+            <div class="order-form__row">
+              <div class="field">
+                <label class="field__label" for="edit-categoryId">Categoría</label>
+                <select
+                  id="edit-categoryId"
+                  class="field__input"
+                  formControlName="categoryId"
+                  required
+                  [attr.aria-invalid]="errorFor('categoryId') ? 'true' : null"
+                  [attr.aria-describedby]="describedBy('categoryId', true)"
+                >
+                  @for (category of categoryOptions(); track category.id) {
+                    <option
+                      [value]="category.id"
+                      [selected]="category.id === form.value.categoryId"
+                    >
+                      {{ category.name }}
+                    </option>
+                  }
+                </select>
+                <p id="edit-categoryId-hint" class="field__hint">
+                  Al cambiarla, el pedido lo verán los trabajadores de la nueva categoría.
+                </p>
+                @if (errorFor('categoryId'); as error) {
+                  <p id="edit-categoryId-error" class="field__error">{{ error }}</p>
+                }
+                @if (categoriesError(); as message) {
+                  <app-error-alert [message]="message" (retry)="categories.reload()" />
+                }
+              </div>
+
+              <dl class="edit__fixed">
+                <dt>Zona</dt>
+                <dd>{{ order.zone.name }}</dd>
+                <dd class="edit__fixed-hint">
+                  No se puede cambiar. Para otra zona, cancele este pedido y publique uno nuevo.
+                </dd>
+              </dl>
+            </div>
+          </fieldset>
+
+          <fieldset class="order-form__group">
+            <legend class="order-form__legend">Problema y presupuesto</legend>
+            <div class="field">
+              <label class="field__label" for="edit-description">Descripción</label>
+              <textarea
+                id="edit-description"
+                class="field__input"
+                formControlName="description"
+                required
+                [attr.maxlength]="limits.maxDescription"
+                [attr.aria-invalid]="errorFor('description') ? 'true' : null"
+                [attr.aria-describedby]="describedBy('description', true)"
+              ></textarea>
+              <p id="edit-description-hint" class="field__hint">
+                Entre {{ limits.minDescription }} y {{ limits.maxDescription }} caracteres. No
+                incluya su teléfono ni su correo.
+              </p>
+              @if (errorFor('description'); as error) {
+                <p id="edit-description-error" class="field__error">{{ error }}</p>
+              }
+            </div>
+
+            <div class="field order-form__budget">
+              <label class="field__label" for="edit-budgetAmount">Presupuesto (Bs)</label>
+              <input
+                id="edit-budgetAmount"
+                class="field__input"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                formControlName="budgetAmount"
+                required
+                [attr.aria-invalid]="errorFor('budgetAmount') ? 'true' : null"
+                [attr.aria-describedby]="describedBy('budgetAmount', true)"
+              />
+              <p id="edit-budgetAmount-hint" class="field__hint">
+                Mayor que 0 y con hasta 2 decimales. Ejemplo: 150.50
+              </p>
+              @if (errorFor('budgetAmount'); as error) {
+                <p id="edit-budgetAmount-error" class="field__error">{{ error }}</p>
+              }
+            </div>
+          </fieldset>
+
+          <fieldset class="order-form__group">
+            <legend class="order-form__legend">Dirección</legend>
+            <div class="field">
+              <label class="field__label" for="edit-addressLine">Dirección exacta</label>
+              <input
+                id="edit-addressLine"
+                class="field__input"
+                type="text"
+                autocomplete="street-address"
+                formControlName="addressLine"
+                required
+                [attr.maxlength]="limits.maxAddress"
+                [attr.aria-invalid]="errorFor('addressLine') ? 'true' : null"
+                [attr.aria-describedby]="describedBy('addressLine', true)"
+              />
+              <p id="edit-addressLine-hint" class="field__hint">
+                Es privada: los trabajadores no la ven al consultar el pedido.
+              </p>
+              @if (errorFor('addressLine'); as error) {
+                <p id="edit-addressLine-error" class="field__error">{{ error }}</p>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="edit-addressReference">
+                Referencia <span class="field__optional">(opcional)</span>
+              </label>
+              <input
+                id="edit-addressReference"
+                class="field__input"
+                type="text"
+                formControlName="addressReference"
+                [attr.maxlength]="limits.maxAddress"
+                [attr.aria-invalid]="errorFor('addressReference') ? 'true' : null"
+                [attr.aria-describedby]="describedBy('addressReference', true)"
+              />
+              <p id="edit-addressReference-hint" class="field__hint">
+                Deje el campo vacío para quitar la referencia.
+              </p>
+              @if (errorFor('addressReference'); as error) {
+                <p id="edit-addressReference-error" class="field__error">{{ error }}</p>
+              }
+            </div>
+          </fieldset>
+
+          <div class="order-form__actions">
+            <button type="submit" class="form-submit" [disabled]="saving()">
+              {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+            </button>
+            <a
+              class="edit__link"
+              [routerLink]="['/cliente/mis-pedidos', order.id]"
+              [state]="listState"
+            >
+              Volver sin guardar
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <app-order-photo-manager
+        [order]="order"
+        (changed)="onPhotosChanged($event)"
+        (stale)="refresh()"
+      />
+    }
+  }
+</section>

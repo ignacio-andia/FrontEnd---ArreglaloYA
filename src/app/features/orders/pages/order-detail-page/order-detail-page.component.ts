@@ -1,32 +1,58 @@
 import { DatePipe, Location } from '@angular/common';
-import { Component, computed, inject, linkedSignal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { apiErrorMessages, apiErrorStatus } from '../../../../shared/utils/api-error-message';
 import { DISPLAY_TIMEZONE } from '../../../../shared/utils/display-timezone';
+import { CancelOrderComponent } from '../../components/cancel-order/cancel-order.component';
 import { OrderPhotoComponent } from '../../components/order-photo/order-photo.component';
 import { OrderStatusBadgeComponent } from '../../components/order-status-badge/order-status-badge.component';
+import {
+  ORDER_AGREED_STATUSES,
+  ORDER_STATUS_DESCRIPTIONS,
+  OwnerOrder,
+} from '../../models/order.model';
 import { OrdersApiService } from '../../services/orders-api.service';
 import { ordersListQueryFrom } from '../../models/orders-list-navigation.model';
 
 const DETAIL_ERROR = 'No se pudo cargar el pedido. Compruebe su conexión e inténtelo de nuevo.';
 
 /**
- * Detalle de un pedido propio (`GET /orders/me/:orderId`), solo lectura: datos del servicio,
- * dirección exacta (visible solo para el dueño), fotografías privadas e información del pedido.
- * Un pedido inexistente o ajeno responde 404 y se muestra como «no encontrado».
+ * Detalle de un pedido propio (`GET /orders/me/:orderId`): datos del servicio, dirección exacta
+ * (visible solo para el dueño), fotografías privadas e información del pedido. Ofrece editar y
+ * cancelar solo cuando el backend lo indica (`canEdit`, `canCancel`). Un pedido inexistente o
+ * ajeno responde 404 y se muestra como «no encontrado».
  */
 @Component({
   selector: 'app-order-detail-page',
-  imports: [DatePipe, RouterLink, OrderPhotoComponent, OrderStatusBadgeComponent],
+  imports: [
+    DatePipe,
+    RouterLink,
+    CancelOrderComponent,
+    OrderPhotoComponent,
+    OrderStatusBadgeComponent,
+  ],
   templateUrl: './order-detail-page.component.html',
   styleUrl: './order-detail-page.component.scss',
 })
 export class OrderDetailPageComponent {
   private readonly ordersApi = inject(OrdersApiService);
 
+  private readonly injector = inject(Injector);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
   protected readonly timezone = DISPLAY_TIMEZONE;
+  protected readonly statusDescriptions = ORDER_STATUS_DESCRIPTIONS;
 
   private readonly orderId = toSignal(
     inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('orderId') ?? '')),
@@ -76,11 +102,38 @@ export class OrderDetailPageComponent {
       : DETAIL_ERROR;
   });
 
+  /** Con acuerdo no se edita ni se cancela por esta vía: se explica por qué. */
+  protected readonly agreed = computed(
+    () => this.order.hasValue() && ORDER_AGREED_STATUSES.includes(this.order.value().status),
+  );
+
+  protected readonly actionErrors = signal<string[]>([]);
+  protected readonly cancelledMessage = signal(false);
+
+  protected onCancelled(order: OwnerOrder): void {
+    this.order.set(order);
+    this.cancelledMessage.set(true);
+    this.focusAfterRender('#order-cancelled');
+  }
+
+  protected onActionFailed(messages: string[]): void {
+    this.actionErrors.set(messages);
+    if (messages.length > 0) {
+      this.focusAfterRender('#order-action-error');
+    }
+  }
+
   protected selectImage(index: number): void {
     this.selectedIndex.set(index);
   }
 
   protected retry(): void {
     this.order.reload();
+  }
+
+  private focusAfterRender(selector: string): void {
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>(selector)?.focus(), {
+      injector: this.injector,
+    });
   }
 }

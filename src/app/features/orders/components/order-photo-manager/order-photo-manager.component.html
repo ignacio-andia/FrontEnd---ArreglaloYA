@@ -1,0 +1,137 @@
+<section class="manager" aria-labelledby="order-photos-title">
+  <h2 id="order-photos-title" class="manager__title">Fotografías</h2>
+  <p class="manager__intro">
+    {{ count() }} de {{ max }} fotografías. Cada cambio se guarda al momento.
+  </p>
+
+  @if (errors().length > 0) {
+    <div id="order-photos-error" class="form-alert" role="alert" tabindex="-1">
+      @for (message of errors(); track $index) {
+        <p>{{ message }}</p>
+      }
+    </div>
+  }
+  <p id="order-photos-status" class="manager__status" role="status" tabindex="-1">
+    {{ statusMessage() }}
+  </p>
+
+  @if (count() === 0) {
+    <p class="manager__intro">El pedido no tiene fotografías disponibles.</p>
+  } @else {
+    <ul class="manager__grid" aria-label="Fotografías actuales">
+      @for (image of order().images; track image.id; let index = $index) {
+        <li class="manager__item">
+          <app-order-photo
+            class="manager__photo"
+            [orderId]="order().id"
+            [imageId]="image.id"
+            variant="thumb"
+            [alt]="'Fotografía ' + (index + 1) + ' de ' + count()"
+          />
+          <button
+            type="button"
+            class="manager__button manager__replace"
+            [disabled]="busy() !== null"
+            (click)="chooseReplacement(image)"
+          >
+            Reemplazar<span class="sr-only"> la fotografía {{ index + 1 }}</span>
+          </button>
+          <button
+            type="button"
+            class="manager__button manager__delete"
+            [disabled]="busy() !== null || !canDelete()"
+            [attr.aria-describedby]="canDelete() ? null : 'order-photos-minimum'"
+            (click)="deleting.set(image)"
+          >
+            Quitar<span class="sr-only"> la fotografía {{ index + 1 }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+    @if (!canDelete()) {
+      <p id="order-photos-minimum" class="manager__intro">
+        El pedido debe conservar al menos una fotografía: para cambiarla, use «Reemplazar».
+      </p>
+    }
+  }
+
+  <input
+    #replacePicker
+    type="file"
+    class="manager__replace-input"
+    hidden
+    [accept]="accept"
+    (change)="onReplacementPicked($event)"
+  />
+
+  @if (replacement(); as pending) {
+    <div id="order-photos-replacement" class="manager__replacement" tabindex="-1">
+      <h3 class="manager__subtitle">Nueva fotografía</h3>
+      @if (pending.url) {
+        <img
+          class="manager__preview"
+          [src]="pending.url"
+          [alt]="'Vista previa de ' + pending.file.name"
+        />
+      }
+      <p>{{ pending.file.name }} ({{ pending.file.size | fileSize }})</p>
+      <div class="manager__actions">
+        <button
+          type="button"
+          class="manager__primary"
+          [disabled]="busy() !== null"
+          (click)="confirmReplacement()"
+        >
+          {{ busy() === 'replace' ? 'Reemplazando…' : 'Confirmar reemplazo' }}
+        </button>
+        <button
+          type="button"
+          class="manager__button manager__dismiss"
+          [disabled]="busy() !== null"
+          (click)="cancelReplacement()"
+        >
+          Descartar
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (remaining() > 0) {
+    <div class="manager__add">
+      <h3 class="manager__subtitle">Agregar fotografías</h3>
+      <app-order-photos-picker
+        [formControl]="queue"
+        [limit]="remaining()"
+        [additional]="true"
+        hintId="order-photos-add-hint"
+      />
+      @if (queue.value.length > 0) {
+        <button
+          type="button"
+          class="manager__primary manager__upload"
+          [disabled]="busy() !== null"
+          (click)="upload()"
+        >
+          {{ busy() === 'upload' ? 'Subiendo…' : 'Subir fotografías' }}
+        </button>
+      }
+    </div>
+  } @else {
+    <p class="manager__intro">
+      Alcanzó el máximo de {{ max }} fotografías. Quite o reemplace una para cambiarlas.
+    </p>
+  }
+</section>
+
+<app-confirm-dialog
+  heading="¿Quitar la fotografía?"
+  confirmLabel="Sí, quitar"
+  busyLabel="Quitando…"
+  titleId="order-photo-delete-title"
+  [open]="deleting() !== null"
+  [busy]="busy() === 'delete'"
+  (confirmed)="confirmDelete()"
+  (cancelled)="deleting.set(null)"
+>
+  <p>Dejará de mostrarse en este pedido. Esta acción no se puede deshacer.</p>
+</app-confirm-dialog>

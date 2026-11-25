@@ -31,8 +31,8 @@
 
   @switch (step()) {
     @case ('form') {
-      <div class="publish__card">
-        <h2 id="publish-form-title" class="publish__subtitle" tabindex="-1">Datos del pedido</h2>
+      <div class="order-form__card">
+        <h2 id="publish-form-title" class="order-form__subtitle" tabindex="-1">Datos del pedido</h2>
         <p class="field__hint">
           Todos los campos son obligatorios, salvo los indicados como opcionales.
         </p>
@@ -55,15 +55,20 @@
         } @else if (catalogsError(); as message) {
           <div class="form-alert" role="alert">
             <p>{{ message }}</p>
-            <button type="button" class="publish__secondary" (click)="retryCatalogs()">
+            <button type="button" class="order-form__secondary" (click)="retryCatalogs()">
               Reintentar
             </button>
           </div>
         } @else {
-          <form class="publish__form" [formGroup]="form" (ngSubmit)="continueToReview()" novalidate>
-            <fieldset class="publish__group">
-              <legend class="publish__legend">Servicio</legend>
-              <div class="publish__row">
+          <form
+            class="order-form__form"
+            [formGroup]="form"
+            (ngSubmit)="continueToReview()"
+            novalidate
+          >
+            <fieldset class="order-form__group">
+              <legend class="order-form__legend">Servicio</legend>
+              <div class="order-form__row">
                 <div class="field">
                   <label class="field__label" for="order-categoryId">Categoría</label>
                   @if (noCategories()) {
@@ -122,8 +127,8 @@
               </div>
             </fieldset>
 
-            <fieldset class="publish__group">
-              <legend class="publish__legend">Problema y presupuesto</legend>
+            <fieldset class="order-form__group">
+              <legend class="order-form__legend">Problema y presupuesto</legend>
               <div class="field">
                 <label class="field__label" for="order-description">Descripción</label>
                 <textarea
@@ -135,7 +140,7 @@
                   [attr.aria-invalid]="errorFor('description') ? 'true' : null"
                   [attr.aria-describedby]="describedBy('description', true)"
                 ></textarea>
-                <p id="order-description-hint" class="field__hint publish__counter">
+                <p id="order-description-hint" class="field__hint order-form__counter">
                   <span>
                     Explique el problema con detalle, entre {{ limits.minDescription }} y
                     {{ limits.maxDescription }} caracteres. No incluya su teléfono ni su correo.
@@ -149,7 +154,7 @@
                 }
               </div>
 
-              <div class="field publish__budget">
+              <div class="field order-form__budget">
                 <label class="field__label" for="order-budgetAmount">Presupuesto (Bs)</label>
                 <input
                   id="order-budgetAmount"
@@ -172,8 +177,8 @@
               </div>
             </fieldset>
 
-            <fieldset class="publish__group">
-              <legend class="publish__legend">Dirección</legend>
+            <fieldset class="order-form__group">
+              <legend class="order-form__legend">Dirección</legend>
               <div class="field">
                 <label class="field__label" for="order-addressLine">Dirección exacta</label>
                 <input
@@ -218,19 +223,19 @@
             </fieldset>
 
             <fieldset
-              class="publish__group"
+              class="order-form__group"
               tabindex="-1"
               [attr.aria-invalid]="errorFor('images') ? 'true' : null"
               [attr.aria-describedby]="describedBy('images')"
             >
-              <legend class="publish__legend">Fotografías</legend>
+              <legend class="order-form__legend">Fotografías</legend>
               <app-order-photos-picker formControlName="images" hintId="order-images-hint" />
               @if (errorFor('images'); as error) {
                 <p id="order-images-error" class="field__error">{{ error }}</p>
               }
             </fieldset>
 
-            <div class="publish__actions">
+            <div class="order-form__actions">
               <button
                 type="submit"
                 class="form-submit"
@@ -251,8 +256,10 @@
     }
 
     @case ('review') {
-      <div class="publish__card">
-        <h2 id="publish-review-title" class="publish__subtitle" tabindex="-1">Revise su pedido</h2>
+      <div class="order-form__card">
+        <h2 id="publish-review-title" class="order-form__subtitle" tabindex="-1">
+          Revise su pedido
+        </h2>
 
         @if (warnings().length > 0) {
           <app-order-warnings [warnings]="warnings()" headingId="publish-review-warnings" />
@@ -278,10 +285,10 @@
           </div>
         }
 
-        <div class="publish__actions">
+        <div class="order-form__actions">
           <button
             type="button"
-            class="publish__secondary"
+            class="order-form__secondary"
             [disabled]="publishing()"
             (click)="backToForm()"
           >
@@ -296,8 +303,8 @@
 
     @case ('published') {
       @if (result(); as result) {
-        <div class="publish__card">
-          <h2 id="publish-done-title" class="publish__subtitle" tabindex="-1">
+        <div class="order-form__card">
+          <h2 id="publish-done-title" class="order-form__subtitle" tabindex="-1">
             <span aria-hidden="true">✓ </span>Su pedido fue publicado
           </h2>
           <p class="form-notice" role="status">
@@ -339,8 +346,8 @@
             />
           }
 
-          <div class="publish__actions">
-            <button type="button" class="publish__secondary" (click)="startOver()">
+          <div class="order-form__actions">
+            <button type="button" class="order-form__secondary" (click)="startOver()">
               Publicar otro pedido
             </button>
             <a class="publish__link" [routerLink]="['/cliente/mis-pedidos', result.order.id]">

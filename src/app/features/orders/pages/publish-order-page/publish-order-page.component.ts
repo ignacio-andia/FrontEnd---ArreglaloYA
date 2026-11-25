@@ -104,7 +104,7 @@ const BUSINESS_ERROR_FIELDS: readonly [RegExp, FormField][] = [
   ],
   providers: [PhotoPreviewService],
   templateUrl: './publish-order-page.component.html',
-  styleUrl: './publish-order-page.component.scss',
+  styleUrls: ['../../order-form.scss', './publish-order-page.component.scss'],
 })
 export class PublishOrderPageComponent {
   private readonly ordersApi = inject(OrdersApiService);

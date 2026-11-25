@@ -443,6 +443,26 @@ describe('app routes', () => {
     expect(TestBed.inject(Title).getTitle()).toBe('Mi cuenta | ArreglaloYA');
   });
 
+  it('keeps the order edition closed for an account without the CLIENTE role', async () => {
+    signIn(['TRABAJADOR']);
+    const harness = await RouterTestingHarness.create();
+
+    await visit(harness, '/cliente/mis-pedidos/e5f6a7b8-c9d0-4e1f-8a2b-3c4d5e6f7a8b/editar');
+
+    expect(currentPath()).toBe('/acceso-denegado');
+    httpTesting.expectNone((request) => request.url.includes('/orders/'));
+  });
+
+  it('asks a visitor to sign in before editing an order, keeping the returnUrl', async () => {
+    const url = '/cliente/mis-pedidos/e5f6a7b8-c9d0-4e1f-8a2b-3c4d5e6f7a8b/editar';
+    const harness = await RouterTestingHarness.create();
+
+    await visit(harness, url);
+
+    expect(currentPath()).toBe('/auth/login');
+    expect(router.parseUrl(router.url).queryParams['returnUrl']).toBe(url);
+  });
+
   it('sends an authenticated user to the login when the API answers 401', async () => {
     signIn(['CLIENTE']);
     const harness = await RouterTestingHarness.create();

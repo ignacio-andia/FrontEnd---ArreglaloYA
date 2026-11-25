@@ -14,6 +14,9 @@ export const ORDER_MAX_IMAGES = 4;
  */
 export const ORDER_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 
+/** Longitud máxima del motivo de cancelación (`CancelOrderDto`). */
+export const ORDER_CANCEL_REASON_MAX_LENGTH = 500;
+
 /** Formatos que acepta el backend (detectados por el contenido real del archivo). */
 export const ORDER_IMAGE_FORMATS = [
   { label: 'JPG', mimeType: 'image/jpeg', extensions: ['jpg', 'jpeg'] },

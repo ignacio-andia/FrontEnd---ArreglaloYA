@@ -1,5 +1,6 @@
 @use 'tokens';
 @use 'mixins';
+@use 'buttons';
 
 :host {
   display: block;
@@ -43,6 +44,23 @@
   border-left: 4px solid var(--color-control-border);
   border-radius: tokens.$radius-sm;
   background-color: var(--color-surface);
+}
+
+.detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-3;
+}
+
+.detail__primary {
+  @include buttons.primary;
+}
+
+.detail__success {
+  padding: tokens.$space-3 tokens.$space-4;
+  border-left: 4px solid var(--color-primary);
+  border-radius: tokens.$radius-sm;
+  background-color: var(--color-primary-pale);
 }
 
 .detail__alert {

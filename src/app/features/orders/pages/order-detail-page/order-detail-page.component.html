@@ -27,6 +27,48 @@
       <app-order-status-badge [status]="current.status" />
     </header>
 
+    <p class="detail__muted detail__status-help">{{ statusDescriptions[current.status] }}</p>
+
+    @if (cancelledMessage()) {
+      <p id="order-cancelled" class="detail__success" role="status" tabindex="-1">
+        El pedido fue cancelado.
+      </p>
+    }
+    @if (actionErrors().length > 0) {
+      <div id="order-action-error" class="detail__alert" role="alert" tabindex="-1">
+        @for (message of actionErrors(); track $index) {
+          <p>{{ message }}</p>
+        }
+      </div>
+    }
+
+    @if (current.canEdit || current.canCancel) {
+      <div class="detail__actions">
+        @if (current.canEdit) {
+          <a
+            class="detail__primary"
+            [routerLink]="['/cliente/mis-pedidos', current.id, 'editar']"
+            [state]="{ ordersListQuery: backQuery }"
+          >
+            Editar pedido
+          </a>
+        }
+        @if (current.canCancel) {
+          <app-cancel-order
+            [orderId]="current.id"
+            (cancelled)="onCancelled($event)"
+            (failed)="onActionFailed($event)"
+            (stale)="retry()"
+          />
+        }
+      </div>
+    } @else if (agreed()) {
+      <p class="detail__notice">
+        Este pedido tiene un acuerdo: ya no se edita ni se cancela como un pedido publicado.
+        Cancelarlo corresponde a «Cancelar trabajo», que todavía no está disponible en esta versión.
+      </p>
+    }
+
     @if (current.anonymizedAt) {
       <p class="detail__notice">
         El pedido se cerró y, por privacidad, se eliminaron su descripción, su dirección y sus
@@ -78,10 +120,12 @@
             <dt>Publicado el</dt>
             <dd>{{ current.publishedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
           </div>
-          <div>
-            <dt>Vence el</dt>
-            <dd>{{ current.expiresAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
-          </div>
+          @if (current.canEdit || current.status === 'VENCIDO') {
+            <div>
+              <dt>{{ current.status === 'VENCIDO' ? 'Venció el' : 'Vence el' }}</dt>
+              <dd>{{ current.expiresAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+            </div>
+          }
           @if (current.lastEditedAt) {
             <div>
               <dt>Última edición</dt>

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
 import { PaginatedResponse } from '../../../core/models/pagination.model';
 import {
+  CancelOrderRequest,
   CreateOrderRequest,
   DuplicateCheckRequest,
   DuplicateCheckResponse,
@@ -11,12 +12,21 @@ import {
   OrderWithWarnings,
   OwnOrdersQuery,
   OwnerOrder,
+  UpdateOrderRequest,
 } from '../models/order.model';
+
+/** Cuerpo multipart de una fotografía; el navegador agrega el `boundary`. */
+function imageForm(image: File): FormData {
+  const form = new FormData();
+  form.append('image', image, image.name);
+  return form;
+}
 
 /**
  * Pedidos del cliente dueño (`/api/orders` y `/api/orders/me`, rol CLIENTE): publicación (con la
- * consulta previa de posibles duplicados), listado, detalle y fotografías privadas. Un pedido
- * ajeno responde 404, igual que uno inexistente.
+ * consulta previa de posibles duplicados), listado, detalle, edición, cancelación y fotografías
+ * privadas. Un pedido ajeno responde 404, igual que uno inexistente. Editar, cambiar fotografías
+ * y cancelar exigen estado efectivo PUBLICADO o EN_NEGOCIACION (409 en otro caso).
  */
 @Service()
 export class OrdersApiService {
@@ -75,6 +85,58 @@ export class OrdersApiService {
   /** `GET /orders/me/:orderId`: 404 si no existe o no es del cliente; 400 si no es un UUID. */
   getOwn(orderId: string): Observable<OwnerOrder> {
     return this.http.get<OwnerOrder>(apiUrl('orders', 'me', orderId));
+  }
+
+  /**
+   * `PATCH /orders/me/:orderId` (200): envía solo las propiedades definidas del DTO. Los avisos
+   * solo llegan si cambió la descripción o la categoría. 400 datos o categoría inactiva; 404
+   * pedido o categoría inexistente; 409 estado.
+   */
+  update(orderId: string, request: UpdateOrderRequest): Observable<OrderWithWarnings> {
+    const body: UpdateOrderRequest = {};
+    if (request.categoryId !== undefined) {
+      body.categoryId = request.categoryId;
+    }
+    if (request.description !== undefined) {
+      body.description = request.description;
+    }
+    if (request.budgetAmount !== undefined) {
+      body.budgetAmount = request.budgetAmount;
+    }
+    if (request.addressLine !== undefined) {
+      body.addressLine = request.addressLine;
+    }
+    if (request.addressReference !== undefined) {
+      body.addressReference = request.addressReference;
+    }
+    return this.http.patch<OrderWithWarnings>(apiUrl('orders', 'me', orderId), body);
+  }
+
+  /** `POST /orders/me/:orderId/images`, campo `image` (201). 409 si ya tiene 4 fotografías. */
+  addImage(orderId: string, image: File): Observable<OwnerOrder> {
+    return this.http.post<OwnerOrder>(apiUrl('orders', 'me', orderId, 'images'), imageForm(image));
+  }
+
+  /** `PUT /orders/me/:orderId/images/:imageId`, campo `image` (200): ocupa el mismo lugar. */
+  replaceImage(orderId: string, imageId: string, image: File): Observable<OwnerOrder> {
+    return this.http.put<OwnerOrder>(
+      apiUrl('orders', 'me', orderId, 'images', imageId),
+      imageForm(image),
+    );
+  }
+
+  /** `DELETE /orders/me/:orderId/images/:imageId` (200 con el pedido). 409 si es la única. */
+  deleteImage(orderId: string, imageId: string): Observable<OwnerOrder> {
+    return this.http.delete<OwnerOrder>(apiUrl('orders', 'me', orderId, 'images', imageId));
+  }
+
+  /** `POST /orders/me/:orderId/cancel` (200): devuelve el pedido ya cancelado. 409 estado. */
+  cancel(orderId: string, request: CancelOrderRequest = {}): Observable<OwnerOrder> {
+    const body: CancelOrderRequest = {};
+    if (request.reason !== undefined) {
+      body.reason = request.reason;
+    }
+    return this.http.post<OwnerOrder>(apiUrl('orders', 'me', orderId, 'cancel'), body);
   }
 
   /**

@@ -14,7 +14,7 @@ export const PUBLISH_ORDER_ROUTES: Routes = [
 
 /**
  * «Mis pedidos», montada en `/cliente/mis-pedidos` (ClientLayout, rol CLIENTE): listado
- * (`?estado=&pagina=`) y detalle de un pedido propio.
+ * (`?estado=&pagina=`), detalle y edición de un pedido propio.
  */
 export const MY_ORDERS_ROUTES: Routes = [
   {
@@ -23,6 +23,14 @@ export const MY_ORDERS_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/my-orders-page/my-orders-page.component').then(
         (m) => m.MyOrdersPageComponent,
+      ),
+  },
+  {
+    path: ':orderId/editar',
+    title: 'Editar pedido | ArreglaloYA',
+    loadComponent: () =>
+      import('./pages/edit-order-page/edit-order-page.component').then(
+        (m) => m.EditOrderPageComponent,
       ),
   },
   {

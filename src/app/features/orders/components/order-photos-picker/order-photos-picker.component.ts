@@ -52,14 +52,18 @@ export class OrderPhotosPickerComponent implements ControlValueAccessor {
   /** Id del texto de ayuda de la zona de selección. */
   readonly hintId = input('order-photos-hint');
 
+  /** Máximo que admite esta selección (menor que 4 al agregar a un pedido con fotografías). */
+  readonly limit = input(ORDER_MAX_IMAGES);
+  /** Se agregan fotografías a un pedido ya publicado: no hay mínimo. */
+  readonly additional = input(false);
+
   protected readonly accept = ORDER_IMAGE_ACCEPT;
-  protected readonly max = ORDER_MAX_IMAGES;
   protected readonly maxSize = formatFileSize(ORDER_IMAGE_MAX_BYTES);
 
   protected readonly files = signal<readonly File[]>([]);
   protected readonly rejected = signal<readonly RejectedPhoto[]>([]);
   protected readonly disabled = signal(false);
-  protected readonly full = computed(() => this.files().length >= ORDER_MAX_IMAGES);
+  protected readonly full = computed(() => this.files().length >= this.limit());
   protected readonly items = computed(() =>
     this.files().map((file) => ({ file, url: this.previews.urlFor(file) })),
   );
@@ -95,8 +99,8 @@ export class OrderPhotosPickerComponent implements ControlValueAccessor {
       const problem =
         orderImageProblem(file) ??
         (this.isRepeated(file, accepted) ? 'Esta fotografía ya está agregada.' : null) ??
-        (this.files().length + accepted.length >= ORDER_MAX_IMAGES
-          ? `Se alcanzó el máximo de ${ORDER_MAX_IMAGES} fotografías.`
+        (this.files().length + accepted.length >= this.limit()
+          ? `Se alcanzó el máximo de ${this.limit()} fotografías.`
           : null);
       if (problem === null) {
         accepted.push(file);

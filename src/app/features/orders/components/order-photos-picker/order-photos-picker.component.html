@@ -5,11 +5,16 @@
   [hintId]="hintId()"
   (filesSelected)="add($event)"
 >
-  JPG, PNG o WebP, hasta {{ maxSize }} cada una. Mínimo 1 y máximo {{ max }} fotografías.
+  JPG, PNG o WebP, hasta {{ maxSize }} cada una.
+  @if (additional()) {
+    Puede agregar hasta {{ limit() }}.
+  } @else {
+    Mínimo 1 y máximo {{ limit() }} fotografías.
+  }
 </app-file-dropzone>
 
 <p class="photos__count" aria-live="polite">
-  {{ files().length }} de {{ max }} fotografías
+  {{ files().length }} de {{ limit() }} {{ additional() ? 'por subir' : 'fotografías' }}
   @if (full()) {
     <span class="photos__full">· Alcanzó el máximo; quite una para cambiarla.</span>
   }

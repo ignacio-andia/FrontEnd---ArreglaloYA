@@ -127,6 +127,50 @@ export interface DuplicateCheckRequest {
 }
 
 /**
+ * Cuerpo de `PATCH /orders/me/:orderId` (`UpdateOrderDto`): solo las propiedades que cambian y al
+ * menos una. La zona, el estado, el dueño y las fechas no son editables. `addressReference: null`
+ * borra la referencia; las demás propiedades no admiten `null`.
+ */
+export interface UpdateOrderRequest {
+  categoryId?: string;
+  description?: string;
+  budgetAmount?: string;
+  addressLine?: string;
+  addressReference?: string | null;
+}
+
+/** Cuerpo de `POST /orders/me/:orderId/cancel` (`CancelOrderDto`): el motivo es opcional. */
+export interface CancelOrderRequest {
+  reason?: string;
+}
+
+/** Estados con un acuerdo vigente: cancelarlos corresponde a «Cancelar trabajo» (RF-34). */
+export const ORDER_AGREED_STATUSES: readonly OrderStatus[] = [
+  'ACORDADO',
+  'ANTICIPO_REGISTRADO',
+  'VISITA_REALIZADA',
+  'PRESUPUESTO_ADICIONAL_PENDIENTE',
+  'EN_EJECUCION',
+];
+
+/** Explicación de cada estado según 04-enums-and-states. Solo describe; no decide acciones. */
+export const ORDER_STATUS_DESCRIPTIONS: Readonly<Record<OrderStatus, string>> = {
+  PUBLICADO: 'El pedido está publicado y puede recibir ofertas.',
+  EN_NEGOCIACION: 'El pedido tiene ofertas en negociación.',
+  ACORDADO: 'Se aceptó una oferta y hay un trabajador asignado.',
+  ANTICIPO_REGISTRADO: 'El trabajador asignado confirmó el anticipo.',
+  VISITA_REALIZADA: 'El trabajador registró la visita.',
+  PRESUPUESTO_ADICIONAL_PENDIENTE: 'Hay un presupuesto adicional pendiente de respuesta.',
+  EN_EJECUCION: 'El trabajo está en ejecución.',
+  TERMINADO: 'El trabajador marcó el trabajo como terminado.',
+  EN_RECLAMO: 'Hay un reclamo en curso sobre este pedido.',
+  CERRADO: 'El pedido está cerrado.',
+  SIN_ACUERDO: 'El pedido terminó sin acuerdo.',
+  VENCIDO: 'Se cumplió el plazo de 7 días y el pedido ya no se puede modificar ni cancelar.',
+  CANCELADO: 'El pedido está cancelado y ya no recibe ofertas.',
+};
+
+/**
  * Datos para `POST /orders` (`CreateOrderDto` más el campo de archivos `images`), que se envían
  * como `multipart/form-data`. `budgetAmount` es texto decimal con punto (`"150.50"`);
  * `addressReference` se omite si está vacía.

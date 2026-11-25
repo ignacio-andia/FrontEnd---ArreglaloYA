@@ -25,7 +25,7 @@ import { Component, ElementRef, effect, input, output, viewChild } from '@angula
           [disabled]="busy()"
           (click)="cancelled.emit()"
         >
-          Cancelar
+          {{ dismissLabel() }}
         </button>
         <button
           type="button"
@@ -47,6 +47,8 @@ export class ConfirmDialogComponent {
   readonly open = input.required<boolean>();
   readonly heading = input.required<string>();
   readonly confirmLabel = input.required<string>();
+  /** Texto del botón que cierra sin hacer nada. */
+  readonly dismissLabel = input('Cancelar');
   readonly busyLabel = input('Procesando…');
   readonly busy = input(false);
   readonly titleId = input('confirm-dialog-title');

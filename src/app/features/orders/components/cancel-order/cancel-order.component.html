@@ -1,0 +1,32 @@
+<button type="button" class="cancel__button" (click)="ask()">Cancelar pedido</button>
+
+<app-confirm-dialog
+  heading="¿Cancelar el pedido?"
+  confirmLabel="Sí, cancelar pedido"
+  dismissLabel="Volver"
+  busyLabel="Cancelando…"
+  titleId="cancel-order-title"
+  [open]="confirming()"
+  [busy]="submitting()"
+  (confirmed)="cancel()"
+  (cancelled)="confirming.set(false)"
+>
+  <p>
+    El pedido pasará a «Cancelado» y no podrá reactivarlo. Se eliminarán sus fotografías y su
+    dirección, y la descripción se reemplazará. Las ofertas vigentes quedarán sin efecto. El
+    registro y su historial se conservan.
+  </p>
+  <div class="field">
+    <label class="field__label" for="cancel-order-reason">
+      Motivo <span class="field__optional">(opcional)</span>
+    </label>
+    <textarea
+      id="cancel-order-reason"
+      class="field__input"
+      [formControl]="reason"
+      [attr.maxlength]="maxLength"
+      aria-describedby="cancel-order-reason-hint"
+    ></textarea>
+    <p id="cancel-order-reason-hint" class="field__hint">Hasta {{ maxLength }} caracteres.</p>
+  </div>
+</app-confirm-dialog>

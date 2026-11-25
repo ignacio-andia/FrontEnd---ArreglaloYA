@@ -1,0 +1,51 @@
+@use 'tokens';
+@use 'buttons';
+@use 'page';
+
+:host {
+  display: block;
+}
+
+.edit {
+  display: grid;
+  gap: tokens.$space-4;
+  max-width: 56rem;
+
+  > .form-alert {
+    margin-top: 0;
+  }
+}
+
+.edit__back {
+  justify-self: start;
+  color: var(--color-primary-dark);
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.edit__title {
+  @include page.title;
+}
+
+.edit__link {
+  @include buttons.secondary;
+}
+
+.edit__fixed {
+  display: grid;
+  align-content: start;
+  gap: tokens.$space-1;
+  margin: 0;
+
+  dt {
+    font-weight: tokens.$font-weight-medium;
+  }
+
+  dd {
+    margin: 0;
+  }
+
+  .edit__fixed-hint {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+}
