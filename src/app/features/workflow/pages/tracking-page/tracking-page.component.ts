@@ -10,6 +10,7 @@ import { WhatsappContactComponent } from '../../../offers/components/whatsapp-co
 import { ClaimFormComponent } from '../../../claims/components/claim-form/claim-form.component';
 import { OffersApiService } from '../../../offers/services/offers-api.service';
 import { OrdersApiService } from '../../../orders/services/orders-api.service';
+import { ClaimPanelComponent } from '../../../claims/components/claim-panel/claim-panel.component';
 import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
 import {
   ActionNotice,
@@ -41,6 +42,7 @@ const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
     ClientActionsComponent,
     ConformityPanelComponent,
     EmptyStateComponent,
+    ClaimPanelComponent,
     ErrorAlertComponent,
     LoadingStateComponent,
     PaymentsSectionComponent,

@@ -1,0 +1,40 @@
+@let current = claim();
+<dl class="detail">
+  <div>
+    <dt>Estado del reclamo</dt>
+    <dd class="detail__status">{{ labels[current.status] }}</dd>
+  </div>
+  <div>
+    <dt>Presentado el</dt>
+    <dd>{{ current.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+  </div>
+  <div class="detail__wide">
+    <dt>Descripción</dt>
+    <dd class="detail__text">{{ current.description }}</dd>
+  </div>
+</dl>
+
+<h3 class="detail__subtitle">Fotografías del reclamo ({{ current.images.length }})</h3>
+<app-image-gallery subject="reclamo" [images]="current.images" [loader]="loader()" />
+
+<h3 class="detail__subtitle">Resolución</h3>
+@if (current.status === 'RESUELTO') {
+  <dl class="detail">
+    @if (current.decidedAt) {
+      <div>
+        <dt>Resuelto el</dt>
+        <dd>{{ current.decidedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+      </div>
+    }
+    <div class="detail__wide">
+      <dt>Decisión</dt>
+      <dd class="detail__text">{{ current.decision }}</dd>
+    </div>
+    <div class="detail__wide">
+      <dt>Justificación</dt>
+      <dd class="detail__text">{{ current.justification }}</dd>
+    </div>
+  </dl>
+} @else {
+  <p class="detail__muted">Todavía no hay una decisión.</p>
+}

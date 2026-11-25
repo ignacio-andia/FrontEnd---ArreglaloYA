@@ -50,6 +50,10 @@ describe('TrackingPageComponent: conformity', () => {
     await view.answer('offers/received', page([ACCEPTED]));
     await view.answer(PAYMENTS, overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    // En reclamo, o cerrado sin conformidad, se consulta el reclamo.
+    if (status === 'EN_RECLAMO' || status === 'CERRADO') {
+      await view.fail(`orders/${ORDER_ID}/claim`, 404);
+    }
     if (status !== 'CERRADO' && status !== 'CANCELADO' && status !== 'PUBLICADO') {
       await view.answer(`offers/received/${ACCEPTED.id}/whatsapp`, {
         available: false,

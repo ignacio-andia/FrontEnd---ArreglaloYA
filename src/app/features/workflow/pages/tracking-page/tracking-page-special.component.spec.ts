@@ -55,6 +55,9 @@ describe('TrackingPageComponent: special situations', () => {
     await view.answer('offers/received', page([ACCEPTED]));
     await view.answer(PAYMENTS, overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    if (status === 'EN_RECLAMO') {
+      await view.fail(`orders/${ORDER_ID}/claim`, 404);
+    }
     if (status !== 'CERRADO' && status !== 'CANCELADO' && status !== 'PUBLICADO') {
       await view.answer(`offers/received/${ACCEPTED.id}/whatsapp`, {
         available: false,

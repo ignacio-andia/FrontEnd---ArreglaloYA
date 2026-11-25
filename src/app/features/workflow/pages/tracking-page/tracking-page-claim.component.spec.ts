@@ -63,6 +63,9 @@ describe('TrackingPageComponent: claim', () => {
     await view.answer('offers/received', page([ACCEPTED]));
     await view.answer(PAYMENTS, overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    if (status === 'EN_RECLAMO' || status === 'CERRADO') {
+      await view.fail(`orders/${ORDER_ID}/claim`, 404);
+    }
     if (status !== 'CERRADO' && status !== 'CANCELADO' && status !== 'PUBLICADO') {
       await view.answer(`offers/received/${ACCEPTED.id}/whatsapp`, {
         available: false,
@@ -78,6 +81,7 @@ describe('TrackingPageComponent: claim', () => {
     await view.answer(TIMELINE, timeline([event({ summary: 'Reclamo presentado' })]));
     await view.answer(PAYMENTS, overview({ orderStatus: 'EN_RECLAMO', payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    await view.answer(`orders/${ORDER_ID}/claim`, CLAIM);
   }
 
   const form = () => view.element('.claim__form');

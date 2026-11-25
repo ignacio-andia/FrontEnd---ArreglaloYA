@@ -130,6 +130,7 @@ describe('JobPageComponent', () => {
     await view.answer(timelinePath, timeline([]));
     await view.answer('offers/me', page([ACCEPTED]));
     await payments();
+    await view.fail(`orders/${ORDER_ID}/claim`, 404);
 
     const content = view.content();
     expect(content).toContain('Gratis');

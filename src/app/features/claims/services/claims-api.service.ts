@@ -1,8 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
-import { Claim, CreateClaimRequest } from '../models/claim.model';
+import { ImageVariant } from '../../../shared/components/private-image/private-image.component';
+import { Claim, ClaimParty, CreateClaimRequest } from '../models/claim.model';
 
 /** Reclamos de un pedido. Un pedido ajeno responde 404. */
 @Service()
@@ -20,5 +21,21 @@ export class ClaimsApiService {
       form.append('images', image, image.name);
     }
     return this.http.post<Claim>(apiUrl('orders', orderId, 'claims'), form);
+  }
+
+  /**
+   * `GET /orders/:orderId/claim`: el cliente recibe el reclamo completo y el trabajador asignado
+   * solo estado y decisión. 404 si el pedido no tiene reclamo.
+   */
+  getForOrder(orderId: string): Observable<Claim | ClaimParty> {
+    return this.http.get<Claim | ClaimParty>(apiUrl('orders', orderId, 'claim'));
+  }
+
+  /** `GET /claims/:claimId/images/:imageId`: cliente que reclamó o administrador. */
+  getImage(claimId: string, imageId: string, variant: ImageVariant): Observable<Blob> {
+    return this.http.get(apiUrl('claims', claimId, 'images', imageId), {
+      params: new HttpParams().set('variant', variant),
+      responseType: 'blob',
+    });
   }
 }

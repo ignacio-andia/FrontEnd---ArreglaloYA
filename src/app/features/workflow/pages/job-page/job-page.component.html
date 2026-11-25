@@ -22,6 +22,8 @@
 
     <app-work-summary [workflow]="current" />
 
+    <app-claim-panel viewer="TRABAJADOR" [workflow]="current" />
+
     @if (hasWorkerStep()) {
       <app-worker-actions
         [workflow]="current"

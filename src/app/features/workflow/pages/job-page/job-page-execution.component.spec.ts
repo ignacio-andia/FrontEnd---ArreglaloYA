@@ -71,6 +71,9 @@ describe('JobPageComponent: start and finish', () => {
     await view.answer('offers/me', page([accepted]));
     await view.answer(PAYMENTS, overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    if (status === 'EN_RECLAMO') {
+      await view.fail(`orders/${ORDER_ID}/claim`, 404);
+    }
     if (status !== 'CERRADO' && status !== 'CANCELADO') {
       await view.answer(WHATSAPP, CONTACT);
       await view.answer(`orders/assigned/${ORDER_ID}`, assignedOrder(status));

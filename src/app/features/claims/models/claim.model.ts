@@ -31,6 +31,30 @@ export interface Claim {
   createdAt: string;
 }
 
+/**
+ * Lo que recibe el trabajador asignado (`ClaimPartyView`): sin descripción ni fotografías. La
+ * decisión llega solo con el reclamo resuelto.
+ */
+export interface ClaimParty {
+  id: string;
+  orderId: string;
+  status: ClaimStatus;
+  decision: string | null;
+  justification: string | null;
+  decidedAt: string | null;
+}
+
+/** Distingue la respuesta completa de la que recibe el trabajador. */
+export function isFullClaim(claim: Claim | ClaimParty): claim is Claim {
+  return 'description' in claim;
+}
+
+export const CLAIM_STATUS_LABELS: Readonly<Record<ClaimStatus, string>> = {
+  ABIERTO: 'Abierto',
+  EN_REVISION: 'En revisión',
+  RESUELTO: 'Resuelto',
+};
+
 /** Campos de `POST /orders/:orderId/claims` (`multipart/form-data`). */
 export interface CreateClaimRequest {
   description: string;

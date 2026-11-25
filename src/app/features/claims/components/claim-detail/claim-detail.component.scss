@@ -1,0 +1,45 @@
+@use 'tokens';
+@use 'mixins';
+
+:host {
+  display: grid;
+  gap: tokens.$space-3;
+  min-width: 0;
+}
+
+.detail {
+  display: grid;
+  gap: tokens.$space-3;
+  margin: 0;
+
+  @include mixins.respond-up(sm) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  dt {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: tokens.$font-weight-medium;
+  }
+}
+
+.detail__wide {
+  grid-column: 1 / -1;
+}
+
+.detail__text {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.detail__subtitle {
+  font-size: 1rem;
+}
+
+.detail__muted {
+  color: var(--color-text-secondary);
+}

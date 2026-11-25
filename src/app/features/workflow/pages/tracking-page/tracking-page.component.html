@@ -27,6 +27,8 @@
 
     <app-work-summary [workflow]="current" />
 
+    <app-claim-panel viewer="CLIENTE" [workflow]="current" />
+
     @if (current.status === 'TERMINADO') {
       <app-conformity-panel
         [workflow]="current"
