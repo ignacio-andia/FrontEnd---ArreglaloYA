@@ -1,0 +1,85 @@
+<section class="offers" aria-labelledby="audit-title">
+  <h1 id="audit-title" class="offers__title">Bitácora</h1>
+  <p class="offers__intro">
+    Acciones de los administradores, de la más reciente a la más antigua. No se pueden editar ni
+    eliminar.
+  </p>
+
+  <form class="offers__filters" [formGroup]="form" (ngSubmit)="apply()">
+    <label for="audit-entity">Sobre</label>
+    <select id="audit-entity" formControlName="entityType">
+      <option value="">Todo</option>
+      @for (type of entityTypes; track type) {
+        <option [value]="type">{{ entityLabels[type] }}</option>
+      }
+    </select>
+    <label for="audit-action">Acción</label>
+    <select id="audit-action" formControlName="action">
+      <option value="">Todas</option>
+      @for (action of actions; track action) {
+        <option [value]="action">{{ actionLabels[action] }}</option>
+      }
+    </select>
+    <label for="audit-from">Desde</label>
+    <input id="audit-from" class="audit__date" type="date" formControlName="from" />
+    <label for="audit-to">Hasta</label>
+    <input id="audit-to" class="audit__date" type="date" formControlName="to" />
+    <button type="submit" class="offers__primary" [disabled]="logs.isLoading()">Filtrar</button>
+    <button type="button" class="offers__secondary" (click)="clear()">Quitar filtros</button>
+  </form>
+  @if (rangeError(); as message) {
+    <p class="offers__error" role="alert">{{ message }}</p>
+  }
+
+  @if (logs.isLoading() && !logs.hasValue()) {
+    <app-loading-state message="Cargando la bitácora…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="logs.reload()" />
+  } @else if (items().length === 0) {
+    <app-empty-state
+      [heading]="filtered() ? 'No hay acciones con estos filtros.' : 'Todavía no hay acciones.'"
+    >
+      @if (page() > 1) {
+        <button type="button" class="offers__secondary" (click)="goToPage(1)">
+          Volver a la primera página
+        </button>
+      }
+    </app-empty-state>
+  } @else {
+    <ol class="audit__list">
+      @for (entry of items(); track entry.id) {
+        <li class="audit__entry">
+          <h2 class="audit__title">
+            {{ actionLabels[entry.action] }} · {{ entityLabels[entry.entityType] }}
+          </h2>
+          <p class="offers__muted">
+            {{ entry.createdAt | date: 'dd/MM/yyyy HH:mm:ss' : timezone }} ·
+            {{ entry.actor.firstName }} {{ entry.actor.lastName }}
+          </p>
+          @for (line of entry.lines; track $index) {
+            <p>{{ line }}</p>
+          }
+          @if (entry.path) {
+            <a [routerLink]="[entry.path, entry.entityId]">
+              Ver registro {{ entry.entityId.slice(0, 8) }}
+            </a>
+          } @else {
+            <p class="offers__muted">Registro {{ entry.entityId.slice(0, 8) }}</p>
+          }
+        </li>
+      }
+    </ol>
+    @if (meta(); as current) {
+      @if (current.totalPages > 1) {
+        <app-paginator
+          label="Páginas de la bitácora"
+          [page]="current.page"
+          [totalPages]="current.totalPages"
+          [total]="current.total"
+          [busy]="logs.isLoading()"
+          (pageChange)="goToPage($event)"
+        />
+      }
+    }
+  }
+</section>

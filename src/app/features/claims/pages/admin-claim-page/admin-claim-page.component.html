@@ -47,7 +47,9 @@
         <dl class="offers__data">
           <div>
             <dt>Pedido</dt>
-            <dd>{{ detail.id.slice(0, 8) }}</dd>
+            <dd>
+              <a [routerLink]="['/admin/pedidos', detail.id]">{{ detail.id.slice(0, 8) }}</a>
+            </dd>
           </div>
           <div>
             <dt>Categoría</dt>

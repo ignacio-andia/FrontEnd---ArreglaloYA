@@ -35,6 +35,27 @@ import { ActionCardComponent } from '../../../../shared/components/action-card/a
           </li>
           <li>
             <app-action-card
+              heading="Pedidos"
+              description="Consulte los pedidos, sus constancias y su historial."
+              path="/admin/pedidos"
+            />
+          </li>
+          <li>
+            <app-action-card
+              heading="Bitácora"
+              description="Vea quién hizo cada acción administrativa y cuándo."
+              path="/admin/bitacora"
+            />
+          </li>
+          <li>
+            <app-action-card
+              heading="Reportes"
+              description="Genere reportes por fechas y descárguelos en CSV."
+              path="/admin/reportes"
+            />
+          </li>
+          <li>
+            <app-action-card
               heading="Mi cuenta"
               description="Actualice su nombre y teléfono."
               path="/admin/mi-cuenta"

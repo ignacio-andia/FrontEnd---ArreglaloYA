@@ -19,11 +19,12 @@ export class AdminLayoutComponent {
     { label: 'Resumen', path: '/admin', exact: true },
     { label: 'Reclamos', path: '/admin/reclamos' },
     { label: 'Verificación de trabajadores', path: '/admin/trabajadores' },
-    { label: 'Pedidos', path: null },
+    { label: 'Pedidos', path: '/admin/pedidos' },
     { label: 'Categorías', path: null },
     { label: 'Zonas', path: null },
     { label: 'Usuarios', path: null },
-    { label: 'Bitácora', path: null },
+    { label: 'Bitácora', path: '/admin/bitacora' },
+    { label: 'Reportes', path: '/admin/reportes' },
     { label: 'Mi cuenta', path: '/admin/mi-cuenta' },
   ];
 }

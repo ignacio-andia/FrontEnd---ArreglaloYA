@@ -299,6 +299,7 @@ Dos métricas separadas, ambas sobre 56:
 | D0 | **35 (62,5 %)** | **20 (35,7 %)** |
 | D1 | **38 (67,9 %)** | **23 (41,1 %)** |
 | D2 | **42 (75,0 %)** | **25 (44,6 %)** |
+| D3 | **45 (80,4 %)** | **26 (46,4 %)** |
 
 ### D0 — Validación de lo construido
 
@@ -334,3 +335,16 @@ Dos métricas separadas, ambas sobre 56:
 - **Calidad:** 917 pruebas unitarias, build, ESLint y Prettier correctos; sin desbordamiento ni infracciones de axe a 360 y 375 px; `public` intacta.
 - **Formal completa:** se suman 09 y 16.
 - **Pendientes:** el perfil público no tiene foto ni horarios y las calificaciones siguen deshabilitadas (RF-11); un visitante solo llega a un perfil por su enlace, porque no hay listado público (RF-54). #107 está integrado, pero solo se ve con más de cinco opiniones.
+
+### D3 — Supervisión, bitácora y reportes
+
+- **Completados (demostrables):** RF-50, RF-52 y RF-53.
+- **Fallidos:** ninguno.
+- **Pantallas:** `/admin/pedidos` y su detalle (datos mínimos, constancias y línea de tiempo), `/admin/bitacora` y `/admin/reportes`; accesos en el inicio y enlace desde el reclamo.
+- **Endpoints integrados:** #67, #22 y #115; se reutilizan #68, #100 y #112.
+- **Evidencia en pantalla:** filtro por estado, detalle de un pedido cerrado, bitácora filtrada con enlace al perfil, reporte con totales, descarga del CSV, aviso sin datos y validación de fechas.
+- **Integración:** `integracion-d3.mjs` 12/12 (incluye 403 para un cliente y que la bitácora no admite cambios).
+- **Calidad:** 932 pruebas unitarias, build, ESLint y Prettier correctos; sin desbordamiento ni infracciones de axe a 360 y 375 px; `public` intacta. axe detectó dos regiones con el mismo nombre en reportes y la tabla no cabía a 375 px: ambos corregidos.
+- **Formal completa:** se suma 52.
+- **Pendientes:** los pedidos solo se filtran por estado (RF-50) y el backend no registra algunas acciones (RF-53). La bitácora responde vacía, sin error, si la fecha final es el día anterior a la inicial y se envían sin hora (la pantalla lo impide antes).
+- **Entorno:** `integracion-e32.mjs` falló una vez por un cruce de horarios al azar (RF-30); ahora usa horarios únicos.

@@ -1,0 +1,78 @@
+<section class="offers" aria-labelledby="admin-orders-title">
+  <h1 id="admin-orders-title" class="offers__title">Pedidos</h1>
+  <p class="offers__intro">
+    Consulta de solo lectura. No se muestran direcciones, descripciones ni fotografías.
+  </p>
+
+  <div class="offers__filters">
+    <label for="admin-orders-status">Estado</label>
+    <select id="admin-orders-status" [formControl]="statusFilter">
+      <option value="">Todos</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ labels[status] }}</option>
+      }
+    </select>
+    <button
+      type="button"
+      class="offers__secondary"
+      [disabled]="orders.isLoading()"
+      (click)="orders.reload()"
+    >
+      Actualizar
+    </button>
+  </div>
+
+  @if (orders.isLoading() && !orders.hasValue()) {
+    <app-loading-state message="Cargando los pedidos…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="orders.reload()" />
+  } @else if (items().length === 0) {
+    @if (page() > 1) {
+      <app-empty-state heading="No hay pedidos en esta página.">
+        <button type="button" class="offers__secondary" (click)="goToPage(1)">
+          Volver a la primera página
+        </button>
+      </app-empty-state>
+    } @else {
+      <app-empty-state
+        [heading]="status() ? 'No hay pedidos con ese estado.' : 'Todavía no hay pedidos.'"
+      />
+    }
+  } @else {
+    <ul class="offers__list">
+      @for (order of items(); track order.id) {
+        <li class="order-row">
+          <div class="order-row__top">
+            <h2 class="order-row__title">
+              <a [routerLink]="['/admin/pedidos', order.id]">
+                {{ order.category.name }} · {{ order.id.slice(0, 8) }}
+              </a>
+            </h2>
+            <app-order-status-badge [status]="order.status" />
+          </div>
+          <p>{{ order.zone.name }} · Bs {{ order.budgetAmount }}</p>
+          <p class="offers__muted">
+            @if (order.client; as person) {
+              {{ person.firstName }} {{ person.lastName }}
+            } @else {
+              Cliente no disponible
+            }
+            · Publicado el {{ order.publishedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+          </p>
+        </li>
+      }
+    </ul>
+    @if (meta(); as current) {
+      @if (current.totalPages > 1) {
+        <app-paginator
+          label="Páginas de pedidos"
+          [page]="current.page"
+          [totalPages]="current.totalPages"
+          [total]="current.total"
+          [busy]="orders.isLoading()"
+          (pageChange)="goToPage($event)"
+        />
+      }
+    }
+  }
+</section>

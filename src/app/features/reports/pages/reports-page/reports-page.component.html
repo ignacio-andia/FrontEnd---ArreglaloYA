@@ -1,0 +1,76 @@
+<section class="offers" aria-labelledby="reports-title">
+  <h1 id="reports-title" class="offers__title">Reportes</h1>
+  <p class="offers__intro">Las fechas son días de Bolivia e incluyen el primero y el último.</p>
+
+  <form class="offers__filters" [formGroup]="form" (ngSubmit)="generate()" novalidate>
+    <label for="report-type">Reporte</label>
+    <select id="report-type" formControlName="type">
+      @for (type of types; track type) {
+        <option [value]="type">{{ labels[type] }}</option>
+      }
+    </select>
+    <label for="report-from">Desde</label>
+    <input id="report-from" class="report__date" type="date" formControlName="from" required />
+    <label for="report-to">Hasta</label>
+    <input id="report-to" class="report__date" type="date" formControlName="to" required />
+    <button type="submit" class="offers__primary" [disabled]="report.isLoading()">
+      Generar reporte
+    </button>
+  </form>
+  @if (rangeError(); as message) {
+    <p class="offers__error" role="alert">{{ message }}</p>
+  }
+
+  @if (report.isLoading()) {
+    <app-loading-state message="Generando el reporte…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="report.reload()" />
+  } @else if (current(); as current) {
+    <section class="offers__card" aria-labelledby="report-result-title">
+      <h2 id="report-result-title" class="offers__subtitle">
+        {{ labels[current.report] }}: {{ current.total }}
+        {{ current.total === 1 ? 'registro' : 'registros' }}
+      </h2>
+      <p class="offers__muted">
+        Del {{ current.from }} al {{ current.to }}, según la {{ current.basis }}.
+      </p>
+      @if (current.message) {
+        <p role="status">{{ current.message }}</p>
+      } @else if (table(); as table) {
+        <div class="report__scroll" role="region" aria-label="Tabla del reporte" tabindex="0">
+          <table class="report__table">
+            <thead>
+              <tr>
+                @for (column of table.columns; track $index) {
+                  <th scope="col">{{ column }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of table.rows; track $index) {
+                <tr>
+                  @for (cell of row; track $index) {
+                    <td>{{ cell }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="offers__actions">
+        <button
+          type="button"
+          class="offers__secondary"
+          [disabled]="downloading()"
+          (click)="download()"
+        >
+          Descargar CSV
+        </button>
+      </div>
+      @if (downloadError(); as message) {
+        <p class="offers__error" role="alert">{{ message }}</p>
+      }
+    </section>
+  }
+</section>

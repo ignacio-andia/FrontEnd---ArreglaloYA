@@ -1,0 +1,86 @@
+<section class="offers" aria-labelledby="admin-order-title">
+  <a class="offers__back" routerLink="/admin/pedidos">
+    <span aria-hidden="true">←</span> Volver a pedidos
+  </a>
+
+  @if (order.isLoading() && !order.hasValue()) {
+    <h1 id="admin-order-title" class="offers__title">Pedido</h1>
+    <app-loading-state message="Cargando el pedido…" />
+  } @else if (notFound()) {
+    <h1 id="admin-order-title" class="offers__title">Pedido no encontrado</h1>
+    <app-empty-state heading="El pedido no existe." />
+  } @else if (errorMessage(); as message) {
+    <h1 id="admin-order-title" class="offers__title">Pedido</h1>
+    <app-error-alert [message]="message" (retry)="order.reload()" />
+  } @else if (order.hasValue()) {
+    @let detail = order.value();
+    <h1 id="admin-order-title" class="offers__title">
+      {{ detail.category.name }} · {{ detail.id.slice(0, 8) }}
+    </h1>
+    <p><app-order-status-badge [status]="detail.status" /></p>
+    <div class="offers__actions">
+      <button type="button" class="offers__secondary" (click)="refresh()">Actualizar</button>
+    </div>
+
+    <section class="offers__card" aria-labelledby="admin-order-data-title">
+      <h2 id="admin-order-data-title" class="offers__subtitle">Datos del pedido</h2>
+      <dl class="offers__data">
+        <div>
+          <dt>Zona</dt>
+          <dd>{{ detail.zone.name }}</dd>
+        </div>
+        <div>
+          <dt>Presupuesto</dt>
+          <dd>Bs {{ detail.budgetAmount }}</dd>
+        </div>
+        <div>
+          <dt>Cliente</dt>
+          <dd>
+            @if (detail.client; as person) {
+              {{ person.firstName }} {{ person.lastName }}
+            } @else {
+              No disponible
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Trabajador asignado</dt>
+          <dd>
+            @if (detail.assignedWorkerId) {
+              <a [routerLink]="['/trabajadores', detail.assignedWorkerId]">Ver perfil público</a>
+            } @else {
+              Sin asignar
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Publicado</dt>
+          <dd>{{ detail.publishedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+        </div>
+        <div>
+          <dt>Fotografías vigentes</dt>
+          <dd>{{ detail.imageCount }}</dd>
+        </div>
+        @if (detail.cancelledAt) {
+          <div>
+            <dt>Cancelado</dt>
+            <dd>{{ detail.cancelledAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+
+    <section class="offers__card" aria-labelledby="admin-order-receipts-title">
+      <h2 id="admin-order-receipts-title" class="offers__subtitle">Constancias</h2>
+      @if (receipts.isLoading() && !receipts.hasValue()) {
+        <app-loading-state message="Cargando las constancias…" />
+      } @else if (receiptsError(); as message) {
+        <app-error-alert [message]="message" (retry)="receipts.reload()" />
+      } @else if (receipts.hasValue()) {
+        <app-receipts-list [receipts]="receipts.value()" />
+      }
+    </section>
+
+    <app-service-history [viewer]="null" />
+  }
+</section>

@@ -50,3 +50,23 @@ export const MY_ORDERS_ROUTES: Routes = [
       ),
   },
 ];
+
+/** Supervisión de pedidos, en `/admin/pedidos` (rol ADMINISTRADOR). Solo lectura. */
+export const ADMIN_ORDERS_ROUTES: Routes = [
+  {
+    path: '',
+    title: 'Pedidos | ArreglaloYA',
+    loadComponent: () =>
+      import('./pages/admin-orders-page/admin-orders-page.component').then(
+        (m) => m.AdminOrdersPageComponent,
+      ),
+  },
+  {
+    path: ':orderId',
+    title: 'Pedido | ArreglaloYA',
+    loadComponent: () =>
+      import('./pages/admin-order-page/admin-order-page.component').then(
+        (m) => m.AdminOrderPageComponent,
+      ),
+  },
+];

@@ -169,8 +169,19 @@ export interface AdminOrder {
   zone: { id: string; name: string };
   budgetAmount: string;
   publishedAt: string;
+  expiresAt: string;
+  cancelledAt: string | null;
+  anonymizedAt: string | null;
+  imageCount: number;
   client: { id: string; firstName: string; lastName: string } | null;
   assignedWorkerId: string | null;
+}
+
+/** Filtros de `GET /orders/admin`: el backend solo permite filtrar por estado (efectivo). */
+export interface AdminOrdersQuery {
+  status?: OrderStatus;
+  page?: number;
+  limit?: number;
 }
 
 /** Cuerpo de `POST /orders/me/:orderId/cancel` (`CancelOrderDto`): el motivo es opcional. */

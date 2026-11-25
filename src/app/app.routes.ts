@@ -181,6 +181,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'pedidos',
+        loadChildren: () =>
+          import('./features/orders/orders.routes').then((m) => m.ADMIN_ORDERS_ROUTES),
+      },
+      {
+        path: 'bitacora',
+        loadChildren: () => import('./features/audit/audit.routes').then((m) => m.AUDIT_ROUTES),
+      },
+      {
+        path: 'reportes',
+        loadChildren: () =>
+          import('./features/reports/reports.routes').then((m) => m.REPORTS_ROUTES),
+      },
+      {
         path: 'mi-cuenta',
         loadChildren: () => import('./features/users/users.routes').then((m) => m.ACCOUNT_ROUTES),
       },

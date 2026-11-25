@@ -56,9 +56,12 @@ const cases: LayoutCase[] = [
       ['Resumen', '/admin'],
       ['Reclamos', '/admin/reclamos'],
       ['Verificación de trabajadores', '/admin/trabajadores'],
+      ['Pedidos', '/admin/pedidos'],
+      ['Bitácora', '/admin/bitacora'],
+      ['Reportes', '/admin/reportes'],
       ['Mi cuenta', '/admin/mi-cuenta'],
     ],
-    pending: ['Pedidos', 'Categorías', 'Zonas', 'Usuarios', 'Bitácora'],
+    pending: ['Categorías', 'Zonas', 'Usuarios'],
   },
 ];
 

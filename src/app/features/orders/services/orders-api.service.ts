@@ -7,6 +7,7 @@ import {
   AssignedOrder,
   AvailableOrdersQuery,
   AdminOrder,
+  AdminOrdersQuery,
   CancelOrderRequest,
   CreateOrderRequest,
   DuplicateCheckRequest,
@@ -133,6 +134,25 @@ export class OrdersApiService {
   /** `DELETE /orders/me/:orderId/images/:imageId` (200 con el pedido). 409 si es la única. */
   deleteImage(orderId: string, imageId: string): Observable<OwnerOrder> {
     return this.http.delete<OwnerOrder>(apiUrl('orders', 'me', orderId, 'images', imageId));
+  }
+
+  /** `GET /orders/admin`: solo administradores; registro mínimo, sin dirección ni fotos. */
+  listForAdmin({
+    status,
+    page,
+    limit,
+  }: AdminOrdersQuery): Observable<PaginatedResponse<AdminOrder>> {
+    let params = new HttpParams();
+    if (status !== undefined) {
+      params = params.set('status', status);
+    }
+    if (page !== undefined) {
+      params = params.set('page', page);
+    }
+    if (limit !== undefined) {
+      params = params.set('limit', limit);
+    }
+    return this.http.get<PaginatedResponse<AdminOrder>>(apiUrl('orders', 'admin'), { params });
   }
 
   /** `GET /orders/admin/:orderId`: solo administradores. */
