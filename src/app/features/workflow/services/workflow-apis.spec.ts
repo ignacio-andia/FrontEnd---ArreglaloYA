@@ -40,6 +40,28 @@ describe('workflow APIs', () => {
     request.flush({});
   });
 
+  it('sends only the fields of the budget DTOs', () => {
+    const api = TestBed.inject(WorkflowApiService);
+    const url = (...path: string[]) =>
+      apiUrl('orders', ORDER_ID, ...(['additional-budgets', ...path] as [string]));
+    const send = (path: string, body: unknown) => {
+      const request = http.expectOne(path);
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual(body);
+      request.flush({});
+    };
+    const budget = { amount: '10', reason: 'r', materials: 'm' };
+
+    api.proposeBudget(ORDER_ID, { ...budget, extra: 'x' } as typeof budget).subscribe();
+    send(url(), budget);
+    api.acceptBudget(ORDER_ID, 'b1').subscribe();
+    send(url('b1', 'accept'), null);
+    api.rejectBudget(ORDER_ID, 'b1', '').subscribe();
+    send(url('b1', 'reject'), {});
+    api.rejectBudget(ORDER_ID, 'b1', 'Caro').subscribe();
+    send(url('b1', 'reject'), { reason: 'Caro' });
+  });
+
   it('asks the timeline with the page size and, afterwards, the opaque cursor', () => {
     const api = TestBed.inject(TimelineApiService);
     const url = apiUrl('orders', ORDER_ID, 'timeline');

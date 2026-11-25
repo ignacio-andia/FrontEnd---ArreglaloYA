@@ -3,18 +3,7 @@
     <span aria-hidden="true">←</span> Volver a trabajos asignados
   </a>
 
-  @if (notice(); as result) {
-    <div
-      id="job-notice"
-      tabindex="-1"
-      [class]="result.failed ? 'offers__error' : 'offers__notice'"
-      [attr.role]="result.failed ? 'alert' : 'status'"
-    >
-      @for (message of result.messages; track $index) {
-        <p>{{ message }}</p>
-      }
-    </div>
-  }
+  <app-action-notice [notice]="notice()" />
 
   @if (store.workflow.isLoading() && !store.current()) {
     <h1 id="job-title" class="offers__title">Trabajo</h1>
@@ -24,7 +13,7 @@
     <app-empty-state heading="El trabajo no existe o no está asignado a su cuenta." />
   } @else if (store.errorMessage(); as message) {
     <h1 id="job-title" class="offers__title">Trabajo</h1>
-    <app-error-alert [message]="message" (retry)="refresh()" />
+    <app-error-alert [message]="message" (retry)="reload()" />
   } @else if (store.current(); as current) {
     <h1 id="job-title" class="offers__title">Seguimiento del trabajo</h1>
     <div class="offers__actions">
@@ -43,6 +32,20 @@
         (failed)="onActionFailed($event)"
         (stale)="reload()"
         (retryOffer)="offer.reload()"
+        (retryClearance)="reloadEligibility()"
+      />
+    }
+
+    @if (current.additionalBudgets.length > 0) {
+      <app-additional-budget-list viewer="TRABAJADOR" [workflow]="current" />
+    }
+    @if (canPropose()) {
+      <app-additional-budget-form
+        [workflow]="current"
+        [clearance]="clearance()"
+        (proposed)="onBudgetProposed($event)"
+        (failed)="onActionFailed($event)"
+        (stale)="reload()"
         (retryClearance)="reloadEligibility()"
       />
     }

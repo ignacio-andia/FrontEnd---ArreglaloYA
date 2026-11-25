@@ -63,6 +63,26 @@ export interface VisitPaymentConfirmation {
   visit: Visit;
 }
 
+/** Límites de `CreateAdditionalBudgetDto` y `RejectAdditionalBudgetDto`. */
+export const BUDGET_TEXT_MAX_LENGTH = 1000;
+export const BUDGET_REJECT_REASON_MAX_LENGTH = 400;
+
+/** Estados en los que el backend admite proponer un adicional. */
+export const BUDGET_ORIGIN_STATUSES: readonly OrderStatus[] = ['VISITA_REALIZADA', 'EN_EJECUCION'];
+
+/** Cuerpo de `POST /orders/:orderId/additional-budgets`. */
+export interface ProposeBudgetRequest {
+  amount: string;
+  reason: string;
+  materials: string;
+}
+
+/** Respuesta de proponer, aceptar o rechazar un adicional. */
+export interface BudgetResult {
+  status: OrderStatus;
+  budget: AdditionalBudget;
+}
+
 /** La visita tiene un cobro: `null` y `"0.00"` son visitas sin costo. */
 export function hasVisitCost(cost: string | null): cost is string {
   return cost !== null && Number(cost) > 0;

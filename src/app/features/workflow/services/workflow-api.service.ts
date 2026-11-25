@@ -2,7 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
-import { VisitPaymentConfirmation, VisitRegistration, Workflow } from '../models/workflow.model';
+import {
+  BudgetResult,
+  ProposeBudgetRequest,
+  VisitPaymentConfirmation,
+  VisitRegistration,
+  Workflow,
+} from '../models/workflow.model';
 
 /** Ciclo del trabajo (`/api/orders/:orderId`). Un pedido ajeno responde 404. */
 @Service()
@@ -27,6 +33,32 @@ export class WorkflowApiService {
     return this.http.post<VisitPaymentConfirmation>(
       apiUrl('orders', orderId, 'visit', 'payment-confirmation'),
       null,
+    );
+  }
+
+  /** `POST /orders/:orderId/additional-budgets` (201): trabajador aprobado y asignado. */
+  proposeBudget(orderId: string, request: ProposeBudgetRequest): Observable<BudgetResult> {
+    const { amount, reason, materials } = request;
+    return this.http.post<BudgetResult>(apiUrl('orders', orderId, 'additional-budgets'), {
+      amount,
+      reason,
+      materials,
+    });
+  }
+
+  /** `POST …/additional-budgets/:budgetId/accept`, sin cuerpo: cliente dueño. */
+  acceptBudget(orderId: string, budgetId: string): Observable<BudgetResult> {
+    return this.http.post<BudgetResult>(
+      apiUrl('orders', orderId, 'additional-budgets', budgetId, 'accept'),
+      null,
+    );
+  }
+
+  /** `POST …/additional-budgets/:budgetId/reject`: cierra el pedido. El motivo es opcional. */
+  rejectBudget(orderId: string, budgetId: string, reason: string): Observable<BudgetResult> {
+    return this.http.post<BudgetResult>(
+      apiUrl('orders', orderId, 'additional-budgets', budgetId, 'reject'),
+      reason === '' ? {} : { reason },
     );
   }
 }

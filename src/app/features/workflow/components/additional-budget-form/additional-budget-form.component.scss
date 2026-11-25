@@ -1,0 +1,57 @@
+@use 'tokens';
+@use 'mixins';
+@use 'buttons';
+@use 'page';
+@use 'form-controls';
+
+@include form-controls.base;
+@include form-controls.textarea;
+
+:host {
+  display: block;
+}
+
+.proposal {
+  display: grid;
+  gap: tokens.$space-3;
+  min-width: 0;
+  padding: tokens.$space-6 tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+
+  @include mixins.respond-up(sm) {
+    padding: tokens.$space-6;
+  }
+}
+
+.proposal__title {
+  @include page.subtitle;
+}
+
+.proposal__muted {
+  color: var(--color-text-secondary);
+}
+
+.proposal__form {
+  display: grid;
+  justify-items: start;
+  gap: tokens.$space-3;
+
+  .field {
+    width: 100%;
+  }
+}
+
+.proposal__short {
+  max-width: 20rem;
+}
+
+.proposal__submit {
+  @include buttons.primary;
+}
+
+.proposal__review {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}

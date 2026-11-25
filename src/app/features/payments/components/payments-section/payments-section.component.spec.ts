@@ -104,7 +104,7 @@ describe('PaymentsSectionComponent', () => {
 
     const text = content();
     expect(text).toContain('El pago se realiza directamente al trabajador');
-    expect(text).toContain('Monto acordadoBs 100.00');
+    expect(text).toContain('Monto original acordadoBs 100.00');
     expect(text).toContain('Saldo esperadoBs 75.00');
     expect(text).toContain('Anticipo (25 %)');
     expect(text).toContain('Bs 25.00');
@@ -319,6 +319,6 @@ describe('PaymentsSectionComponent', () => {
     http.expectOne(PAYMENTS).flush(overview());
     http.expectOne(RECEIPTS).flush(receipts());
     await render();
-    expect(content()).toContain('Monto acordado');
+    expect(content()).toContain('Monto original acordado');
   });
 });

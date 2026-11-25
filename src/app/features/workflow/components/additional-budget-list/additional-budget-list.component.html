@@ -1,0 +1,54 @@
+<section class="offers__card" aria-labelledby="budgets-title">
+  <h2 id="budgets-title" class="offers__subtitle">Presupuestos adicionales</h2>
+  <p class="offers__muted">
+    No cambian el monto original: solo se suman los aceptados. Los totales están en «Pagos».
+  </p>
+  <ul class="budgets">
+    @for (budget of workflow().additionalBudgets; track budget.id) {
+      <li class="budget" [class.budget--pending]="budget.status === 'PENDIENTE'">
+        <p class="budget__head">
+          <strong class="budget__amount">Bs {{ budget.amount }}</strong> ·
+          {{ labels[budget.status] }}
+        </p>
+        <dl class="budget__data">
+          <div>
+            <dt>Motivo</dt>
+            <dd>{{ budget.reason }}</dd>
+          </div>
+          <div>
+            <dt>Materiales</dt>
+            <dd>{{ budget.materials }}</dd>
+          </div>
+          <div>
+            <dt>Propuesto el</dt>
+            <dd>{{ budget.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+          </div>
+          @if (budget.respondedAt) {
+            <div>
+              <dt>Respondido el</dt>
+              <dd>{{ budget.respondedAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</dd>
+            </div>
+          }
+        </dl>
+
+        @if (
+          budget.status === 'PENDIENTE' && workflow().status === 'PRESUPUESTO_ADICIONAL_PENDIENTE'
+        ) {
+          @if (viewer() === 'CLIENTE') {
+            <app-budget-response
+              [orderId]="workflow().orderId"
+              [budget]="budget"
+              (responded)="responded.emit($event)"
+              (failed)="failed.emit($event)"
+              (stale)="stale.emit()"
+            />
+          } @else {
+            <p class="offers__muted">
+              Falta la respuesta del cliente. Mientras tanto no puede proponer otro presupuesto.
+            </p>
+          }
+        }
+      </li>
+    }
+  </ul>
+</section>

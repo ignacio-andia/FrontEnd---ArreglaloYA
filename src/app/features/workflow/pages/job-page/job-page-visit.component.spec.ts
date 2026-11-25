@@ -165,7 +165,12 @@ describe('JobPageComponent: visit and its payment', () => {
     it.each(['VISITA_REALIZADA', 'EN_EJECUCION', 'TERMINADO', 'CANCELADO', 'CERRADO'] as const)(
       'does not offer it with the order in %s',
       async (status) => {
-        await open(status, { accepted: FREE_VISIT, eligibility: null });
+        // En curso, la elegibilidad se consulta para proponer un adicional.
+        const inProgress = status === 'VISITA_REALIZADA' || status === 'EN_EJECUCION';
+        await open(status, {
+          accepted: FREE_VISIT,
+          eligibility: inProgress ? ELIGIBLE : null,
+        });
 
         expect(panel()).toBeNull();
       },
@@ -249,7 +254,7 @@ describe('JobPageComponent: visit and its payment', () => {
       expect(panel()).toBeNull();
       expect(view.content()).toContain('Visita realizada. Costo Bs 30.00');
       expect(collectButton()).not.toBeNull();
-      const notice = view.element('#job-notice');
+      const notice = view.element('#action-notice');
       expect(notice?.textContent).toContain('Visita registrada');
       expect(document.activeElement).toBe(notice);
     });
@@ -261,7 +266,7 @@ describe('JobPageComponent: visit and its payment', () => {
       await view.fail(WORKFLOW, 500, 'Fallo del servidor');
       await view.answer(TIMELINE, timeline());
 
-      expect(view.element('#job-notice')?.textContent).toContain('Visita registrada');
+      expect(view.element('#action-notice')?.textContent).toContain('Visita registrada');
     });
 
     it.each([
@@ -272,7 +277,7 @@ describe('JobPageComponent: visit and its payment', () => {
       await open('ANTICIPO_REGISTRADO');
       await reject(await register(), status, message);
 
-      const notice = view.element('#job-notice');
+      const notice = view.element('#action-notice');
       expect(notice?.getAttribute('role')).toBe('alert');
       expect(notice?.textContent).toContain(message);
       expect(document.activeElement).toBe(notice);
@@ -282,7 +287,7 @@ describe('JobPageComponent: visit and its payment', () => {
       await view.answer('offers/me', page([WITH_VISIT]));
       await view.answer(PAYMENTS, overview({ orderStatus: 'CANCELADO', payments: [] }));
       await view.answer(RECEIPTS, receipts());
-      expect(view.element('#job-notice')?.textContent).toContain(message);
+      expect(view.element('#action-notice')?.textContent).toContain(message);
       expect(panel()).toBeNull();
     });
 
@@ -294,7 +299,7 @@ describe('JobPageComponent: visit and its payment', () => {
         'No se puede registrar la visita con el pedido en estado VISITA_REALIZADA.',
       );
 
-      expect(view.element('#job-notice')?.textContent).toContain('El pedido cambió de estado');
+      expect(view.element('#action-notice')?.textContent).toContain('El pedido cambió de estado');
       expect(view.content()).not.toContain('VISITA_REALIZADA');
       await view.answer(ELIGIBILITY, ELIGIBLE);
       await view.answer(WORKFLOW, workflow('VISITA_REALIZADA', { visit: VISIT }));
@@ -310,7 +315,7 @@ describe('JobPageComponent: visit and its payment', () => {
       await open('ANTICIPO_REGISTRADO');
       await reject(await register(), 500, 'boom');
 
-      expect(view.element('#job-notice')?.textContent).toContain('error en el servidor');
+      expect(view.element('#action-notice')?.textContent).toContain('error en el servidor');
       expect(registerButton()?.disabled).toBe(false);
     });
 

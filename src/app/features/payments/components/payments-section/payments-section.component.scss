@@ -35,6 +35,10 @@
     font-weight: tokens.$font-weight-bold;
   }
 
+  > .pay__total {
+    border: 2px solid var(--color-primary-dark);
+  }
+
   > .pay__balance {
     border-color: var(--color-primary);
     background-color: var(--color-primary-pale);

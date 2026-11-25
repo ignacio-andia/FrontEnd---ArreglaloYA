@@ -22,15 +22,15 @@
     @if (current.agreement; as agreement) {
       <dl class="pay__totals">
         <div>
-          <dt>Monto acordado</dt>
+          <dt>Monto original acordado</dt>
           <dd>Bs {{ agreement.baseAmount }}</dd>
         </div>
         <div>
           <dt>Adicionales aceptados</dt>
           <dd>Bs {{ agreement.acceptedAdditional }}</dd>
         </div>
-        <div>
-          <dt>Total acordado</dt>
+        <div class="pay__total">
+          <dt>Total actualizado</dt>
           <dd>Bs {{ agreement.totalAmount }}</dd>
         </div>
         @if (current.balance.status === 'CALCULADO') {

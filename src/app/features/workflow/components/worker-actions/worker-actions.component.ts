@@ -14,7 +14,7 @@ import { finalize } from 'rxjs';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { ErrorAlertComponent } from '../../../../shared/components/error-alert/error-alert.component';
 import { LoadingStateComponent } from '../../../../shared/components/loading-state/loading-state.component';
-import { apiErrorMessages, apiErrorStatus } from '../../../../shared/utils/api-error-message';
+import { apiErrorStatus } from '../../../../shared/utils/api-error-message';
 import { Offer } from '../../../offers/models/offer.model';
 import {
   STALE_ACTION_STATUSES,
@@ -23,11 +23,9 @@ import {
   hasVisitCost,
 } from '../../models/workflow.model';
 import { WorkflowApiService } from '../../services/workflow-api.service';
+import { actionErrorMessages } from '../../utils/action-error';
 
 const VISIT_ERROR = 'No se pudo registrar la visita. Inténtelo de nuevo más tarde.';
-const CHANGED_ERROR = 'El pedido cambió de estado. Revise la información actualizada.';
-/** El backend nombra el estado con su literal interno («… en estado EN_EJECUCION»). */
-const RAW_STATUS = /en estado [A-Z_]{4,}/;
 
 /**
  * Acciones del trabajador asignado sobre el trabajo. Por ahora, registrar la visita de
@@ -101,14 +99,8 @@ export class WorkerActionsComponent {
         },
         error: (error: unknown) => {
           this.confirming.set(false);
-          const status = apiErrorStatus(error) ?? 0;
-          const messages = apiErrorMessages(error, VISIT_ERROR);
-          this.failed.emit(
-            status === 409 && messages.some((message) => RAW_STATUS.test(message))
-              ? [CHANGED_ERROR]
-              : messages,
-          );
-          if (STALE_ACTION_STATUSES.includes(status)) {
+          this.failed.emit(actionErrorMessages(error, VISIT_ERROR));
+          if (STALE_ACTION_STATUSES.includes(apiErrorStatus(error) ?? 0)) {
             this.stale.emit();
           }
         },

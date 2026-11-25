@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, untracked } from '@angular/core';
+import { Component, computed, effect, inject, linkedSignal, untracked } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
@@ -10,9 +10,14 @@ import { WhatsappContactComponent } from '../../../offers/components/whatsapp-co
 import { OffersApiService } from '../../../offers/services/offers-api.service';
 import { OrdersApiService } from '../../../orders/services/orders-api.service';
 import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
+import {
+  ActionNotice,
+  ActionNoticeComponent,
+} from '../../components/action-notice/action-notice.component';
+import { AdditionalBudgetListComponent } from '../../components/additional-budget-list/additional-budget-list.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
-import { SERVICE_AGREEMENT_STATUSES } from '../../models/workflow.model';
+import { BudgetResult, SERVICE_AGREEMENT_STATUSES } from '../../models/workflow.model';
 import { ServiceWorkStore } from '../../services/service-work.store';
 
 const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
@@ -22,6 +27,8 @@ const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
   selector: 'app-tracking-page',
   imports: [
     RouterLink,
+    ActionNoticeComponent,
+    AdditionalBudgetListComponent,
     EmptyStateComponent,
     ErrorAlertComponent,
     LoadingStateComponent,
@@ -71,6 +78,12 @@ export class TrackingPageComponent {
     return current !== null && SERVICE_AGREEMENT_STATUSES.includes(current.status);
   });
 
+  /** Se borra al pasar a otro pedido. */
+  protected readonly notice = linkedSignal<string, ActionNotice | null>({
+    source: this.orderId,
+    computation: () => null,
+  });
+
   constructor() {
     effect(() => {
       const orderId = this.orderId();
@@ -78,9 +91,32 @@ export class TrackingPageComponent {
     });
   }
 
+  /** «Actualizar»: se vuelve a consultar todo y se retira el aviso. */
   protected refresh(): void {
+    this.notice.set(null);
+    this.reload();
+  }
+
+  /** «Reintentar»: conserva el resultado de la última acción. */
+  protected reload(): void {
     this.store.refresh();
     this.order.reload();
     this.worker.reload();
+  }
+
+  protected onBudgetResponded({ budget }: BudgetResult): void {
+    const outcome =
+      budget.status === 'ACEPTADO'
+        ? 'aceptado. El pedido pasó a «En ejecución».'
+        : 'rechazado. El pedido quedó cerrado.';
+    this.notice.set({
+      failed: false,
+      messages: [`Presupuesto adicional de Bs ${budget.amount} ${outcome}`],
+    });
+    this.store.refresh();
+  }
+
+  protected onActionFailed(messages: string[]): void {
+    this.notice.set(messages.length === 0 ? null : { failed: true, messages });
   }
 }
