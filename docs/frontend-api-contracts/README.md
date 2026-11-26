@@ -20,6 +20,7 @@ Documentación técnica de los contratos **reales** entre el backend NestJS de S
 | [08-feature-mapping.md](08-feature-mapping.md)                       | Correspondencia con los 12 módulos funcionales (RF-01 a RF-56)                           |
 | [09-gaps-and-pending-contracts.md](09-gaps-and-pending-contracts.md) | Faltantes, inconsistencias y contratos pendientes                                        |
 | [10-sprint1-endpoints.md](10-sprint1-endpoints.md)                   | Flujo del trabajo, reclamos, pagos, calificaciones, agenda y seguimiento (#82–#112)      |
+| [11-worker-recommendations.md](11-worker-recommendations.md)         | Recomendación de trabajadores y sus criterios (#116–#119)                                |
 
 ## Cómo usar esta documentación
 
@@ -79,11 +80,11 @@ Esta carpeta es la copia de `backend/docs/frontend-api-contracts` usada por Angu
 
 **Discrepancias detectadas en la documentación sincronizada:**
 
-| # | Documentación | Realidad |
-|---|---|---|
-| S1 | Los encabezados de 01 y de este README hablan de 112 endpoints | El inventario numera hasta #115 y los controllers declaran 115 rutas |
-| S2 | 04 indica que nadie escribe `AdditionalBudgetStatus.RECHAZADO` y que la salida por rechazo del adicional no está implementada | La tabla de transiciones del mismo archivo y 10 documentan #113, que existe en `service-workflow.controller.ts` |
-| S3 | 09 (A2) dice que los módulos del Sprint 1 no están en `main` | Ya están fusionados y registrados en `app.module.ts` |
-| S4 | 07 solo tipifica #1–#81 | Los tipos de #82–#115 se toman de 10 |
+| #   | Documentación                                                                                                                 | Realidad                                                                                                        |
+| --- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| S1  | Los encabezados de 01 y de este README hablan de 112 endpoints                                                                | El inventario numera hasta #115 y los controllers declaran 115 rutas                                            |
+| S2  | 04 indica que nadie escribe `AdditionalBudgetStatus.RECHAZADO` y que la salida por rechazo del adicional no está implementada | La tabla de transiciones del mismo archivo y 10 documentan #113, que existe en `service-workflow.controller.ts` |
+| S3  | 09 (A2) dice que los módulos del Sprint 1 no están en `main`                                                                  | Ya están fusionados y registrados en `app.module.ts`                                                            |
+| S4  | 07 solo tipifica #1–#81                                                                                                       | Los tipos de #82–#115 se toman de 10                                                                            |
 
 **Decisión del frontend que se mantiene:** `environment.apiBaseUrl = '/api'` con el proxy de `proxy.conf.json`, en lugar de apuntar a `http://localhost:3000/api`.
