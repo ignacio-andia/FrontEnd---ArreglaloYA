@@ -196,6 +196,13 @@ export const routes: Routes = [
           import('./features/catalogs/catalogs.routes').then((m) => m.ADMIN_ZONES_ROUTES),
       },
       {
+        path: 'recomendaciones',
+        loadChildren: () =>
+          import('./features/recommendations/recommendations.routes').then(
+            (m) => m.RECOMMENDATION_SETTINGS_ROUTES,
+          ),
+      },
+      {
         path: 'bitacora',
         loadChildren: () => import('./features/audit/audit.routes').then((m) => m.AUDIT_ROUTES),
       },

@@ -59,6 +59,7 @@ const cases: LayoutCase[] = [
       ['Pedidos', '/admin/pedidos'],
       ['Categorías', '/admin/categorias'],
       ['Zonas', '/admin/zonas'],
+      ['Recomendaciones', '/admin/recomendaciones'],
       ['Bitácora', '/admin/bitacora'],
       ['Reportes', '/admin/reportes'],
       ['Mi cuenta', '/admin/mi-cuenta'],

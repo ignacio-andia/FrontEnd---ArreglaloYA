@@ -1,0 +1,56 @@
+@use 'tokens';
+@use 'mixins';
+@use 'form-controls';
+
+@include form-controls.base;
+@include form-controls.alerts;
+
+.settings__form {
+  display: grid;
+  gap: tokens.$space-4;
+}
+
+.settings__group {
+  display: grid;
+  gap: tokens.$space-3;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  @include mixins.respond-up(md) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    legend,
+    .settings__sum,
+    .field__error {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.settings__field {
+  align-content: start;
+}
+
+.settings__sum {
+  margin: 0;
+}
+
+.settings__scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.settings__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th,
+  td {
+    padding: tokens.$space-2;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    white-space: nowrap;
+  }
+}
