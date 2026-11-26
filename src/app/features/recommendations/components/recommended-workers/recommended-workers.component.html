@@ -1,0 +1,172 @@
+@if (visible()) {
+  <section class="recs" aria-labelledby="recs-title">
+    <h2 id="recs-title" class="recs__title">Trabajadores recomendados</h2>
+    <p class="recs__muted">
+      Se recomiendan trabajadores aprobados de la categoría y la zona del pedido según su
+      reputación, sus servicios completados y su disponibilidad.
+    </p>
+
+    @if (canGenerate()) {
+      <button type="button" class="recs__primary" [disabled]="generating()" (click)="generate()">
+        @if (generating()) {
+          Calculando…
+        } @else if (items().length > 0) {
+          Actualizar recomendación
+        } @else {
+          Recomendar trabajadores
+        }
+      </button>
+    }
+    @if (generated()) {
+      <p class="recs__success" role="status">Se generó y guardó una recomendación nueva.</p>
+    }
+    @if (generateError(); as message) {
+      <p class="recs__error" role="alert">{{ message }}</p>
+    }
+
+    @if (history.isLoading() && !history.hasValue()) {
+      <app-loading-state message="Consultando las recomendaciones…" />
+    } @else if (listError(); as message) {
+      <div class="recs__error" role="alert">
+        <p>{{ message }}</p>
+        <button type="button" class="recs__secondary" (click)="history.reload()">Reintentar</button>
+      </div>
+    } @else if (selected(); as recommendation) {
+      @let criteria = recommendation.criteria;
+      <p class="recs__meta">
+        Generada el {{ recommendation.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }} ·
+        {{ recommendation.candidatesCount }}
+        {{
+          recommendation.candidatesCount === 1 ? 'trabajador evaluado' : 'trabajadores evaluados'
+        }}
+        · criterios versión {{ criteria.version }}
+      </p>
+
+      <details class="recs__criteria">
+        <summary>Criterios usados para esta recomendación</summary>
+        <ul>
+          <li>
+            <strong>Reputación ({{ criteria.reputationWeight }} %):</strong> promedio de las
+            calificaciones visibles de clientes, completado con
+            {{ criteria.reviewsForConfidence }} calificaciones neutras de
+            {{ criteria.neutralRating }} estrellas. 1 estrella vale 0 puntos y 5 estrellas, 100.
+          </li>
+          <li>
+            <strong>Servicios completados ({{ criteria.completedServicesWeight }} %):</strong>
+            trabajos terminados; con {{ criteria.completedServicesTarget }} o más se obtienen 100
+            puntos.
+          </li>
+          <li>
+            <strong>Disponibilidad ({{ criteria.availabilityWeight }} %):</strong> horas libres en
+            los próximos {{ criteria.availabilityWindowDays }} días (horario de atención menos
+            trabajos acordados); con {{ criteria.availabilityHoursTarget }} h o más se obtienen 100
+            puntos.
+          </li>
+          <li>
+            <strong>Puntaje total:</strong> suma de los puntos de cada criterio (puntaje × peso). En
+            empate gana la mejor reputación.
+          </li>
+        </ul>
+      </details>
+
+      @if (recommendation.message) {
+        <p class="recs__notice" role="status">{{ recommendation.message }}</p>
+      } @else {
+        <ol class="recs__list">
+          @for (worker of recommendation.workers; track worker.workerId) {
+            <li class="recs__item">
+              <div class="recs__head">
+                <span class="recs__rank" aria-hidden="true">{{ worker.rank }}</span>
+                <h3 class="recs__name">
+                  <span class="sr-only">Puesto {{ worker.rank }}: </span>
+                  {{ worker.firstName }} {{ worker.lastName }}
+                </h3>
+                <p class="recs__total">{{ worker.totalScore }} <span>/ 100</span></p>
+              </div>
+              <meter
+                class="recs__meter"
+                min="0"
+                max="100"
+                [value]="worker.totalScore"
+                [attr.aria-label]="
+                  'Puntaje total de ' + worker.firstName + ': ' + worker.totalScore + ' de 100'
+                "
+              ></meter>
+
+              <dl class="recs__scores">
+                <div>
+                  <dt>Reputación</dt>
+                  <dd>
+                    <span class="recs__points">
+                      {{ worker.reputation.score }} × {{ worker.reputation.weight }} % =
+                      {{ worker.reputation.points }} pts
+                    </span>
+                    <span class="recs__why">{{ worker.reputation.explanation }}</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Servicios completados</dt>
+                  <dd>
+                    <span class="recs__points">
+                      {{ worker.completedServices.score }} × {{ worker.completedServices.weight }} %
+                      = {{ worker.completedServices.points }} pts
+                    </span>
+                    <span class="recs__why">{{ worker.completedServices.explanation }}</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Disponibilidad</dt>
+                  <dd>
+                    <span class="recs__points">
+                      {{ worker.availability.score }} × {{ worker.availability.weight }} % =
+                      {{ worker.availability.points }} pts
+                    </span>
+                    <span class="recs__why">{{ worker.availability.explanation }}</span>
+                  </dd>
+                </div>
+              </dl>
+
+              <div class="recs__links">
+                <a
+                  class="recs__link"
+                  [routerLink]="['/cliente/buscar-trabajadores', worker.workerId]"
+                >
+                  Ver perfil
+                </a>
+                @if (worker.openOfferId) {
+                  <a class="recs__link" [routerLink]="['/cliente/ofertas', worker.openOfferId]">
+                    Ver su oferta
+                  </a>
+                } @else {
+                  <span class="recs__muted">Todavía no envió una oferta para este pedido.</span>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      }
+
+      @if (items().length > 1) {
+        <h3 class="recs__subtitle">Historial de recomendaciones</h3>
+        <ul class="recs__history">
+          @for (item of items(); track item.id) {
+            <li>
+              <button
+                type="button"
+                class="recs__history-button"
+                [attr.aria-pressed]="item.id === recommendation.id"
+                (click)="select(item.id)"
+              >
+                {{ item.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }} · versión
+                {{ item.criteria.version }} · {{ item.workers.length }}
+                {{ item.workers.length === 1 ? 'recomendado' : 'recomendados' }}
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    } @else {
+      <p class="recs__muted">Todavía no se generó ninguna recomendación para este pedido.</p>
+    }
+  </section>
+}

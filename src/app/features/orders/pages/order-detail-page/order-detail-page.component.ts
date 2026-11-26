@@ -15,6 +15,7 @@ import { apiErrorMessages, apiErrorStatus } from '../../../../shared/utils/api-e
 import { DISPLAY_TIMEZONE } from '../../../../shared/utils/display-timezone';
 import { SERVICE_AGREEMENT_STATUSES } from '../../../workflow/models/workflow.model';
 import { OrderOffersComponent } from '../../../offers/components/order-offers/order-offers.component';
+import { RecommendedWorkersComponent } from '../../../recommendations/components/recommended-workers/recommended-workers.component';
 import { CancelOrderComponent } from '../../components/cancel-order/cancel-order.component';
 import { OrderPhotoComponent } from '../../components/order-photo/order-photo.component';
 import { OrderStatusBadgeComponent } from '../../components/order-status-badge/order-status-badge.component';
@@ -43,6 +44,7 @@ const DETAIL_ERROR = 'No se pudo cargar el pedido. Compruebe su conexi√≥n e int√
     OrderOffersComponent,
     OrderPhotoComponent,
     OrderStatusBadgeComponent,
+    RecommendedWorkersComponent,
   ],
   templateUrl: './order-detail-page.component.html',
   styleUrl: './order-detail-page.component.scss',

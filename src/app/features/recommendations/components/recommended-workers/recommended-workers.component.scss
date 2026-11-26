@@ -1,0 +1,216 @@
+@use 'tokens';
+@use 'mixins';
+@use 'page';
+@use 'buttons';
+
+:host {
+  display: block;
+}
+
+:host:empty {
+  display: none;
+}
+
+.sr-only {
+  @include mixins.visually-hidden;
+}
+
+.recs {
+  display: grid;
+  justify-items: start;
+  gap: tokens.$space-3;
+  padding: tokens.$space-6 tokens.$space-4;
+  border: 1px solid var(--color-primary);
+  border-radius: tokens.$radius-lg;
+  background-color: var(--color-surface);
+}
+
+.recs__title {
+  @include page.subtitle;
+}
+
+.recs__subtitle {
+  margin: tokens.$space-2 0 0;
+  font-size: 1rem;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.recs__primary {
+  @include buttons.primary;
+}
+
+// Un solo bloque de estilos para todos los botones secundarios (presupuesto de estilos).
+.recs__secondary,
+.recs__link,
+.recs__history-button {
+  @include buttons.secondary;
+}
+
+.recs__muted,
+.recs__meta {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.recs__success {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.recs__error {
+  display: grid;
+  justify-items: start;
+  gap: tokens.$space-2;
+  margin: 0;
+  color: var(--color-danger);
+
+  p {
+    margin: 0;
+  }
+}
+
+.recs__notice {
+  margin: 0;
+  padding: tokens.$space-3;
+  border-radius: tokens.$radius-md;
+  background-color: var(--color-primary-pale);
+}
+
+.recs__criteria {
+  width: 100%;
+  padding: tokens.$space-3;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-md;
+
+  summary {
+    color: var(--color-primary-dark);
+    font-weight: tokens.$font-weight-semibold;
+    cursor: pointer;
+  }
+
+  ul {
+    display: grid;
+    gap: tokens.$space-2;
+    margin: tokens.$space-3 0 0;
+    padding-left: tokens.$space-6;
+  }
+}
+
+.recs__list {
+  display: grid;
+  gap: tokens.$space-3;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recs__item {
+  display: grid;
+  gap: tokens.$space-2;
+  padding: tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-md;
+}
+
+.recs__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tokens.$space-3;
+}
+
+.recs__rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: tokens.$font-weight-bold;
+}
+
+.recs__name {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.recs__total {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1.25rem;
+  font-weight: tokens.$font-weight-bold;
+
+  span {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    font-weight: tokens.$font-weight-regular;
+  }
+}
+
+.recs__meter {
+  width: 100%;
+  height: 0.75rem;
+}
+
+.recs__scores {
+  display: grid;
+  gap: tokens.$space-2;
+  margin: 0;
+
+  div {
+    display: grid;
+    gap: tokens.$space-1;
+
+    @include mixins.respond-up(md) {
+      grid-template-columns: 12rem 1fr;
+    }
+  }
+
+  dt {
+    font-weight: tokens.$font-weight-semibold;
+  }
+
+  dd {
+    display: grid;
+    margin: 0;
+  }
+}
+
+.recs__points {
+  font-variant-numeric: tabular-nums;
+}
+
+.recs__why {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.recs__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tokens.$space-3;
+}
+
+.recs__history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recs__history-button {
+  font-weight: tokens.$font-weight-regular;
+
+  &[aria-pressed='true'] {
+    background-color: var(--color-primary-pale);
+    font-weight: tokens.$font-weight-semibold;
+  }
+}
