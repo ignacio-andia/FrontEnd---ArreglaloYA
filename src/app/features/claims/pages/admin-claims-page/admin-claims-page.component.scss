@@ -34,3 +34,56 @@
   font-size: 0.8125rem;
   font-weight: tokens.$font-weight-semibold;
 }
+
+// --- Priorización ---------------------------------------------------------
+
+.claim-row--overdue {
+  border-color: #b42318;
+}
+
+.claim-row__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tokens.$space-2;
+}
+
+.claim-row__priority,
+.claim-row__overdue {
+  padding: 0.125rem tokens.$space-2;
+  border-radius: tokens.$radius-sm;
+  font-size: 0.8125rem;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.claim-row__priority {
+  &[data-priority='URGENTE'] {
+    background-color: #fde2e1;
+    color: #9b1c1c;
+  }
+
+  &[data-priority='ALTA'] {
+    background-color: #feecdc;
+    color: #8a3c00;
+  }
+
+  &[data-priority='MEDIA'] {
+    background-color: #fef9c3;
+    color: #713f12;
+  }
+
+  &[data-priority='BAJA'] {
+    background-color: #e5edff;
+    color: #1e3a8a;
+  }
+}
+
+.claim-row__overdue {
+  background-color: #b42318;
+  color: #fff;
+}
+
+.claim-row__late {
+  color: #b42318;
+  font-weight: tokens.$font-weight-semibold;
+}

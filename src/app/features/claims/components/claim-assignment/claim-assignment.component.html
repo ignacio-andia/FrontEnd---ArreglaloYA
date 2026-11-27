@@ -1,0 +1,89 @@
+<section class="assignment" aria-labelledby="claim-assignment-title">
+  <h2 id="claim-assignment-title" class="assignment__title">Prioridad y responsable</h2>
+
+  <dl class="assignment__data">
+    <div>
+      <dt>Prioridad</dt>
+      <dd>
+        <span class="assignment__priority" [attr.data-priority]="claim().priority">
+          {{ labels[claim().priority] }}
+        </span>
+      </dd>
+    </div>
+    <div>
+      <dt>Responsable</dt>
+      <dd>
+        @if (claim().assignee; as person) {
+          {{ person.firstName }} {{ person.lastName }}
+          @if (claim().assignedAt; as assignedAt) {
+            <span class="assignment__muted">
+              (desde el {{ assignedAt | date: 'dd/MM/yyyy HH:mm' : timezone }})
+            </span>
+          }
+        } @else {
+          Sin asignar
+        }
+      </dd>
+    </div>
+    <div>
+      <dt>Fecha límite</dt>
+      <dd [class.assignment__late]="claim().overdue">
+        {{ claim().dueAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+        @if (claim().overdue) {
+          <strong> · Vencido</strong>
+        }
+      </dd>
+    </div>
+  </dl>
+
+  @if (claim().status !== 'RESUELTO') {
+    <form class="assignment__form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="field">
+        <label class="field__label" for="assign-priority">Prioridad</label>
+        <select id="assign-priority" class="field__input" formControlName="priority">
+          @for (priority of priorities; track priority) {
+            <option [value]="priority">{{ labels[priority] }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="assign-user">Responsable</label>
+        <select id="assign-user" class="field__input" formControlName="assignedToId">
+          <option value="">Sin asignar</option>
+          @if (assignees.hasValue()) {
+            @for (person of assignees.value(); track person.id) {
+              <option [value]="person.id">{{ person.firstName }} {{ person.lastName }}</option>
+            }
+          }
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="assign-due">Fecha límite</label>
+        <input
+          id="assign-due"
+          class="field__input"
+          type="datetime-local"
+          formControlName="dueAt"
+          aria-describedby="assign-due-hint"
+        />
+        <p id="assign-due-hint" class="assignment__muted">
+          Vacía: se calcula con la prioridad (Urgente 24 h, Alta 48 h, Media 72 h, Baja 120 h).
+          Máximo 30 días.
+        </p>
+      </div>
+
+      <div class="assignment__actions">
+        <button type="button" class="assignment__secondary" (click)="useAutomaticDueAt()">
+          Usar plazo automático
+        </button>
+        <button type="submit" class="assignment__send" [disabled]="sending()">
+          {{ sending() ? 'Guardando…' : 'Guardar asignación' }}
+        </button>
+      </div>
+    </form>
+  } @else {
+    <p class="assignment__muted">El reclamo está resuelto: ya no se puede reasignar.</p>
+  }
+</section>

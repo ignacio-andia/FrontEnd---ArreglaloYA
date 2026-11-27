@@ -16,6 +16,7 @@ import {
   ActionNoticeComponent,
 } from '../../../workflow/components/action-notice/action-notice.component';
 import { ServiceWorkStore } from '../../../workflow/services/service-work.store';
+import { ClaimAssignmentComponent } from '../../components/claim-assignment/claim-assignment.component';
 import { ClaimDetailComponent } from '../../components/claim-detail/claim-detail.component';
 import {
   ClaimChange,
@@ -29,13 +30,15 @@ const RECEIPTS_ERROR = 'No se pudieron cargar las constancias.';
 
 /**
  * Detalle de un reclamo para el administrador (#96) con el contexto del pedido: las partes que
- * entrega su detalle administrativo, las constancias (#100) y el historial (#112).
+ * entrega su detalle administrativo, las constancias (#100) y el historial (#112). También su
+ * priorización: prioridad, responsable y fecha límite.
  */
 @Component({
   selector: 'app-admin-claim-page',
   imports: [
     RouterLink,
     ActionNoticeComponent,
+    ClaimAssignmentComponent,
     ClaimDetailComponent,
     ClaimResolutionComponent,
     EmptyStateComponent,

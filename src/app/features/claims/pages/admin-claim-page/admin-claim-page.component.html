@@ -25,6 +25,12 @@
       <app-claim-detail [claim]="current" />
     </section>
 
+    <app-claim-assignment
+      [claim]="current"
+      (changed)="onChanged($event)"
+      (failed)="onActionFailed($event)"
+    />
+
     @if (current.status !== 'RESUELTO') {
       <app-claim-resolution
         [claim]="current"
