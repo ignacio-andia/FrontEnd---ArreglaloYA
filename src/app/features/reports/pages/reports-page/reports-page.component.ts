@@ -1,6 +1,7 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { FileDownloadService } from '../../../../core/services/file-download.service';
 import { ErrorAlertComponent } from '../../../../shared/components/error-alert/error-alert.component';
@@ -22,7 +23,7 @@ const CSV_ERROR = 'No se pudo descargar el archivo.';
 /** Reportes por rango de fechas (#115), en pantalla y como archivo CSV. */
 @Component({
   selector: 'app-reports-page',
-  imports: [ReactiveFormsModule, ErrorAlertComponent, LoadingStateComponent],
+  imports: [ReactiveFormsModule, RouterLink, ErrorAlertComponent, LoadingStateComponent],
   templateUrl: './reports-page.component.html',
   styleUrls: ['../../../offers/offer-pages.scss', './reports-page.component.scss'],
 })

@@ -1,0 +1,147 @@
+<section class="offers" aria-labelledby="financial-title">
+  <a class="offers__back" routerLink="/admin/reportes">
+    <span aria-hidden="true">←</span> Volver a reportes
+  </a>
+  <h1 id="financial-title" class="offers__title">Reporte financiero de servicios</h1>
+  <p class="offers__intro">
+    Pedidos que llegaron a un acuerdo en el rango indicado. Las fechas son días de Bolivia e
+    incluyen el primero y el último.
+  </p>
+  <p class="offers__notice offers__notice--waiting">
+    La plataforma no procesa pagos: los ingresos son los pagos que el trabajador confirmó y la
+    comisión es solo informativa.
+  </p>
+
+  <form class="finance__form" [formGroup]="form" (ngSubmit)="generate()" novalidate>
+    <div class="offers__filters">
+      <label for="financial-from">Desde</label>
+      <input id="financial-from" class="report__date" type="date" formControlName="from" required />
+      <label for="financial-to">Hasta</label>
+      <input id="financial-to" class="report__date" type="date" formControlName="to" required />
+    </div>
+
+    <fieldset class="finance__statuses" formGroupName="statuses">
+      <legend>Estado actual del pedido <span class="offers__muted">(opcional)</span></legend>
+      <ul class="finance__checks">
+        @for (status of statusOptions; track status) {
+          <li>
+            <label class="finance__check">
+              <input type="checkbox" [formControlName]="status" />
+              {{ statusLabels[status] }}
+            </label>
+          </li>
+        }
+      </ul>
+      <p class="offers__muted">Sin estados marcados se incluyen todos.</p>
+    </fieldset>
+
+    <div class="offers__actions">
+      <button type="submit" class="offers__primary" [disabled]="report.isLoading()">
+        Generar reporte
+      </button>
+      <button type="button" class="offers__secondary" (click)="clearStatuses()">
+        Quitar estados
+      </button>
+    </div>
+  </form>
+  @if (rangeError(); as message) {
+    <p class="offers__error" role="alert">{{ message }}</p>
+  }
+
+  @if (report.isLoading()) {
+    <app-loading-state message="Generando el reporte financiero…" />
+  } @else if (errorMessage(); as message) {
+    <app-error-alert [message]="message" (retry)="report.reload()" />
+  } @else if (current(); as current) {
+    <section class="offers__card" aria-labelledby="financial-result-title">
+      <h2 id="financial-result-title" class="offers__subtitle">
+        {{ current.totals.orders }}
+        {{ current.totals.orders === 1 ? 'pedido' : 'pedidos' }} del {{ current.from }} al
+        {{ current.to }}
+      </h2>
+      <p class="offers__muted">
+        Según la {{ current.basis }}.
+        @if (filteredStatuses(); as statuses) {
+          Estados: {{ statuses }}.
+        } @else {
+          Todos los estados.
+        }
+      </p>
+
+      <dl class="finance__totals">
+        <div>
+          <dt>Total esperado</dt>
+          <dd>Bs {{ current.totals.expected }}</dd>
+        </div>
+        <div class="finance__income">
+          <dt>Ingresos confirmados</dt>
+          <dd>Bs {{ current.totals.income }}</dd>
+        </div>
+        <div>
+          <dt>Pagos pendientes</dt>
+          <dd>Bs {{ current.totals.pending }}</dd>
+        </div>
+        <div>
+          <dt>Comisión ({{ current.commissionPercent }} %)</dt>
+          <dd>Bs {{ current.totals.commission }}</dd>
+        </div>
+      </dl>
+      <p class="offers__muted">{{ current.notice }}</p>
+
+      @if (current.message) {
+        <p role="status">{{ current.message }}</p>
+      } @else {
+        <div
+          class="report__scroll"
+          role="region"
+          aria-label="Detalle del reporte financiero"
+          tabindex="0"
+        >
+          <table class="report__table">
+            <thead>
+              <tr>
+                @for (column of columns(); track $index) {
+                  <th scope="col">{{ column }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows(); track $index) {
+                <tr>
+                  @for (cell of row; track $index) {
+                    <td [class.finance__money]="cell.money">
+                      @if (cell.orderId) {
+                        <a
+                          [routerLink]="['/admin/pedidos', cell.orderId]"
+                          [attr.aria-label]="'Ver el pedido ' + cell.orderId"
+                        >
+                          {{ cell.text }}
+                        </a>
+                      } @else {
+                        {{ cell.text }}
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <div class="offers__actions">
+        <button
+          type="button"
+          class="offers__secondary"
+          [disabled]="downloading()"
+          (click)="download()"
+        >
+          {{ downloading() ? 'Descargando…' : 'Descargar CSV' }}
+        </button>
+      </div>
+      @if (downloadError(); as message) {
+        <p class="offers__error" role="alert">{{ message }}</p>
+      }
+    </section>
+  }
+</section>
