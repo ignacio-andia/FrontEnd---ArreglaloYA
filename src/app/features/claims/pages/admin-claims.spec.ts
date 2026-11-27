@@ -16,6 +16,11 @@ const row = (overrides: Partial<ClaimSummary> = {}): ClaimSummary => ({
   status: 'ABIERTO',
   imageCount: 2,
   createdAt: '2026-11-22T14:00:00.000Z',
+  priority: 'MEDIA',
+  dueAt: '2026-11-25T14:00:00.000Z',
+  assignedAt: null,
+  assignee: null,
+  overdue: false,
   ...overrides,
 });
 const ADMIN_ORDER = {
@@ -41,6 +46,10 @@ describe('administration of claims', () => {
   });
 
   afterEach(() => {
+    // La lista de responsables se pide en el listado y en el detalle; no es parte de estas pruebas.
+    view.http
+      .match((request) => request.url === apiUrl('admin', 'claims', 'assignees'))
+      .forEach((request) => request.flush([]));
     view.http.verify();
     sessionStorage.clear();
   });

@@ -21,6 +21,11 @@ export function claim(overrides: Partial<Claim> = {}): Claim {
     justification: null,
     decidedAt: null,
     createdAt: '2026-11-22T14:00:00.000Z',
+    priority: 'MEDIA',
+    dueAt: '2026-11-25T14:00:00.000Z',
+    assignedAt: null,
+    assignee: null,
+    overdue: false,
     ...overrides,
   };
 }

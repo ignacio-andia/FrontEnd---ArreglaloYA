@@ -6,11 +6,13 @@ import { ImageVariant } from '../../../shared/components/private-image/private-i
 import { PaginatedResponse } from '../../../core/models/pagination.model';
 import {
   Claim,
+  ClaimAssignee,
   ClaimParty,
   ClaimSummary,
   ClaimsQuery,
   CreateClaimRequest,
   DecideClaimRequest,
+  UpdateClaimAssignmentRequest,
 } from '../models/claim.model';
 
 /** Reclamos de un pedido. Un pedido ajeno responde 404. */
@@ -39,19 +41,28 @@ export class ClaimsApiService {
     return this.http.get<Claim | ClaimParty>(apiUrl('orders', orderId, 'claim'));
   }
 
-  /** `GET /admin/claims`: solo administradores; los más antiguos primero. */
-  list({ status, page, limit }: ClaimsQuery): Observable<PaginatedResponse<ClaimSummary>> {
+  /**
+   * `GET /admin/claims`: solo administradores. El backend ordena por prioridad, fecha límite y
+   * antigüedad. Solo se envían los filtros con valor.
+   */
+  list(query: ClaimsQuery): Observable<PaginatedResponse<ClaimSummary>> {
     let params = new HttpParams();
-    if (status !== undefined) {
-      params = params.set('status', status);
-    }
-    if (page !== undefined) {
-      params = params.set('page', page);
-    }
-    if (limit !== undefined) {
-      params = params.set('limit', limit);
+    for (const [key, value] of Object.entries(query)) {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, value);
+      }
     }
     return this.http.get<PaginatedResponse<ClaimSummary>>(apiUrl('admin', 'claims'), { params });
+  }
+
+  /** `GET /admin/claims/assignees`: administradores activos que pueden ser responsables. */
+  listAssignees(): Observable<ClaimAssignee[]> {
+    return this.http.get<ClaimAssignee[]>(apiUrl('admin', 'claims', 'assignees'));
+  }
+
+  /** `PATCH /admin/claims/:claimId/assignment`: prioridad, responsable y fecha límite. */
+  updateAssignment(claimId: string, request: UpdateClaimAssignmentRequest): Observable<Claim> {
+    return this.http.patch<Claim>(apiUrl('admin', 'claims', claimId, 'assignment'), request);
   }
 
   /** `GET /admin/claims/:claimId`: solo administradores. */

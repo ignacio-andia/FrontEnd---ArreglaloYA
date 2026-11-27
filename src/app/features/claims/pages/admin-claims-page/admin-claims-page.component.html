@@ -1,6 +1,6 @@
 <section class="offers" aria-labelledby="claims-title">
   <h1 id="claims-title" class="offers__title">Reclamos</h1>
-  <p class="offers__intro">Se muestran del más antiguo al más reciente.</p>
+  <p class="offers__intro">Ordenados por prioridad y fecha límite: primero los más urgentes.</p>
 
   <div class="offers__filters">
     <label for="claims-status">Estado</label>
@@ -10,6 +10,34 @@
         <option [value]="status">{{ labels[status] }}</option>
       }
     </select>
+
+    <label for="claims-priority">Prioridad</label>
+    <select id="claims-priority" [formControl]="priorityFilter">
+      <option value="">Todas</option>
+      @for (priority of priorities; track priority) {
+        <option [value]="priority">{{ priorityLabels[priority] }}</option>
+      }
+    </select>
+
+    <label for="claims-situation">Situación</label>
+    <select id="claims-situation" [formControl]="situationFilter">
+      <option value="">Todas</option>
+      @for (situation of situations; track situation) {
+        <option [value]="situation">{{ situationLabels[situation] }}</option>
+      }
+    </select>
+
+    <label for="claims-assignee">Responsable</label>
+    <select id="claims-assignee" [formControl]="assigneeFilter">
+      <option value="">Todos</option>
+      <option value="none">Sin asignar</option>
+      @if (assignees.hasValue()) {
+        @for (person of assignees.value(); track person.id) {
+          <option [value]="person.id">{{ person.firstName }} {{ person.lastName }}</option>
+        }
+      }
+    </select>
+
     <button
       type="button"
       class="offers__secondary"
@@ -18,6 +46,11 @@
     >
       Actualizar
     </button>
+    @if (filtered()) {
+      <button type="button" class="offers__secondary" (click)="clearFilters()">
+        Quitar filtros
+      </button>
+    }
   </div>
 
   @if (claims.isLoading() && !claims.hasValue()) {
@@ -34,23 +67,42 @@
       </div>
     } @else {
       <app-empty-state
-        [heading]="status() ? 'No hay reclamos con ese estado.' : 'Todavía no hay reclamos.'"
+        [heading]="status() ? 'No hay reclamos con ese estado.' : filtered() ? 'No hay reclamos con esos filtros.' : 'Todavía no hay reclamos.'"
       />
     }
   } @else {
     <ul class="offers__list">
       @for (claim of items(); track claim.id) {
-        <li class="claim-row">
+        <li class="claim-row" [class.claim-row--overdue]="claim.overdue">
           <div class="claim-row__top">
             <h2 class="claim-row__title">
               <a [routerLink]="['/admin/reclamos', claim.id]">
                 Reclamo {{ claim.id.slice(0, 8) }}
               </a>
             </h2>
-            <span class="claim-row__status">{{ labels[claim.status] }}</span>
+            <div class="claim-row__badges">
+              <span class="claim-row__priority" [attr.data-priority]="claim.priority">
+                {{ priorityLabels[claim.priority] }}
+              </span>
+              @if (claim.overdue) {
+                <span class="claim-row__overdue">Vencido</span>
+              }
+              <span class="claim-row__status">{{ labels[claim.status] }}</span>
+            </div>
           </div>
           <p class="offers__muted">Pedido {{ claim.orderId.slice(0, 8) }}</p>
           <p>Presentado el {{ claim.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</p>
+          <p [class.claim-row__late]="claim.overdue">
+            Fecha límite: {{ claim.dueAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
+          </p>
+          <p class="offers__muted">
+            Responsable:
+            @if (claim.assignee; as person) {
+              {{ person.firstName }} {{ person.lastName }}
+            } @else {
+              Sin asignar
+            }
+          </p>
           <p class="offers__muted">Fotografías: {{ claim.imageCount }}</p>
         </li>
       }

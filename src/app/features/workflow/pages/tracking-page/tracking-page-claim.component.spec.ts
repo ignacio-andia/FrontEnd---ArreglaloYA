@@ -30,6 +30,11 @@ const CLAIM: Claim = {
   justification: null,
   decidedAt: null,
   createdAt: '2026-11-02T10:00:00.000Z',
+  priority: 'MEDIA',
+  dueAt: '2026-11-05T10:00:00.000Z',
+  assignedAt: null,
+  assignee: null,
+  overdue: false,
 };
 
 const WORKFLOW = `orders/${ORDER_ID}/workflow`;
