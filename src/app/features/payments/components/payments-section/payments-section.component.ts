@@ -99,18 +99,29 @@ export class PaymentsSectionComponent {
     if (overview === null) {
       return [];
     }
-    return overview.payments.map((payment) => ({
-      payment,
-      availability: declarationAvailability(payment, {
-        viewer: this.viewer(),
-        status: overview.orderStatus,
-        visitRegistered: this.workflow().visit !== null,
-        balance: overview.balance.status,
-      }),
-      suggested: suggestedAmount(payment, overview),
-      confirmed: payment.declarations.some((item) => item.declaredBy === 'TRABAJADOR'),
-      visitToCollect: this.visitToCollect(payment),
-    }));
+    const cancelled = overview.orderStatus === 'CANCELADO';
+    // Tras cancelar ya no hay saldo que declarar: su tarjeta solo se conserva si tiene historia.
+    const payments = overview.payments.filter(
+      (payment) => !(cancelled && payment.concept === 'SALDO' && payment.declarations.length === 0),
+    );
+    return payments.map((payment) => {
+      const confirmed = payment.declarations.some((item) => item.declaredBy === 'TRABAJADOR');
+      const suggested = suggestedAmount(payment, overview);
+      return {
+        payment,
+        availability: declarationAvailability(payment, {
+          viewer: this.viewer(),
+          status: overview.orderStatus,
+          visitRegistered: this.workflow().visit !== null,
+          balance: overview.balance.status,
+        }),
+        suggested,
+        confirmed,
+        state: stateLabel(payment, confirmed, cancelled),
+        headline: headlineOf(payment, overview, suggested),
+        visitToCollect: this.visitToCollect(payment),
+      };
+    });
   });
 
   protected readonly success = signal<string | null>(null);
@@ -176,5 +187,39 @@ export class PaymentsSectionComponent {
 
 /** Importe que corresponde declarar: el esperado del concepto o el saldo esperado. */
 function suggestedAmount(payment: Payment, overview: PaymentsOverview): string | null {
-  return payment.concept === 'SALDO' ? overview.balance.amount : payment.expectedAmount;
+  if (payment.concept !== 'SALDO') {
+    return payment.expectedAmount;
+  }
+  // El saldo de un pedido cancelado es el registrado al cancelar, no uno que se vaya a declarar.
+  return overview.orderStatus === 'CANCELADO' ? null : overview.balance.amount;
+}
+
+/**
+ * Importe destacado de la tarjeta. En un pedido cancelado solo el de la visita, que todavía se
+ * puede declarar: los demás son referencias que ya muestra el resumen de la cancelación.
+ */
+function headlineOf(
+  payment: Payment,
+  overview: PaymentsOverview,
+  suggested: string | null,
+): { amount: string; caption: string } | null {
+  if (overview.orderStatus === 'CANCELADO' && payment.concept !== 'VISITA') {
+    return null;
+  }
+  if (payment.expectedAmount !== null) {
+    return { amount: payment.expectedAmount, caption: 'Monto esperado' };
+  }
+  return suggested !== null && overview.balance.status === 'CALCULADO'
+    ? { amount: suggested, caption: 'Saldo esperado (informativo)' }
+    : null;
+}
+
+/** Solo confirma el trabajador; lo declarado sin su confirmación se distingue al cancelar. */
+function stateLabel(payment: Payment, confirmed: boolean, cancelled: boolean): string {
+  if (confirmed) {
+    return 'Confirmado por el trabajador';
+  }
+  return cancelled && payment.declarations.length > 0
+    ? 'Declarado — sin confirmar'
+    : 'Sin confirmación del trabajador';
 }

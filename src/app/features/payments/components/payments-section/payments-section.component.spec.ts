@@ -161,13 +161,102 @@ describe('PaymentsSectionComponent', () => {
     expect(content()).toContain('Todavía no hay constancias');
   });
 
-  it('does not present the figures of a cancelled order as money owed', async () => {
-    await open('CLIENTE', overview({ orderStatus: 'CANCELADO' }));
+  describe('cancelled order', () => {
+    const NOTE = 'Pedido cancelado. Informativo: saldo registrado al cancelar.';
+    const cancelled = (declarations = [declaration()]) =>
+      overview({
+        orderStatus: 'CANCELADO',
+        agreement: { baseAmount: '400.00', acceptedAdditional: '50.00', totalAmount: '450.00' },
+        payments: [
+          payment({ concept: 'ANTICIPO', expectedAmount: '100.00', declarations }),
+          payment({ concept: 'SALDO', expectedAmount: null }),
+        ],
+        balance: {
+          status: 'CALCULADO',
+          amount: '350.00',
+          advanceAmount: '100.00',
+          additionalBudgetsTotal: '50.00',
+          note: NOTE,
+        },
+      });
+    const states = () =>
+      Array.from(root().querySelectorAll('.pay__state'), (item) => item.textContent?.trim());
 
-    expect(content()).toContain('no indican un cobro ni una devolución pendiente');
-    expect(root().querySelector('app-declare-payment-form')).toBeNull();
+    it('shows the balance of the backend without repeating the totals of the summary', async () => {
+      await open('CLIENTE', cancelled());
+
+      expect(content()).toContain('Saldo registrado al cancelarBs 350.00');
+      expect(content()).toContain(NOTE);
+      expect(content()).not.toContain('Saldo esperado');
+      expect(content()).not.toContain('Total actualizado');
+      expect(content()).not.toContain('450.00');
+      expect(root().querySelector('.pay__amount')).toBeNull();
+      expect(root().querySelector('app-declare-payment-form')).toBeNull();
+    });
+
+    it('drops the empty balance card and separates declared from confirmed', async () => {
+      await open('CLIENTE', cancelled());
+
+      expect(states()).toEqual(['Declarado — sin confirmar']);
+      expect(content()).toContain('no se declaran el anticipo ni el saldo');
+    });
+
+    it('says when the worker confirmed the advance', async () => {
+      await open(
+        'CLIENTE',
+        cancelled([declaration({ declaredBy: 'TRABAJADOR', amount: '100.00' })]),
+      );
+
+      expect(states()).toEqual(['Confirmado por el trabajador']);
+    });
+
+    it('still lets the client declare a visit already made', async () => {
+      fixture = TestBed.createComponent(PaymentsSectionComponent);
+      fixture.componentRef.setInput('viewer', 'CLIENTE');
+      fixture.componentRef.setInput(
+        'workflow',
+        workflow('CANCELADO', {
+          visit: { orderId: ORDER_ID, performedAt: '2026-11-21T14:00:00Z', visitCost: '30.00' },
+        }),
+      );
+      fixture.detectChanges();
+      http.expectOne(PAYMENTS).flush({
+        ...cancelled(),
+        payments: [payment({ concept: 'VISITA', expectedAmount: '30.00' })],
+      });
+      http.expectOne(RECEIPTS).flush(receipts());
+      await render();
+
+      expect(content()).toContain('Bs 30.00Monto esperado');
+      expect(root().querySelector('app-declare-payment-form')).not.toBeNull();
+    });
+
+    it.each([
+      'El pedido se canceló sin acuerdo: no hay saldo.',
+      'El pedido se canceló sin resumen económico registrado: no se calcula un saldo.',
+    ])('shows NO_APLICA without an amount: «%s»', async (note) => {
+      await open(
+        'CLIENTE',
+        overview({
+          orderStatus: 'CANCELADO',
+          agreement: null,
+          payments: [],
+          balance: {
+            status: 'NO_APLICA',
+            amount: null,
+            advanceAmount: null,
+            additionalBudgetsTotal: null,
+            note,
+          },
+        }),
+        receipts({ service: null }),
+      );
+
+      expect(content()).toContain(note);
+      expect(content()).not.toContain('Saldo registrado');
+      expect(content()).not.toContain('Bs ');
+    });
   });
-
   it('never offers the client to confirm the collection of the visit', async () => {
     fixture = TestBed.createComponent(PaymentsSectionComponent);
     fixture.componentRef.setInput('viewer', 'CLIENTE');
