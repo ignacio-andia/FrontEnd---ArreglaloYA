@@ -6,6 +6,9 @@
   </p>
 
   <form class="offers__filters" [formGroup]="form" (ngSubmit)="apply()">
+    <label for="audit-actor">Responsable</label>
+    <input id="audit-actor" class="audit__date" type="search" maxlength="100"
+      placeholder="Nombre o correo" formControlName="actorSearch" />
     <label for="audit-entity">Sobre</label>
     <select id="audit-entity" formControlName="entityType">
       <option value="">Todo</option>
@@ -58,6 +61,23 @@
           </p>
           @for (line of entry.lines; track $index) {
             <p>{{ line }}</p>
+          }
+          <p class="offers__muted">{{ entry.actor.email }}</p>
+          @if (entry.operationLabel) { <p><strong>{{ entry.operationLabel }}</strong></p> }
+          @if (entry.changes.length > 0) {
+            <div class="audit__comparison">
+              <table>
+                <caption>Valores registrados</caption>
+                <thead><tr><th scope="col">Campo</th><th scope="col">Antes</th><th scope="col">Después</th></tr></thead>
+                <tbody>
+                  @for (change of entry.changes; track change.field) {
+                    <tr><th scope="row">{{ change.label }}</th><td>{{ change.before }}</td><td>{{ change.after }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="offers__muted">Sin comparación registrada para esta operación.</p>
           }
           @if (entry.path) {
             <a [routerLink]="[entry.path, entry.entityId]">

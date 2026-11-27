@@ -25,8 +25,11 @@ const CAUSE_LABELS: Readonly<Record<string, string>> = {
   SUSPENSION_CUENTA: 'suspensión de la cuenta',
 };
 
-const text = (value: unknown): string | null =>
-  typeof value === 'string' && value !== '' ? value : null;
+const text = (value: unknown): string | null => {
+  if (typeof value === 'boolean') return value ? 'Sí' : 'No';
+  if (Array.isArray(value)) return value.map(String).join(', ');
+  return typeof value === 'string' && value !== '' ? value : null;
+};
 
 const record = (value: unknown): Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
@@ -40,14 +43,19 @@ const status = (value: unknown): string | null => {
  * Detalles de una entrada como frases. Solo muestra los datos legibles que documenta el
  * contrato; los identificadores internos se omiten.
  */
-export function describeAuditDetails({ details }: Pick<AuditLog, 'details'>): string[] {
+export function describeAuditDetails(
+  { details }: Pick<AuditLog, 'details'>,
+  omitComparedFields = false,
+): string[] {
   if (details === null) {
     return [];
   }
   const lines: string[] = [];
 
   const before = record(details['before']);
-  for (const [key, value] of Object.entries(record(details['after']))) {
+  const after = record(details['after']);
+  for (const [key, value] of Object.entries(after)) {
+    if (omitComparedFields) continue;
     const label = FIELD_LABELS[key] ?? key;
     lines.push(`${label}: ${text(before[key]) ?? 'sin dato'} → ${text(value) ?? 'sin dato'}`);
   }
@@ -59,6 +67,7 @@ export function describeAuditDetails({ details }: Pick<AuditLog, 'details'>): st
   }
 
   for (const [key, label] of Object.entries(FIELD_LABELS)) {
+    if (omitComparedFields && (key in before || key in after)) continue;
     const value = text(details[key]);
     if (value !== null) {
       lines.push(`${label}: ${value}`);

@@ -18,6 +18,7 @@ import {
   AuditLog,
 } from '../../models/audit-log.model';
 import { AuditApiService } from '../../services/audit-api.service';
+import { auditChanges } from '../../utils/audit-changes';
 import { describeAuditDetails } from '../../utils/audit-details';
 
 export const AUDIT_PAGE_SIZE = 20;
@@ -69,6 +70,7 @@ export class AuditLogPageComponent {
     return {
       entityType: AUDIT_ENTITY_TYPES.find((type) => type === params.get('entidad')) ?? '',
       action: AUDIT_ACTIONS.find((action) => action === params.get('accion')) ?? '',
+      actorSearch: (params.get('responsable') ?? '').slice(0, 100).trim(),
       from: date('desde'),
       to: date('hasta'),
     } as const;
@@ -85,6 +87,7 @@ export class AuditLogPageComponent {
     params: () => ({ ...this.filtersFromUrl(), page: this.page() }),
     stream: ({ params }) =>
       this.auditApi.list({
+        actorSearch: params.actorSearch || undefined,
         entityType: params.entityType || undefined,
         action: params.action || undefined,
         from: params.from ? dayBounds(params.from).start : undefined,
@@ -98,7 +101,14 @@ export class AuditLogPageComponent {
     this.logs.hasValue()
       ? this.logs.value().data.map((entry) => ({
           ...entry,
-          lines: describeAuditDetails(entry),
+          lines: describeAuditDetails(entry, true),
+          changes: auditChanges(entry.details),
+          operationLabel: ({
+            ASIGNACION_ROL: 'Asignación de rol',
+            REVOCACION_ROL: 'Revocación de rol',
+            EDICION_CUENTA: 'Edición administrativa de cuenta',
+            REASIGNACION_ZONA: 'Reasignación de zona',
+          } as Record<string, string>)[String(entry.details?.['operation'] ?? '')],
           path: ENTITY_PATHS[entry.entityType],
         }))
       : [],
@@ -109,6 +119,7 @@ export class AuditLogPageComponent {
   });
 
   protected readonly form = inject(NonNullableFormBuilder).group({
+    actorSearch: '',
     entityType: '',
     action: '',
     from: '',
@@ -121,13 +132,14 @@ export class AuditLogPageComponent {
   }
 
   protected apply(): void {
-    const { entityType, action, from, to } = this.form.getRawValue();
+    const { entityType, action, from, to, actorSearch } = this.form.getRawValue();
     if (from !== '' && to !== '' && from > to) {
       this.rangeError.set(RANGE_ERROR);
       return;
     }
     this.rangeError.set(null);
     this.navigate({
+      responsable: actorSearch.trim() || null,
       entidad: entityType || null,
       accion: action || null,
       desde: from || null,
