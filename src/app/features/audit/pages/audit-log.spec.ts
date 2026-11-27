@@ -96,6 +96,15 @@ describe('audit log', () => {
     expect(view.content()).toContain('Admin Pruebas');
   });
 
+  it('avoids repeating comparison fields while preserving contextual details', () => {
+    expect(describeAuditDetails({ details: {
+      name: 'Gas', before: null, after: { name: 'Gas', isActive: true },
+    } }, true)).toEqual([]);
+    expect(describeAuditDetails({ details: {
+      name: 'Gas', before: { isActive: true }, after: { isActive: false },
+    } }, true)).toEqual(['Nombre: Gas']);
+  });
+
   it('describes catalog, document and claim details without internal identifiers', () => {
     expect(
       describeAuditDetails({

@@ -58,6 +58,7 @@ export interface AuditLog {
 }
 
 export interface AuditLogsQuery extends PageQuery {
+  actorSearch?: string;
   entityType?: AuditEntityType;
   action?: AuditAction;
   /** ISO 8601, inclusivo. */
