@@ -20,6 +20,16 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   description: 'Descripción',
 };
 
+/** Campos numéricos de los criterios de recomendación (`before`/`after`). */
+const SETTINGS_LABELS: Readonly<Record<string, string>> = {
+  reputationWeight: 'Peso de la reputación (%)',
+  completedServicesWeight: 'Peso de los servicios completados (%)',
+  availabilityWeight: 'Peso de la disponibilidad (%)',
+  reviewsForConfidence: 'Calificaciones neutras',
+  completedServicesTarget: 'Servicios para el 100 %',
+  availabilityHoursTarget: 'Horas libres para el 100 %',
+};
+
 const CAUSE_LABELS: Readonly<Record<string, string>> = {
   SUSPENSION_PERFIL: 'suspensión del perfil',
   SUSPENSION_CUENTA: 'suspensión de la cuenta',
@@ -27,6 +37,9 @@ const CAUSE_LABELS: Readonly<Record<string, string>> = {
 
 const text = (value: unknown): string | null =>
   typeof value === 'string' && value !== '' ? value : null;
+
+const shown = (value: unknown): string | null =>
+  typeof value === 'number' ? String(value) : text(value);
 
 const record = (value: unknown): Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
@@ -47,9 +60,22 @@ export function describeAuditDetails({ details }: Pick<AuditLog, 'details'>): st
   const lines: string[] = [];
 
   const before = record(details['before']);
-  for (const [key, value] of Object.entries(record(details['after']))) {
-    const label = FIELD_LABELS[key] ?? key;
-    lines.push(`${label}: ${text(before[key]) ?? 'sin dato'} → ${text(value) ?? 'sin dato'}`);
+  if (typeof details['version'] === 'number') {
+    const previous = details['previousVersion'];
+    lines.push(
+      typeof previous === 'number'
+        ? `Versión: ${previous} → ${details['version']}`
+        : `Versión: ${details['version']}`,
+    );
+  }
+  // Solo los campos que cambiaron; los criterios de recomendación, en el orden del formulario.
+  const settingsOrder = Object.keys(SETTINGS_LABELS);
+  const changes = Object.entries(record(details['after']))
+    .filter(([key, value]) => shown(before[key]) !== shown(value))
+    .sort(([a], [b]) => settingsOrder.indexOf(a) - settingsOrder.indexOf(b));
+  for (const [key, value] of changes) {
+    const label = FIELD_LABELS[key] ?? SETTINGS_LABELS[key] ?? key;
+    lines.push(`${label}: ${shown(before[key]) ?? 'sin dato'} → ${shown(value) ?? 'sin dato'}`);
   }
 
   const from = status(details['from'] ?? details['fromStatus']);

@@ -1,3 +1,4 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { User } from '../../../core/auth/auth.models';
 import { CatalogOption } from '../../catalogs/models/catalog.model';
 import { OwnerOrder } from '../models/order.model';
@@ -84,4 +85,34 @@ export function stubObjectUrls(): { created: string[]; revoked: string[] } {
     revokeObjectURL: (url: string) => revoked.push(url),
   });
   return { created, revoked };
+}
+
+/**
+ * El detalle del pedido consulta sus recomendaciones de trabajadores
+ * (`GET /orders/:orderId/recommendations`): las pruebas que no tratan de eso las responden vacías
+ * antes de `verify()`.
+ */
+export function flushRecommendations(httpTesting: HttpTestingController): void {
+  httpTesting
+    .match((request) => request.method === 'GET' && request.url.endsWith('/recommendations'))
+    .filter((request) => !request.cancelled)
+    .forEach((request) => request.flush([]));
+}
+
+/**
+ * Espera la consulta de recomendaciones que hace el detalle al mostrarse y la responde vacía: con
+ * una petición pendiente la aplicación no queda estable (`whenStable`).
+ */
+export async function answerRecommendations(httpTesting: HttpTestingController): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const found = httpTesting.match(
+      (request) => request.method === 'GET' && request.url.endsWith('/recommendations'),
+    );
+    if (found.length > 0) {
+      found.forEach((request) => request.flush([]));
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error('El detalle no consultó sus recomendaciones');
 }

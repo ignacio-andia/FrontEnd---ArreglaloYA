@@ -1,0 +1,247 @@
+<section class="offers" aria-labelledby="settings-title">
+  <h1 id="settings-title" class="offers__title">Criterios de recomendación</h1>
+  <p class="offers__intro">
+    Definen cómo se recomiendan trabajadores a los clientes para cada pedido. Al guardar se crea una
+    versión nueva: las recomendaciones ya generadas conservan la versión con la que se calcularon, y
+    el cambio queda registrado en la bitácora.
+  </p>
+
+  @if (settings.isLoading() && !settings.hasValue()) {
+    <app-loading-state message="Cargando los criterios…" />
+  } @else if (loadError(); as message) {
+    <app-error-alert [message]="message" (retry)="settings.reload()" />
+  } @else if (current(); as current) {
+    <p class="offers__muted">
+      Versión vigente: {{ current.version }}, del
+      {{ current.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }},
+      @if (current.createdBy; as author) {
+        guardada por {{ author.firstName }} {{ author.lastName }}.
+      } @else {
+        configuración inicial.
+      }
+    </p>
+
+    <form class="offers__card settings__form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <fieldset class="settings__group">
+        <legend class="offers__subtitle">Pesos de cada criterio (deben sumar 100)</legend>
+        <div class="field settings__field">
+          <label class="field__label" for="settings-reputationWeight">Reputación (%)</label>
+          <input
+            id="settings-reputationWeight"
+            class="field__input"
+            type="number"
+            inputmode="numeric"
+            [min]="limits.reputationWeight.min"
+            [max]="limits.reputationWeight.max"
+            step="1"
+            formControlName="reputationWeight"
+            required
+            [attr.aria-invalid]="errorFor('reputationWeight') || sumError() ? 'true' : null"
+            [attr.aria-describedby]="describedBy('reputationWeight')"
+          />
+          <p id="settings-reputationWeight-hint" class="field__hint">
+            Promedio de las calificaciones visibles de los clientes.
+          </p>
+          @if (errorFor('reputationWeight'); as message) {
+            <p id="settings-reputationWeight-error" class="field__error">{{ message }}</p>
+          }
+        </div>
+        <div class="field settings__field">
+          <label class="field__label" for="settings-completedServicesWeight"
+            >Servicios completados (%)</label
+          >
+          <input
+            id="settings-completedServicesWeight"
+            class="field__input"
+            type="number"
+            inputmode="numeric"
+            [min]="limits.completedServicesWeight.min"
+            [max]="limits.completedServicesWeight.max"
+            step="1"
+            formControlName="completedServicesWeight"
+            required
+            [attr.aria-invalid]="errorFor('completedServicesWeight') || sumError() ? 'true' : null"
+            [attr.aria-describedby]="describedBy('completedServicesWeight')"
+          />
+          <p id="settings-completedServicesWeight-hint" class="field__hint">
+            Trabajos terminados por el trabajador.
+          </p>
+          @if (errorFor('completedServicesWeight'); as message) {
+            <p id="settings-completedServicesWeight-error" class="field__error">{{ message }}</p>
+          }
+        </div>
+        <div class="field settings__field">
+          <label class="field__label" for="settings-availabilityWeight">Disponibilidad (%)</label>
+          <input
+            id="settings-availabilityWeight"
+            class="field__input"
+            type="number"
+            inputmode="numeric"
+            [min]="limits.availabilityWeight.min"
+            [max]="limits.availabilityWeight.max"
+            step="1"
+            formControlName="availabilityWeight"
+            required
+            [attr.aria-invalid]="errorFor('availabilityWeight') || sumError() ? 'true' : null"
+            [attr.aria-describedby]="describedBy('availabilityWeight')"
+          />
+          <p id="settings-availabilityWeight-hint" class="field__hint">
+            Horas libres en los próximos 7 días (horario de atención menos trabajos acordados).
+          </p>
+          @if (errorFor('availabilityWeight'); as message) {
+            <p id="settings-availabilityWeight-error" class="field__error">{{ message }}</p>
+          }
+        </div>
+        <p class="settings__sum" aria-live="polite">
+          Suma de los pesos: <strong>{{ weightsTotal() }} %</strong>
+        </p>
+        @if (sumError()) {
+          <p id="settings-sum-error" class="field__error">
+            Los pesos deben sumar exactamente 100 (ahora suman {{ weightsTotal() }}).
+          </p>
+        }
+      </fieldset>
+
+      <fieldset class="settings__group">
+        <legend class="offers__subtitle">Cómo se calcula cada puntaje</legend>
+        <div class="field settings__field">
+          <label class="field__label" for="settings-reviewsForConfidence"
+            >Calificaciones neutras</label
+          >
+          <input
+            id="settings-reviewsForConfidence"
+            class="field__input"
+            type="number"
+            inputmode="numeric"
+            [min]="limits.reviewsForConfidence.min"
+            [max]="limits.reviewsForConfidence.max"
+            step="1"
+            formControlName="reviewsForConfidence"
+            required
+            [attr.aria-invalid]="errorFor('reviewsForConfidence') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('reviewsForConfidence')"
+          />
+          <p id="settings-reviewsForConfidence-hint" class="field__hint">
+            Entre 0 y 50. Se suman al promedio con 3 estrellas: con más, una sola calificación alta
+            pesa menos.
+          </p>
+          @if (errorFor('reviewsForConfidence'); as message) {
+            <p id="settings-reviewsForConfidence-error" class="field__error">{{ message }}</p>
+          }
+        </div>
+        <div class="field settings__field">
+          <label class="field__label" for="settings-completedServicesTarget"
+            >Servicios para el 100 %</label
+          >
+          <input
+            id="settings-completedServicesTarget"
+            class="field__input"
+            type="number"
+            inputmode="numeric"
+            [min]="limits.completedServicesTarget.min"
+            [max]="limits.completedServicesTarget.max"
+            step="1"
+            formControlName="completedServicesTarget"
+            required
+            [attr.aria-invalid]="errorFor('completedServicesTarget') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('completedServicesTarget')"
+          />
+          <p id="settings-completedServicesTarget-hint" class="field__hint">
+            Servicios completados con los que el criterio llega al 100 %. Entre 1 y 1000.
+          </p>
+          @if (errorFor('completedServicesTarget'); as message) {
+            <p id="settings-completedServicesTarget-error" class="field__error">{{ message }}</p>
+          }
+        </div>
+        <div class="field settings__field">
+          <label class="field__label" for="settings-availabilityHoursTarget"
+            >Horas libres para el 100 %</label
+          >
+          <input
+            id="settings-availabilityHoursTarget"
+            class="field__input"
+            type="number"
+            inputmode="numeric"
+            [min]="limits.availabilityHoursTarget.min"
+            [max]="limits.availabilityHoursTarget.max"
+            step="1"
+            formControlName="availabilityHoursTarget"
+            required
+            [attr.aria-invalid]="errorFor('availabilityHoursTarget') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('availabilityHoursTarget')"
+          />
+          <p id="settings-availabilityHoursTarget-hint" class="field__hint">
+            Horas libres en 7 días con las que el criterio llega al 100 %. Entre 1 y 168.
+          </p>
+          @if (errorFor('availabilityHoursTarget'); as message) {
+            <p id="settings-availabilityHoursTarget-error" class="field__error">{{ message }}</p>
+          }
+        </div>
+      </fieldset>
+
+      @if (saveErrors().length > 0) {
+        <div id="settings-save-error" class="form-alert" role="alert" tabindex="-1">
+          @for (message of saveErrors(); track $index) {
+            <p>{{ message }}</p>
+          }
+        </div>
+      }
+      @if (savedVersion(); as version) {
+        <p id="settings-saved" class="form-notice" role="status" tabindex="-1">
+          Se guardó la versión {{ version }}. Las próximas recomendaciones la usarán.
+        </p>
+      }
+
+      <div class="offers__actions">
+        <button type="submit" class="offers__primary" [disabled]="saving()">
+          {{ saving() ? 'Guardando…' : 'Guardar como versión nueva' }}
+        </button>
+        <button type="button" class="offers__secondary" [disabled]="saving()" (click)="restore()">
+          Deshacer cambios
+        </button>
+      </div>
+    </form>
+
+    <section class="offers__card" aria-labelledby="settings-history-title">
+      <h2 id="settings-history-title" class="offers__subtitle">Historial de versiones</h2>
+      <div class="settings__scroll" role="region" aria-label="Historial de versiones" tabindex="0">
+        <table class="settings__table">
+          <thead>
+            <tr>
+              <th scope="col">Versión</th>
+              <th scope="col">Reputación</th>
+              <th scope="col">Servicios</th>
+              <th scope="col">Disponibilidad</th>
+              <th scope="col">Calif. neutras</th>
+              <th scope="col">Servicios al 100 %</th>
+              <th scope="col">Horas al 100 %</th>
+              <th scope="col">Autor</th>
+              <th scope="col">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (version of history(); track version.id) {
+              <tr>
+                <th scope="row">{{ version.version }}</th>
+                <td>{{ version.reputationWeight }} %</td>
+                <td>{{ version.completedServicesWeight }} %</td>
+                <td>{{ version.availabilityWeight }} %</td>
+                <td>{{ version.reviewsForConfidence }}</td>
+                <td>{{ version.completedServicesTarget }}</td>
+                <td>{{ version.availabilityHoursTarget }} h</td>
+                <td>
+                  @if (version.createdBy; as author) {
+                    {{ author.firstName }} {{ author.lastName }}
+                  } @else {
+                    Configuración inicial
+                  }
+                </td>
+                <td>{{ version.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</section>

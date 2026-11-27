@@ -7,7 +7,7 @@ import { apiUrl } from '../../../../core/http/api-url';
 import { apiErrorInterceptor } from '../../../../core/interceptors/api-error.interceptor';
 import { OwnerOrder } from '../../models/order.model';
 import { MY_ORDERS_ROUTES } from '../../orders.routes';
-import { ownerOrder } from '../../testing/order.fixtures';
+import { ownerOrder, flushRecommendations } from '../../testing/order.fixtures';
 import { OrderDetailPageComponent } from './order-detail-page.component';
 
 const ORDER = ownerOrder({ images: [] });
@@ -39,7 +39,10 @@ describe('OrderDetailPageComponent (acciones)', () => {
     harness = await RouterTestingHarness.create();
   });
 
-  afterEach(() => httpTesting.verify());
+  afterEach(() => {
+    flushRecommendations(httpTesting);
+    httpTesting.verify();
+  });
 
   const element = () => harness.routeNativeElement as HTMLElement;
   const text = () => element().textContent?.replace(/\s+/g, ' ') ?? '';

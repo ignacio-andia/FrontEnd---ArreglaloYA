@@ -23,6 +23,7 @@ export class AdminLayoutComponent {
     { label: 'Categorías', path: '/admin/categorias' },
     { label: 'Zonas', path: '/admin/zonas' },
     { label: 'Usuarios', path: null },
+    { label: 'Recomendaciones', path: '/admin/recomendaciones' },
     { label: 'Bitácora', path: '/admin/bitacora' },
     { label: 'Reportes', path: '/admin/reportes' },
     { label: 'Mi cuenta', path: '/admin/mi-cuenta' },

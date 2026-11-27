@@ -13,7 +13,13 @@ import { apiErrorInterceptor } from '../../../../core/interceptors/api-error.int
 import { authInterceptor } from '../../../../core/interceptors/auth.interceptor';
 import { OrderImage, OwnerOrder } from '../../models/order.model';
 import { MY_ORDERS_ROUTES } from '../../orders.routes';
-import { CLIENT, ownerOrder, stubObjectUrls } from '../../testing/order.fixtures';
+import {
+  CLIENT,
+  ownerOrder,
+  stubObjectUrls,
+  answerRecommendations,
+  flushRecommendations,
+} from '../../testing/order.fixtures';
 import { OrderDetailPageComponent } from './order-detail-page.component';
 
 const ORDER = ownerOrder();
@@ -54,6 +60,7 @@ describe('OrderDetailPageComponent', () => {
   });
 
   afterEach(() => {
+    flushRecommendations(httpTesting);
     httpTesting.verify();
     sessionStorage.clear();
   });
@@ -71,6 +78,7 @@ describe('OrderDetailPageComponent', () => {
     (await vi.waitFor(() => httpTesting.expectOne(apiUrl('orders', 'me', id)))).flush(response);
     await navigation;
     harness.detectChanges();
+    await answerRecommendations(httpTesting);
   }
 
   /** Responde las descargas de fotos pendientes y devuelve sus peticiones. */
@@ -201,6 +209,7 @@ describe('OrderDetailPageComponent', () => {
     element().querySelector<HTMLButtonElement>('[role="alert"] button')?.click();
     (await vi.waitFor(() => httpTesting.expectOne(DETAIL_URL))).flush(ORDER);
     harness.detectChanges();
+    await answerRecommendations(httpTesting);
     await flushImages();
 
     expect(element().querySelector('h1')?.textContent?.trim()).toBe('Plomería');

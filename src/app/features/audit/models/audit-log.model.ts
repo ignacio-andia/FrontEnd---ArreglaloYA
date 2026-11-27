@@ -34,6 +34,7 @@ export const AUDIT_ENTITY_TYPES = [
   'SOLICITUD_CAMBIO_ZONA',
   'RECLAMO',
   'USUARIO',
+  'CONFIGURACION_RECOMENDACION',
 ] as const;
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
 
@@ -44,6 +45,7 @@ export const AUDIT_ENTITY_LABELS: Readonly<Record<AuditEntityType, string>> = {
   SOLICITUD_CAMBIO_ZONA: 'Solicitud de cambio de zona',
   RECLAMO: 'Reclamo',
   USUARIO: 'Cuenta',
+  CONFIGURACION_RECOMENDACION: 'Criterios de recomendación',
 };
 
 /** Entrada de `GET /audit-logs` (`AuditLog`). La forma de `details` depende de la acción. */

@@ -14,7 +14,13 @@ import { authInterceptor } from '../../../../core/interceptors/auth.interceptor'
 import { PaginatedResponse } from '../../../../core/models/pagination.model';
 import { OwnerOrder } from '../../models/order.model';
 import { MY_ORDERS_ROUTES } from '../../orders.routes';
-import { CLIENT, ownerOrder, stubObjectUrls } from '../../testing/order.fixtures';
+import {
+  CLIENT,
+  ownerOrder,
+  stubObjectUrls,
+  answerRecommendations,
+  flushRecommendations,
+} from '../../testing/order.fixtures';
 import { OrderDetailPageComponent } from '../order-detail-page/order-detail-page.component';
 import { MyOrdersPageComponent } from './my-orders-page.component';
 
@@ -64,6 +70,7 @@ describe('MyOrdersPageComponent', () => {
   });
 
   afterEach(() => {
+    flushRecommendations(httpTesting);
     httpTesting.verify();
     sessionStorage.clear();
   });
@@ -257,6 +264,7 @@ describe('MyOrdersPageComponent', () => {
     element().querySelector<HTMLAnchorElement>('.card__link')?.click();
     const detail = await vi.waitFor(() => httpTesting.expectOne(apiUrl('orders', 'me', target.id)));
     detail.flush(target);
+    await answerRecommendations(httpTesting);
     await settle();
 
     expect(currentUrl()).toBe(`/cliente/mis-pedidos/${target.id}`);
