@@ -11,8 +11,8 @@ const CANCEL_ERROR = 'No se pudo cancelar el pedido. Inténtelo de nuevo más ta
 
 /**
  * Cancelación de un pedido sin acuerdo (`POST /orders/me/:orderId/cancel`), con motivo
- * obligatorio y confirmación. Se muestra solo cuando el backend indica `canCancel`. Cancelar un trabajo ya
- * acordado es otra operación y no está aquí.
+ * obligatorio y confirmación. Se muestra solo cuando el backend indica `canCancel`. Cancelar un
+ * trabajo ya acordado es otra operación y no está aquí.
  */
 @Component({
   selector: 'app-cancel-order',

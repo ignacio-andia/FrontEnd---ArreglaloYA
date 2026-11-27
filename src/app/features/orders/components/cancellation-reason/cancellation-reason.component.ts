@@ -5,8 +5,9 @@ import { SERVER_FIELD_MESSAGE, setServerError } from '../../../../shared/utils/s
 import { trimmedMaxLength, trimmedRequired } from '../../../../shared/validators/text.validators';
 import { ORDER_CANCEL_REASON_MAX_LENGTH } from '../../validators/order.validators';
 
-const REQUIRED_ERROR = 'Indique el motivo de la cancelación.';
-const LENGTH_ERROR = `El motivo admite hasta ${ORDER_CANCEL_REASON_MAX_LENGTH} caracteres.`;
+// Cortos: ocupan una línea también en móvil, como la ayuda a la que sustituyen.
+const REQUIRED_ERROR = 'Indique el motivo.';
+const LENGTH_ERROR = `Máximo ${ORDER_CANCEL_REASON_MAX_LENGTH} caracteres.`;
 
 /**
  * Motivo de una cancelación, para las dos operaciones (#51 y #90): obligatorio, de 1 a 500
@@ -50,11 +51,15 @@ const LENGTH_ERROR = `El motivo admite hasta ${ORDER_CANCEL_REASON_MAX_LENGTH} c
       display: block;
     }
 
+    // El texto y el contador comparten línea también en móvil, para que la altura no cambie.
     .reason__help {
       display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
       gap: tokens.$space-2;
+
+      span:last-child {
+        white-space: nowrap;
+      }
     }
   `,
 })

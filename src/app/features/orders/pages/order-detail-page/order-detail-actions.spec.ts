@@ -149,9 +149,9 @@ describe('OrderDetailPageComponent (acciones)', () => {
   });
 
   it.each([
-    ['', 'Indique el motivo de la cancelación.'],
-    ['   ', 'Indique el motivo de la cancelación.'],
-    ['a'.repeat(501), 'El motivo admite hasta 500 caracteres.'],
+    ['', 'Indique el motivo.'],
+    ['   ', 'Indique el motivo.'],
+    ['a'.repeat(501), 'Máximo 500 caracteres.'],
   ])('does not send the reason «%s»', async (reason, message) => {
     await open();
     send(reason);
