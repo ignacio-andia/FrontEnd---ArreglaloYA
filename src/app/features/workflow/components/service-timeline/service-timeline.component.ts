@@ -13,16 +13,8 @@ import { ErrorAlertComponent } from '../../../../shared/components/error-alert/e
 import { DISPLAY_TIMEZONE } from '../../../../shared/utils/display-timezone';
 import { OFFER_REASON_LABELS, OfferParty } from '../../../offers/models/offer.model';
 import { ORDER_STATUS_LABELS, isOrderStatus } from '../../../orders/models/order.model';
-import { TimelineActor, TimelineEvent } from '../../models/timeline.model';
-
-type Author = 'worker' | 'client' | 'admin' | 'system';
-
-const AUTHOR_LABELS: Readonly<Record<Author, string>> = {
-  worker: 'Trabajador',
-  client: 'Cliente',
-  admin: 'Administrador',
-  system: 'Sistema',
-};
+import { TimelineEvent } from '../../models/timeline.model';
+import { authorLabel, authorOf } from '../../utils/timeline-actor';
 
 const METHOD_LABELS: Readonly<Partial<Record<string, string>>> = {
   EFECTIVO: 'Efectivo',
@@ -55,19 +47,14 @@ export class ServiceTimelineComponent {
   private readonly shownBefore = signal<number | null>(null);
 
   protected readonly entries = computed(() =>
-    this.events().map((event) => {
-      const author = authorOf(event.actor);
-      const viewer = this.viewer();
-      const own = viewer !== null && author === (viewer === 'CLIENTE' ? 'client' : 'worker');
-      return {
-        key: `${event.source}:${event.id}:${event.type}`,
-        event,
-        author,
-        who: own ? `${AUTHOR_LABELS[author]} (usted)` : AUTHOR_LABELS[author],
-        status: relatedStatus(event),
-        details: describe(event),
-      };
-    }),
+    this.events().map((event) => ({
+      key: `${event.source}:${event.id}:${event.type}`,
+      event,
+      author: authorOf(event.actor),
+      who: authorLabel(event.actor, this.viewer()),
+      status: relatedStatus(event),
+      details: describe(event),
+    })),
   );
 
   constructor() {
@@ -85,22 +72,6 @@ export class ServiceTimelineComponent {
   protected more(): void {
     this.shownBefore.set(this.entries().length);
     this.loadMore.emit();
-  }
-}
-
-function authorOf(actor: TimelineActor): Author {
-  if (actor.type === 'SISTEMA') {
-    return 'system';
-  }
-  switch (actor.role) {
-    case 'TRABAJADOR':
-      return 'worker';
-    case 'CLIENTE':
-      return 'client';
-    case 'ADMINISTRADOR':
-      return 'admin';
-    default:
-      return 'system';
   }
 }
 

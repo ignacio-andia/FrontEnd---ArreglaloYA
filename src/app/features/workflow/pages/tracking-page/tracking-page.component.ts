@@ -20,6 +20,7 @@ import {
 import { AdditionalBudgetListComponent } from '../../components/additional-budget-list/additional-budget-list.component';
 import { ClientActionsComponent } from '../../components/client-actions/client-actions.component';
 import { ConformityPanelComponent } from '../../components/conformity-panel/conformity-panel.component';
+import { CancellationRecordComponent } from '../../components/cancellation-record/cancellation-record.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
 import {
@@ -39,6 +40,7 @@ const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
     RouterLink,
     ActionNoticeComponent,
     AdditionalBudgetListComponent,
+    CancellationRecordComponent,
     CancellationSummaryComponent,
     ClaimFormComponent,
     ClientActionsComponent,

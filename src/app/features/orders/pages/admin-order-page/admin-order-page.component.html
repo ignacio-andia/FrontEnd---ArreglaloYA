@@ -71,6 +71,7 @@
     </section>
 
     @if (detail.status === 'CANCELADO') {
+      <app-cancellation-record [viewer]="null" />
       <app-cancellation-summary [viewer]="null" [orderId]="detail.id" [version]="detail" />
     }
 

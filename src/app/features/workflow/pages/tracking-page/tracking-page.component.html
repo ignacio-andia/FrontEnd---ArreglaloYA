@@ -28,6 +28,7 @@
     <app-work-summary [workflow]="current" />
 
     @if (current.status === 'CANCELADO') {
+      <app-cancellation-record viewer="CLIENTE" />
       <app-cancellation-summary viewer="CLIENTE" [orderId]="current.orderId" [version]="current" />
     }
 

@@ -22,6 +22,7 @@ import {
 } from '../../components/action-notice/action-notice.component';
 import { AdditionalBudgetFormComponent } from '../../components/additional-budget-form/additional-budget-form.component';
 import { AdditionalBudgetListComponent } from '../../components/additional-budget-list/additional-budget-list.component';
+import { CancellationRecordComponent } from '../../components/cancellation-record/cancellation-record.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
 import { WorkerActionsComponent } from '../../components/worker-actions/worker-actions.component';
@@ -51,6 +52,7 @@ const ELIGIBILITY_ERROR = 'No se pudo comprobar su perfil de trabajador.';
     AdditionalBudgetFormComponent,
     AdditionalBudgetListComponent,
     AssignedOrderComponent,
+    CancellationRecordComponent,
     CancellationSummaryComponent,
     EmptyStateComponent,
     ClaimPanelComponent,

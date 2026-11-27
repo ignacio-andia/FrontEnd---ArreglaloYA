@@ -21,3 +21,8 @@ export interface TimelinePage {
   /** Opaco: se devuelve tal cual para pedir la página siguiente. */
   nextCursor: string | null;
 }
+
+/** El acontecimiento que registra la cancelación: autor, fecha, estado anterior y motivo. */
+export function isCancellation(event: TimelineEvent): boolean {
+  return event.source === 'orders' && event.type === 'PEDIDO_CANCELADO';
+}
