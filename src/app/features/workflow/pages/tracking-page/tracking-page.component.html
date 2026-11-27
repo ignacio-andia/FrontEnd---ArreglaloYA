@@ -3,7 +3,7 @@
     <span aria-hidden="true">←</span> Volver al pedido
   </a>
 
-  <app-action-notice [notice]="notice()" />
+  <app-action-notice [notice]="shownNotice()" />
 
   @if (store.workflow.isLoading() && !store.current()) {
     <h1 id="tracking-title" class="offers__title">Seguimiento</h1>
@@ -26,6 +26,16 @@
     </div>
 
     <app-work-summary [workflow]="current" />
+
+    @if (current.status === 'CANCELADO') {
+      <app-cancellation-record viewer="CLIENTE" />
+      <app-cancellation-summary
+        viewer="CLIENTE"
+        [orderId]="current.orderId"
+        [version]="current"
+        [alongsidePayments]="paymentsShown()"
+      />
+    }
 
     <app-claim-panel viewer="CLIENTE" [workflow]="current" />
 
@@ -78,12 +88,17 @@
       }
     </section>
 
-    <app-payments-section [workflow]="current" viewer="CLIENTE" (changed)="store.refresh()" />
+    <app-payments-section
+      [workflow]="current"
+      [alongsideSummary]="summaryShown()"
+      viewer="CLIENTE"
+      (changed)="store.refresh()"
+    />
 
     @if (canCancelWork()) {
       <app-client-actions
         [workflow]="current"
-        [refreshing]="store.workflow.isLoading()"
+        [refreshing]="store.workflow.isLoading() || unverified()"
         (cancelled)="onWorkCancelled()"
         (reported)="onNoShowReported($event)"
         (failed)="onActionFailed($event)"

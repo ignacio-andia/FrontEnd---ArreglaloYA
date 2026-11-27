@@ -22,6 +22,16 @@
 
     <app-work-summary [workflow]="current" />
 
+    @if (current.status === 'CANCELADO') {
+      <app-cancellation-record viewer="TRABAJADOR" />
+      <app-cancellation-summary
+        viewer="TRABAJADOR"
+        [orderId]="current.orderId"
+        [version]="current"
+        [alongsidePayments]="paymentsShown()"
+      />
+    }
+
     <app-claim-panel viewer="TRABAJADOR" [workflow]="current" />
 
     @if (hasWorkerStep()) {
@@ -104,6 +114,7 @@
     <app-payments-section
       viewer="TRABAJADOR"
       [workflow]="current"
+      [alongsideSummary]="summaryShown()"
       [clearance]="clearance()"
       (changed)="store.refresh()"
       (retryClearance)="reloadEligibility()"

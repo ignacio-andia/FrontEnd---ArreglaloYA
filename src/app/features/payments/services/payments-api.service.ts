@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { apiUrl } from '../../../core/http/api-url';
+import { CancellationSummary } from '../models/cancellation-summary.model';
 import {
   DeclarationResult,
   DeclarePaymentRequest,
@@ -21,6 +22,14 @@ export class PaymentsApiService {
   /** `GET /orders/:orderId/payments`. */
   getOverview(orderId: string): Observable<PaymentsOverview> {
     return this.http.get<PaymentsOverview>(apiUrl('orders', orderId, 'payments'));
+  }
+
+  /**
+   * `GET /orders/:orderId/cancellation-summary`: partes y administrador. 404 si no hay resumen o
+   * no hay acceso; 409 si el pedido no está cancelado.
+   */
+  getCancellationSummary(orderId: string): Observable<CancellationSummary> {
+    return this.http.get<CancellationSummary>(apiUrl('orders', orderId, 'cancellation-summary'));
   }
 
   /** `GET /orders/:orderId/receipts`. */

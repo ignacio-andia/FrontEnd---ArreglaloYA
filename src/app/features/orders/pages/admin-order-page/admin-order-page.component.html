@@ -70,6 +70,11 @@
       </dl>
     </section>
 
+    @if (detail.status === 'CANCELADO') {
+      <app-cancellation-record [viewer]="null" />
+      <app-cancellation-summary [viewer]="null" [orderId]="detail.id" [version]="detail" />
+    }
+
     <section class="offers__card" aria-labelledby="admin-order-receipts-title">
       <h2 id="admin-order-receipts-title" class="offers__subtitle">Constancias</h2>
       @if (receipts.isLoading() && !receipts.hasValue()) {

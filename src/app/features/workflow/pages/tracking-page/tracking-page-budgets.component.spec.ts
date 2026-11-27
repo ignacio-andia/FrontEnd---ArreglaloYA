@@ -6,10 +6,15 @@ import { ORDER_ID, page, received, setupOfferPage } from '../../../offers/testin
 import { OrderStatus } from '../../../orders/models/order.model';
 import { MY_ORDERS_ROUTES } from '../../../orders/orders.routes';
 import { ownerOrder } from '../../../orders/testing/order.fixtures';
-import { overview, receipts } from '../../../payments/testing/payments.fixtures';
+import {
+  cancellationSummary,
+  overview,
+  receipts,
+} from '../../../payments/testing/payments.fixtures';
 import { AdditionalBudget } from '../../models/workflow.model';
 import { event, timeline, workflow } from '../../testing/workflow.fixtures';
 
+const SUMMARY = `orders/${ORDER_ID}/cancellation-summary`;
 const ACCEPTED = received({ status: 'ACEPTADA' });
 const BUDGET: AdditionalBudget = {
   id: 'b1',
@@ -60,6 +65,9 @@ describe('TrackingPageComponent: additional budgets', () => {
     await view.answer('offers/received', page([ACCEPTED]));
     await view.answer(PAYMENTS, overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    if (status === 'CANCELADO') {
+      await view.answer(SUMMARY, cancellationSummary());
+    }
     if (status !== 'CERRADO' && status !== 'CANCELADO') {
       await view.answer(`offers/received/${ACCEPTED.id}/whatsapp`, {
         available: false,
@@ -83,6 +91,9 @@ describe('TrackingPageComponent: additional budgets', () => {
       }),
     );
     await view.answer(RECEIPTS, receipts());
+    if (status === 'CANCELADO') {
+      await view.answer(SUMMARY, cancellationSummary());
+    }
   }
 
   const dialog = () => view.element('dialog[open]');

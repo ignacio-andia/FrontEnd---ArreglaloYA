@@ -1,5 +1,13 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, inject, linkedSignal, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  linkedSignal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
@@ -13,6 +21,7 @@ import { WhatsappContactComponent } from '../../../offers/components/whatsapp-co
 import { formatDuration } from '../../../offers/models/offer.model';
 import { OffersApiService } from '../../../offers/services/offers-api.service';
 import { ClaimPanelComponent } from '../../../claims/components/claim-panel/claim-panel.component';
+import { CancellationSummaryComponent } from '../../../payments/components/cancellation-summary/cancellation-summary.component';
 import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
 import { WorkerProfileApiService } from '../../../worker-profile/services/worker-profile-api.service';
 import {
@@ -21,6 +30,7 @@ import {
 } from '../../components/action-notice/action-notice.component';
 import { AdditionalBudgetFormComponent } from '../../components/additional-budget-form/additional-budget-form.component';
 import { AdditionalBudgetListComponent } from '../../components/additional-budget-list/additional-budget-list.component';
+import { CancellationRecordComponent } from '../../components/cancellation-record/cancellation-record.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
 import { WorkerActionsComponent } from '../../components/worker-actions/worker-actions.component';
@@ -50,6 +60,8 @@ const ELIGIBILITY_ERROR = 'No se pudo comprobar su perfil de trabajador.';
     AdditionalBudgetFormComponent,
     AdditionalBudgetListComponent,
     AssignedOrderComponent,
+    CancellationRecordComponent,
+    CancellationSummaryComponent,
     EmptyStateComponent,
     ClaimPanelComponent,
     ErrorAlertComponent,
@@ -68,6 +80,12 @@ export class JobPageComponent {
   private readonly offersApi = inject(OffersApiService);
   private readonly workerApi = inject(WorkerProfileApiService);
   protected readonly store = inject(ServiceWorkStore);
+
+  private readonly cancellationSummary = viewChild(CancellationSummaryComponent);
+  private readonly paymentsSection = viewChild(PaymentsSectionComponent);
+  /** El resumen y «Pagos» se reparten los datos solo mientras ambos puedan mostrarlos. */
+  protected readonly summaryShown = computed(() => this.cancellationSummary()?.failed() === false);
+  protected readonly paymentsShown = computed(() => this.paymentsSection()?.failed() === false);
 
   protected readonly timezone = DISPLAY_TIMEZONE;
   protected readonly duration = formatDuration;

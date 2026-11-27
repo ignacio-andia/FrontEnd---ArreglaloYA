@@ -5,8 +5,10 @@ import {
   Injector,
   afterNextRender,
   computed,
+  effect,
   inject,
   linkedSignal,
+  untracked,
 } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -24,6 +26,11 @@ import {
   OwnerOrder,
 } from '../../models/order.model';
 import { OrdersApiService } from '../../services/orders-api.service';
+import {
+  CANCELLATION_NOT_REGISTERED,
+  CANCELLATION_UNCONFIRMED,
+  CANCELLATION_VERIFIED,
+} from '../../utils/cancellation-error';
 import { ordersListQueryFrom } from '../../models/orders-list-navigation.model';
 
 const DETAIL_ERROR = 'No se pudo cargar el pedido. Compruebe su conexión e inténtelo de nuevo.';
@@ -124,20 +131,61 @@ export class OrderDetailPageComponent {
     source: this.orderId,
     computation: () => [],
   });
-  protected readonly cancelledMessage = linkedSignal({
-    source: this.orderId,
-    computation: () => false,
+  /**
+   * Cancelación sin confirmar: no se sabe si llegó a guardarse. Solo la resuelve una consulta del
+   * pedido que responda; hasta entonces el aviso se mantiene y no se admite otro intento.
+   */
+  protected readonly unverified = linkedSignal({ source: this.orderId, computation: () => false });
+  /**
+   * Un resultado incierto se muestra aunque el pedido no se pueda cargar. Los demás rechazos
+   * acompañan al pedido: sin él, la pantalla ya explica el problema y repetirlo confunde.
+   */
+  protected readonly shownErrors = computed(() => {
+    if (this.unverified()) {
+      return [CANCELLATION_UNCONFIRMED];
+    }
+    return this.order.hasValue() ? this.actionErrors() : [];
   });
+  protected readonly cancelledMessage = linkedSignal<string, string | null>({
+    source: this.orderId,
+    computation: () => null,
+  });
+
+  constructor() {
+    effect(() => {
+      // Solo `resolved` es una respuesta: durante la recarga el pedido sigue siendo el anterior.
+      if (this.unverified() && this.order.status() === 'resolved') {
+        const cancelled = this.order.value()?.status === 'CANCELADO';
+        untracked(() => this.onVerified(cancelled));
+      }
+    });
+  }
 
   protected onCancelled(order: OwnerOrder): void {
     this.order.set(order);
-    this.cancelledMessage.set(true);
+    this.cancelledMessage.set('El pedido fue cancelado.');
     this.focusAfterRender('#order-cancelled');
   }
 
   protected onActionFailed(messages: string[]): void {
-    this.actionErrors.set(messages);
+    const unknown = messages.includes(CANCELLATION_UNCONFIRMED);
+    if (unknown) {
+      this.unverified.set(true);
+    }
+    this.actionErrors.set(unknown ? [] : messages);
     if (messages.length > 0) {
+      this.focusAfterRender('#order-action-error');
+    }
+  }
+
+  /** Ya se conoce el estado real: se sustituye el aviso incierto por lo comprobado. */
+  private onVerified(cancelled: boolean): void {
+    this.unverified.set(false);
+    if (cancelled) {
+      this.cancelledMessage.set(CANCELLATION_VERIFIED);
+      this.focusAfterRender('#order-cancelled');
+    } else {
+      this.actionErrors.set([CANCELLATION_NOT_REGISTERED]);
       this.focusAfterRender('#order-action-error');
     }
   }

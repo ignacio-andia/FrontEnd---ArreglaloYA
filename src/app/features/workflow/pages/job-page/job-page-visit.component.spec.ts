@@ -7,6 +7,7 @@ import { ORDER_ID, offer, page, setupOfferPage } from '../../../offers/testing/o
 import { OrderStatus } from '../../../orders/models/order.model';
 import { PaymentsOverview } from '../../../payments/models/payment.model';
 import {
+  cancellationSummary,
   declaration,
   overview,
   payment,
@@ -16,6 +17,7 @@ import { Visit, Workflow } from '../../models/workflow.model';
 import { assignedOrder, event, timeline, workflow } from '../../testing/workflow.fixtures';
 import { ASSIGNED_JOBS_ROUTES } from '../../workflow.routes';
 
+const SUMMARY = `orders/${ORDER_ID}/cancellation-summary`;
 const WITH_VISIT = offer({ status: 'ACEPTADA', requiresVisit: true, visitCost: '30.00' });
 const FREE_VISIT = offer({ status: 'ACEPTADA', requiresVisit: true, visitCost: '0.00' });
 const NO_VISIT = offer({ status: 'ACEPTADA', requiresVisit: false, visitCost: null });
@@ -101,6 +103,9 @@ describe('JobPageComponent: visit and its payment', () => {
     await view.answer('offers/me', page([accepted]));
     await view.answer(PAYMENTS, setup.payments ?? overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    if (status === 'CANCELADO') {
+      await view.answer(SUMMARY, cancellationSummary());
+    }
     if (status !== 'CANCELADO' && status !== 'CERRADO') {
       await view.answer(`offers/me/${accepted.id}/whatsapp`, CONTACT);
       await view.answer(`orders/assigned/${ORDER_ID}`, assignedOrder(status));
@@ -290,6 +295,7 @@ describe('JobPageComponent: visit and its payment', () => {
       await view.answer('offers/me', page([WITH_VISIT]));
       await view.answer(PAYMENTS, overview({ orderStatus: 'CANCELADO', payments: [] }));
       await view.answer(RECEIPTS, receipts());
+      await view.answer(SUMMARY, cancellationSummary());
       expect(view.element('#action-notice')?.textContent).toContain(message);
       expect(panel()).toBeNull();
     });

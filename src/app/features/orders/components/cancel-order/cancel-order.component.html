@@ -1,4 +1,6 @@
-<button type="button" class="cancel__button" (click)="ask()">Cancelar pedido</button>
+<button type="button" class="cancel__button" [disabled]="refreshing()" (click)="ask()">
+  Cancelar pedido
+</button>
 
 <app-confirm-dialog
   heading="¿Cancelar el pedido?"
@@ -16,17 +18,5 @@
     dirección, y la descripción se reemplazará. Las ofertas vigentes quedarán sin efecto. El
     registro y su historial se conservan.
   </p>
-  <div class="field">
-    <label class="field__label" for="cancel-order-reason">
-      Motivo <span class="field__optional">(opcional)</span>
-    </label>
-    <textarea
-      id="cancel-order-reason"
-      class="field__input"
-      [formControl]="reason"
-      [attr.maxlength]="maxLength"
-      aria-describedby="cancel-order-reason-hint"
-    ></textarea>
-    <p id="cancel-order-reason-hint" class="field__hint">Hasta {{ maxLength }} caracteres.</p>
-  </div>
+  <app-cancellation-reason fieldId="cancel-order-reason" />
 </app-confirm-dialog>

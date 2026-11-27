@@ -22,6 +22,8 @@ export class ServiceWorkStore {
   private readonly timelineApi = inject(TimelineApiService);
 
   private readonly orderId = signal<string | undefined>(undefined);
+  /** Pedido indicado con `load` o `loadHistory`. */
+  readonly requestedOrderId = this.orderId.asReadonly();
   /** El flujo (#82) es de las partes: quien solo mira el historial no lo consulta. */
   private readonly withWorkflow = signal(true);
 
@@ -70,6 +72,8 @@ export class ServiceWorkStore {
   readonly timelineLoading = computed(
     () => this.firstPage.isLoading() && this.pages().length === 0,
   );
+  /** El historial se está volviendo a pedir: lo cargado (y su cursor) todavía es el anterior. */
+  readonly timelineReloading = computed(() => this.firstPage.isLoading());
   readonly timelineError = computed(() => {
     const error = this.firstPage.error();
     return error === undefined ? null : apiErrorMessages(error, TIMELINE_ERROR).join(' ');

@@ -184,9 +184,9 @@ export interface AdminOrdersQuery {
   limit?: number;
 }
 
-/** Cuerpo de `POST /orders/me/:orderId/cancel` (`CancelOrderDto`): el motivo es opcional. */
+/** Cuerpo de `POST /orders/me/:orderId/cancel` (`CancelOrderDto`): el motivo es obligatorio. */
 export interface CancelOrderRequest {
-  reason?: string;
+  reason: string;
 }
 
 /** Estados con un acuerdo vigente: cancelarlos corresponde a «Cancelar trabajo» (RF-34). */

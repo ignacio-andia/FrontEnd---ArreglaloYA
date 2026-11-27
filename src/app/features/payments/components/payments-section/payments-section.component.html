@@ -17,9 +17,33 @@
   } @else if (overviewError(); as message) {
     <app-error-alert [message]="message" (retry)="overview.reload()" />
   } @else if (current(); as current) {
-    <p class="offers__notice offers__notice--waiting">{{ current.notice }}</p>
+    @if (!inSummary()) {
+      <p class="offers__notice offers__notice--waiting">{{ current.notice }}</p>
+    }
 
-    @if (current.agreement; as agreement) {
+    @if (current.orderStatus === 'CANCELADO') {
+      <!-- Los importes de la fotografía están en el resumen: aquí solo el saldo de #99. -->
+      @if (current.balance.status === 'CALCULADO') {
+        <dl class="pay__totals">
+          <div class="pay__balance">
+            <dt>Saldo registrado al cancelar</dt>
+            <dd>Bs {{ current.balance.amount }}</dd>
+          </div>
+        </dl>
+      }
+      <p class="offers__muted">{{ current.balance.note }}</p>
+      @if (current.agreement) {
+        <p class="offers__muted">
+          Con el pedido cancelado no se declaran el anticipo ni el saldo; solo el pago de una visita
+          ya realizada.
+        </p>
+      }
+      @if (inSummary() && declared()) {
+        <p class="offers__muted">
+          Lo que declaró cada parte se detalla en el resumen de la cancelación.
+        </p>
+      }
+    } @else if (current.agreement; as agreement) {
       <dl class="pay__totals">
         <div>
           <dt>Monto original acordado</dt>
@@ -41,12 +65,6 @@
         }
       </dl>
       <p class="offers__muted">{{ current.balance.note }}</p>
-      @if (current.orderStatus === 'CANCELADO') {
-        <p class="offers__muted">
-          El pedido está cancelado: las cifras son las del acuerdo y no indican un cobro ni una
-          devolución pendiente.
-        </p>
-      }
     } @else {
       <p class="offers__muted">Este pedido no tiene un acuerdo: no hay pagos que declarar.</p>
     }
@@ -57,16 +75,11 @@
           <li class="pay" [class.pay--confirmed]="card.confirmed">
             <div class="pay__top">
               <h3 class="pay__concept">{{ concepts[card.payment.concept] }}</h3>
-              <span class="pay__state">{{
-                card.confirmed ? 'Confirmado por el trabajador' : 'Sin confirmación del trabajador'
-              }}</span>
+              <span class="pay__state">{{ card.state }}</span>
             </div>
-            @if (card.payment.expectedAmount !== null) {
-              <p class="pay__amount">Bs {{ card.payment.expectedAmount }}</p>
-              <p class="offers__muted">Monto esperado</p>
-            } @else if (card.suggested !== null && current.balance.status === 'CALCULADO') {
-              <p class="pay__amount">Bs {{ card.suggested }}</p>
-              <p class="offers__muted">Saldo esperado (informativo)</p>
+            @if (card.headline; as headline) {
+              <p class="pay__amount">Bs {{ headline.amount }}</p>
+              <p class="offers__muted">{{ headline.caption }}</p>
             }
             <p>{{ comparisons[card.payment.comparison] }}</p>
             @if (card.payment.comparison === 'MONTOS_DIFERENTES') {
@@ -76,21 +89,11 @@
               <p>Las formas de pago declaradas no coinciden.</p>
             }
 
-            @if (card.payment.declarations.length > 0) {
-              <ul class="pay__declarations">
-                @for (item of card.payment.declarations; track item.id) {
-                  <li>
-                    <strong>
-                      {{ parties[item.declaredBy] }}
-                      @if (item.declaredBy === viewer()) {
-                        (usted)
-                      }
-                    </strong>
-                    declaró Bs {{ item.amount }} · {{ methods[item.method] }} ·
-                    {{ item.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
-                  </li>
-                }
-              </ul>
+            @if (!inSummary() && card.payment.declarations.length > 0) {
+              <app-declaration-list
+                [declarations]="card.payment.declarations"
+                [viewer]="viewer()"
+              />
             }
 
             @if (card.visitToCollect; as amount) {

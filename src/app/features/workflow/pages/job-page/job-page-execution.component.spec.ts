@@ -5,11 +5,16 @@ import { apiUrl } from '../../../../core/http/api-url';
 import { Offer } from '../../../offers/models/offer.model';
 import { ORDER_ID, offer, page, setupOfferPage } from '../../../offers/testing/offers.fixtures';
 import { OrderStatus } from '../../../orders/models/order.model';
-import { overview, receipts } from '../../../payments/testing/payments.fixtures';
+import {
+  cancellationSummary,
+  overview,
+  receipts,
+} from '../../../payments/testing/payments.fixtures';
 import { Execution } from '../../models/workflow.model';
 import { assignedOrder, event, timeline, workflow } from '../../testing/workflow.fixtures';
 import { ASSIGNED_JOBS_ROUTES } from '../../workflow.routes';
 
+const SUMMARY = `orders/${ORDER_ID}/cancellation-summary`;
 const NO_VISIT = offer({ status: 'ACEPTADA', requiresVisit: false, visitCost: null });
 const WITH_VISIT = offer({ status: 'ACEPTADA', requiresVisit: true, visitCost: '0.00' });
 const FINISHED: Execution = {
@@ -71,6 +76,9 @@ describe('JobPageComponent: start and finish', () => {
     await view.answer('offers/me', page([accepted]));
     await view.answer(PAYMENTS, overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    if (status === 'CANCELADO') {
+      await view.answer(SUMMARY, cancellationSummary());
+    }
     if (status === 'EN_RECLAMO') {
       await view.fail(`orders/${ORDER_ID}/claim`, 404);
     }
@@ -107,6 +115,9 @@ describe('JobPageComponent: start and finish', () => {
     await view.answer(TIMELINE, history);
     await view.answer(PAYMENTS, overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    if (status === 'CANCELADO') {
+      await view.answer(SUMMARY, cancellationSummary());
+    }
   }
 
   describe('start (#85)', () => {

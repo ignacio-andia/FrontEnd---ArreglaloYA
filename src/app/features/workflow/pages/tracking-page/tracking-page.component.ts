@@ -1,4 +1,12 @@
-import { Component, computed, effect, inject, linkedSignal, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  linkedSignal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
@@ -10,7 +18,13 @@ import { WhatsappContactComponent } from '../../../offers/components/whatsapp-co
 import { ClaimFormComponent } from '../../../claims/components/claim-form/claim-form.component';
 import { OffersApiService } from '../../../offers/services/offers-api.service';
 import { OrdersApiService } from '../../../orders/services/orders-api.service';
+import {
+  CANCELLATION_NOT_REGISTERED,
+  CANCELLATION_UNCONFIRMED,
+  CANCELLATION_VERIFIED,
+} from '../../../orders/utils/cancellation-error';
 import { ClaimPanelComponent } from '../../../claims/components/claim-panel/claim-panel.component';
+import { CancellationSummaryComponent } from '../../../payments/components/cancellation-summary/cancellation-summary.component';
 import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
 import {
   ActionNotice,
@@ -19,6 +33,7 @@ import {
 import { AdditionalBudgetListComponent } from '../../components/additional-budget-list/additional-budget-list.component';
 import { ClientActionsComponent } from '../../components/client-actions/client-actions.component';
 import { ConformityPanelComponent } from '../../components/conformity-panel/conformity-panel.component';
+import { CancellationRecordComponent } from '../../components/cancellation-record/cancellation-record.component';
 import { ServiceHistoryComponent } from '../../components/service-history/service-history.component';
 import { WorkSummaryComponent } from '../../components/work-summary/work-summary.component';
 import {
@@ -30,6 +45,9 @@ import {
 import { ServiceWorkStore } from '../../services/service-work.store';
 
 const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
+const UNVERIFIED: ActionNotice = { failed: true, messages: [CANCELLATION_UNCONFIRMED] };
+const VERIFIED_CANCELLED: ActionNotice = { failed: false, messages: [CANCELLATION_VERIFIED] };
+const VERIFIED_ACTIVE: ActionNotice = { failed: true, messages: [CANCELLATION_NOT_REGISTERED] };
 
 /** Seguimiento del servicio para el cliente (`/cliente/mis-pedidos/:orderId/seguimiento`). */
 @Component({
@@ -38,6 +56,8 @@ const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
     RouterLink,
     ActionNoticeComponent,
     AdditionalBudgetListComponent,
+    CancellationRecordComponent,
+    CancellationSummaryComponent,
     ClaimFormComponent,
     ClientActionsComponent,
     ConformityPanelComponent,
@@ -58,6 +78,12 @@ export class TrackingPageComponent {
   private readonly offersApi = inject(OffersApiService);
   private readonly ordersApi = inject(OrdersApiService);
   protected readonly store = inject(ServiceWorkStore);
+
+  private readonly cancellationSummary = viewChild(CancellationSummaryComponent);
+  private readonly paymentsSection = viewChild(PaymentsSectionComponent);
+  /** El resumen y «Pagos» se reparten los datos solo mientras ambos puedan mostrarlos. */
+  protected readonly summaryShown = computed(() => this.cancellationSummary()?.failed() === false);
+  protected readonly paymentsShown = computed(() => this.paymentsSection()?.failed() === false);
 
   protected readonly orderId = toSignal(
     inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('orderId') ?? '')),
@@ -102,14 +128,39 @@ export class TrackingPageComponent {
     computation: () => null,
   });
 
+  /**
+   * Cancelación sin confirmar: solo la resuelve una consulta del flujo que responda. Va aparte del
+   * resto de avisos para que ni «Actualizar» ni otra acción puedan retirarla antes.
+   */
+  protected readonly unverified = linkedSignal({ source: this.orderId, computation: () => false });
+  protected readonly shownNotice = computed((): ActionNotice | null => {
+    const notice = this.notice();
+    if (!this.unverified()) {
+      return notice;
+    }
+    return notice === null
+      ? UNVERIFIED
+      : { failed: true, messages: [...UNVERIFIED.messages, ...notice.messages] };
+  });
+
   constructor() {
     effect(() => {
       const orderId = this.orderId();
       untracked(() => this.store.load(orderId));
     });
+    effect(() => {
+      // Solo `resolved` es una respuesta: durante la recarga el flujo sigue siendo el anterior.
+      if (this.unverified() && this.store.workflow.status() === 'resolved') {
+        const cancelled = this.store.current()?.status === 'CANCELADO';
+        untracked(() => {
+          this.unverified.set(false);
+          this.notice.set(cancelled ? VERIFIED_CANCELLED : VERIFIED_ACTIVE);
+        });
+      }
+    });
   }
 
-  /** «Actualizar»: se vuelve a consultar todo y se retira el aviso. */
+  /** «Actualizar»: se vuelve a consultar todo y se retira el aviso de la última acción. */
   protected refresh(): void {
     this.notice.set(null);
     this.reload();
@@ -153,6 +204,11 @@ export class TrackingPageComponent {
   }
 
   protected onActionFailed(messages: string[]): void {
+    if (messages.includes(CANCELLATION_UNCONFIRMED)) {
+      this.unverified.set(true);
+      this.notice.set(null);
+      return;
+    }
     this.notice.set(messages.length === 0 ? null : { failed: true, messages });
   }
 
