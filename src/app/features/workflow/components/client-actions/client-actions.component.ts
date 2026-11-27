@@ -15,9 +15,10 @@ import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Observable, finalize } from 'rxjs';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { apiErrorStatus } from '../../../../shared/utils/api-error-message';
-import { trimmedMaxLength, trimmedRequired } from '../../../../shared/validators/text.validators';
+import { trimmedMaxLength } from '../../../../shared/validators/text.validators';
+import { CancellationReasonComponent } from '../../../orders/components/cancellation-reason/cancellation-reason.component';
+import { cancellationFailure } from '../../../orders/utils/cancellation-error';
 import {
-  CANCEL_WORK_REASON_MAX_LENGTH,
   NO_SHOW_DESCRIPTION_MAX_LENGTH,
   NO_SHOW_STATUSES,
   NoShowResult,
@@ -39,7 +40,7 @@ const REPORT_ERROR = 'No se pudo registrar el reporte. Inténtelo de nuevo más 
  */
 @Component({
   selector: 'app-client-actions',
-  imports: [ReactiveFormsModule, ConfirmDialogComponent],
+  imports: [ReactiveFormsModule, CancellationReasonComponent, ConfirmDialogComponent],
   templateUrl: './client-actions.component.html',
   styleUrl: './client-actions.component.scss',
 })
@@ -58,12 +59,7 @@ export class ClientActionsComponent {
   /** Lo mostrado puede estar desactualizado. */
   readonly stale = output();
 
-  protected readonly maxLength = CANCEL_WORK_REASON_MAX_LENGTH;
-  protected readonly reason = inject(NonNullableFormBuilder).control('', [
-    trimmedRequired,
-    trimmedMaxLength(CANCEL_WORK_REASON_MAX_LENGTH),
-  ]);
-  private readonly reasonField = viewChild<ElementRef<HTMLTextAreaElement>>('reasonField');
+  private readonly reasonField = viewChild.required(CancellationReasonComponent);
   protected readonly descriptionMaxLength = NO_SHOW_DESCRIPTION_MAX_LENGTH;
   protected readonly description = inject(NonNullableFormBuilder).control('', [
     trimmedMaxLength(NO_SHOW_DESCRIPTION_MAX_LENGTH),
@@ -93,23 +89,30 @@ export class ClientActionsComponent {
   protected readonly sending = signal(false);
   /** Ya se envió y falta que la página traiga el flujo actualizado. */
   protected readonly sent = linkedSignal({ source: this.workflow, computation: () => false });
+  /** No se admite otro envío: hay uno en curso o el flujo todavía no está al día. */
+  private readonly busy = computed(() => this.sending() || this.sent() || this.refreshing());
 
   protected ask(action: 'cancel' | 'report'): void {
     this.failed.emit([]);
+    if (action === 'cancel') {
+      this.reasonField().clearWarning();
+    }
     this.confirming.set(action);
   }
 
   protected cancel(): void {
-    if (this.reason.invalid) {
-      this.reason.markAsTouched();
-      this.reasonField()?.nativeElement.focus();
+    if (this.busy()) {
+      return;
+    }
+    const reason = this.reasonField().read();
+    if (reason === null) {
       return;
     }
     const { orderId } = this.workflow();
     this.send(
-      () => this.workflowApi.cancelWork(orderId, this.reason.value.trim()),
-      CANCEL_ERROR,
+      () => this.workflowApi.cancelWork(orderId, reason),
       () => this.cancelled.emit(),
+      (error) => this.onCancelError(error),
     );
   }
 
@@ -122,13 +125,21 @@ export class ClientActionsComponent {
     const { orderId } = this.workflow();
     this.send(
       () => this.workflowApi.reportNoShow(orderId, this.description.value.trim()),
-      REPORT_ERROR,
       (result) => this.reported.emit(result),
+      (error) =>
+        this.reject(
+          actionErrorMessages(error, REPORT_ERROR),
+          STALE_ACTION_STATUSES.includes(apiErrorStatus(error) ?? 0),
+        ),
     );
   }
 
-  private send<T>(request: () => Observable<T>, fallback: string, done: (result: T) => void): void {
-    if (this.sending() || this.sent() || this.refreshing()) {
+  private send<T>(
+    request: () => Observable<T>,
+    done: (result: T) => void,
+    fail: (error: unknown) => void,
+  ): void {
+    if (this.busy()) {
       return;
     }
     this.sending.set(true);
@@ -143,13 +154,25 @@ export class ClientActionsComponent {
           this.sent.set(true);
           done(result);
         },
-        error: (error: unknown) => {
-          this.confirming.set(null);
-          this.failed.emit(actionErrorMessages(error, fallback));
-          if (STALE_ACTION_STATUSES.includes(apiErrorStatus(error) ?? 0)) {
-            this.stale.emit();
-          }
-        },
+        error: fail,
       });
+  }
+
+  private onCancelError(error: unknown): void {
+    const failure = cancellationFailure(error, CANCEL_ERROR);
+    if (failure.kind === 'reason') {
+      this.reasonField().reject();
+      return;
+    }
+    this.reject(failure.messages, failure.stale);
+  }
+
+  /** Cierra la confirmación, muestra el rechazo y, si procede, pide volver a consultar. */
+  private reject(messages: string[], stale: boolean): void {
+    this.confirming.set(null);
+    this.failed.emit(messages);
+    if (stale) {
+      this.stale.emit();
+    }
   }
 }

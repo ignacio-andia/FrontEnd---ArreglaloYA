@@ -56,6 +56,7 @@
         @if (current.canCancel) {
           <app-cancel-order
             [orderId]="current.id"
+            [refreshing]="order.isLoading()"
             (cancelled)="onCancelled($event)"
             (failed)="onActionFailed($event)"
             (stale)="retry()"

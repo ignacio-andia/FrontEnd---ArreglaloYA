@@ -67,15 +67,13 @@ describe('OrdersApiService (edición, fotografías y cancelación)', () => {
     req.flush({});
   });
 
-  it.each([
-    [{}, {}],
-    [{ reason: 'Ya lo resolví' }, { reason: 'Ya lo resolví' }],
-  ])('cancels the order with %j', (request, body) => {
+  it('cancels the order sending only the reason', () => {
+    const request = { reason: 'Ya lo resolví', status: 'CANCELADO' };
     service.cancel(ORDER_ID, request).subscribe();
 
     const req = httpTesting.expectOne(apiUrl('orders', 'me', ORDER_ID, 'cancel'));
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual(body);
+    expect(req.request.body).toEqual({ reason: 'Ya lo resolví' });
     req.flush({});
   });
 });

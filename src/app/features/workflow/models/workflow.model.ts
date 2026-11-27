@@ -70,7 +70,6 @@ export interface ExecutionResult {
 }
 
 /** Límite de `CancelWorkDto`. */
-export const CANCEL_WORK_REASON_MAX_LENGTH = 500;
 
 /** Estados en los que el backend admite «Cancelar trabajo»: acordado y sin terminar. */
 export const CANCELLABLE_WORK_STATUSES: readonly OrderStatus[] = ORDER_AGREED_STATUSES;

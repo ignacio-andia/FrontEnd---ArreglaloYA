@@ -161,12 +161,8 @@ export class OrdersApiService {
   }
 
   /** `POST /orders/me/:orderId/cancel` (200): devuelve el pedido ya cancelado. 409 estado. */
-  cancel(orderId: string, request: CancelOrderRequest = {}): Observable<OwnerOrder> {
-    const body: CancelOrderRequest = {};
-    if (request.reason !== undefined) {
-      body.reason = request.reason;
-    }
-    return this.http.post<OwnerOrder>(apiUrl('orders', 'me', orderId, 'cancel'), body);
+  cancel(orderId: string, { reason }: CancelOrderRequest): Observable<OwnerOrder> {
+    return this.http.post<OwnerOrder>(apiUrl('orders', 'me', orderId, 'cancel'), { reason });
   }
 
   /** `GET /orders/available` (trabajador aprobado): pedidos que puede ver y ofertar. */

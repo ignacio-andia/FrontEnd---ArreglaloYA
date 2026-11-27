@@ -224,15 +224,26 @@ describe('TrackingPageComponent: special situations', () => {
       await refreshed('ACORDADO');
     });
 
-    it.each([
-      [400, 'reason es obligatorio', 'reason es obligatorio'],
-      [500, 'boom', 'error en el servidor'],
-    ])('shows a %i without consulting again', async (status, message, shown) => {
+    it('keeps the confirmation open when the backend rejects the reason', async () => {
       await open('ACORDADO');
-      await fail(await cancel(), status, message);
+      await fail(await cancel(), 400, 'reason es obligatorio');
 
-      expect(notice()?.textContent).toContain(shown);
+      expect(dialog()).not.toBeNull();
+      expect(view.element('#cancel-work-reason')?.getAttribute('aria-invalid')).toBe('true');
+      expect(dialog()?.textContent).toContain('El servidor rechazó este dato');
+      expect(notice()?.textContent ?? '').not.toContain('reason');
+      await view.click('dialog[open] .dialog__cancel');
+    });
+
+    it('after a 500 warns that the result is unknown and consults again', async () => {
+      await open('ACORDADO');
+      await fail(await cancel(), 500, 'boom');
+
+      expect(notice()?.textContent).toContain('No pudimos confirmar');
+      expect(cancelButton()?.disabled).toBe(true);
+      await refreshed('ACORDADO');
       expect(cancelButton()?.disabled).toBe(false);
+      view.http.expectNone(CANCEL);
     });
 
     it('closes the session on a 401', async () => {

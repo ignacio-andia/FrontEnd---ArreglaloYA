@@ -55,25 +55,7 @@
   @if (visitToPay()) {
     <p>La visita ya realizada tiene un costo: su pago se podrá seguir declarando.</p>
   }
-  <div class="field">
-    <label class="field__label" for="cancel-work-reason">Motivo de la cancelación</label>
-    <textarea
-      #reasonField
-      id="cancel-work-reason"
-      class="field__input"
-      rows="3"
-      required
-      [formControl]="reason"
-      [attr.aria-invalid]="reason.touched && reason.invalid ? 'true' : null"
-      aria-describedby="cancel-work-hint"
-    ></textarea>
-    <p
-      id="cancel-work-hint"
-      [class]="reason.touched && reason.invalid ? 'field__error' : 'field__hint'"
-    >
-      Obligatorio, hasta {{ maxLength }} caracteres.
-    </p>
-  </div>
+  <app-cancellation-reason fieldId="cancel-work-reason" />
 </app-confirm-dialog>
 
 <app-confirm-dialog
