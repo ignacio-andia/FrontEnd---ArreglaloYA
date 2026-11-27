@@ -1,6 +1,11 @@
 <section class="offers" aria-labelledby="reports-title">
   <h1 id="reports-title" class="offers__title">Reportes</h1>
   <p class="offers__intro">Las fechas son días de Bolivia e incluyen el primero y el último.</p>
+  <p>
+    <a class="offers__back" routerLink="/admin/reportes/financiero">
+      Reporte financiero de servicios <span aria-hidden="true">→</span>
+    </a>
+  </p>
 
   <form class="offers__filters" [formGroup]="form" (ngSubmit)="generate()" novalidate>
     <label for="report-type">Reporte</label>

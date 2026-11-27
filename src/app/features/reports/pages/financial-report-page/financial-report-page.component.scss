@@ -1,0 +1,87 @@
+@use 'tokens';
+@use 'mixins';
+
+.finance__form {
+  display: grid;
+  gap: tokens.$space-4;
+}
+
+.finance__statuses {
+  display: grid;
+  gap: tokens.$space-2;
+  min-width: 0;
+  margin: 0;
+  padding: tokens.$space-3 tokens.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: tokens.$radius-md;
+
+  legend {
+    padding: 0 tokens.$space-1;
+    font-weight: tokens.$font-weight-medium;
+  }
+}
+
+.finance__checks {
+  display: grid;
+  gap: tokens.$space-2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include mixins.respond-up(sm) {
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  }
+}
+
+.finance__check {
+  display: inline-flex;
+  align-items: center;
+  gap: tokens.$space-2;
+  min-height: 2.75rem;
+
+  input {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: var(--color-primary);
+  }
+}
+
+.finance__totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: tokens.$space-3;
+  margin: 0;
+
+  > div {
+    padding: tokens.$space-3;
+    border: 1px solid var(--color-border);
+    border-radius: tokens.$radius-md;
+  }
+
+  dt {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: tokens.$font-weight-bold;
+    overflow-wrap: anywhere;
+  }
+
+  > .finance__income {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-pale);
+
+    // El gris secundario no alcanza el contraste sobre el verde pálido.
+    dt {
+      color: var(--color-primary-dark);
+    }
+  }
+}
+
+.report__table .finance__money {
+  white-space: nowrap;
+  text-align: right;
+}
