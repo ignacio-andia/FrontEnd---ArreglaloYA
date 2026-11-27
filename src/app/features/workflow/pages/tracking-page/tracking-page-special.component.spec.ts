@@ -257,6 +257,144 @@ describe('TrackingPageComponent: special situations', () => {
       view.http.expectNone(CANCEL);
     });
 
+    it('replaces the unknown result when the job proves cancelled', async () => {
+      await open('ACORDADO');
+      await fail(await cancel(), 500, 'boom');
+      await refreshed('CANCELADO');
+
+      expect(notice()?.textContent).toContain('consta como cancelado');
+      expect(view.content()).not.toContain('No pudimos confirmar');
+    });
+
+    it('keeps the unknown result visible until the job can be consulted', async () => {
+      await open('ACORDADO');
+      await fail(await cancel(), 500, 'boom');
+      await view.fail(WORKFLOW, 500, 'Fallo del servidor');
+      await view.answer(TIMELINE, timeline());
+
+      expect(notice()?.textContent).toContain('No pudimos confirmar');
+      expect(cancelButton()).toBeNull();
+
+      await view.click('app-error-alert button');
+      await view.answer(WORKFLOW, workflow('CANCELADO'));
+      await view.answer(TIMELINE, timeline());
+      await view.answer(`orders/me/${ORDER_ID}`, ownerOrder({ status: 'CANCELADO' }));
+      await view.answer('offers/received', page([ACCEPTED]));
+      await view.answer(PAYMENTS, overview({ orderStatus: 'CANCELADO', payments: [] }));
+      await view.answer(RECEIPTS, receipts());
+      await view.answer(SUMMARY, cancellationSummary());
+
+      expect(notice()?.textContent).toContain('consta como cancelado');
+      expect(view.content()).not.toContain('No pudimos confirmar');
+    });
+
+    describe('«Actualizar» while the result is unknown', () => {
+      const UNKNOWN = 'No pudimos confirmar si se realizó la cancelación.';
+      const NOT_REGISTERED = 'Verificamos el pedido: no consta como cancelado.';
+      const update = () => view.click('.offers__actions .offers__secondary');
+      /** Al volver a consultar al asignado, el contacto se pide de nuevo. */
+      const contact = () =>
+        view.answer(`offers/received/${ACCEPTED.id}/whatsapp`, {
+          available: false,
+          contactRole: 'TRABAJADOR',
+          url: null,
+          reason: 'TELEFONO_NO_REGISTRADO',
+        });
+
+      /** Pierde la cancelación y pulsa «Actualizar» con la consulta posterior aún pendiente. */
+      async function loseAndUpdate(): Promise<void> {
+        await open('ACORDADO');
+        await fail(await cancel(), 500, 'boom');
+        await update();
+
+        expect(notice()?.textContent).toContain(UNKNOWN);
+        expect(cancelButton()?.disabled).toBe(true);
+        await view.answer(`orders/me/${ORDER_ID}`, ownerOrder({ status: 'ACORDADO' }));
+        await view.answer('offers/received', page([ACCEPTED]));
+        await contact();
+      }
+
+      /** Responde todo lo que se pide al reintentar desde el error del flujo. */
+      async function retry(status: OrderStatus | 'failure'): Promise<void> {
+        await view.click('app-error-alert button');
+        if (status === 'failure') {
+          await view.fail(WORKFLOW, 500, 'Fallo del servidor');
+          await view.answer(TIMELINE, timeline());
+          return;
+        }
+        await refreshed(status);
+        await view.answer(`orders/me/${ORDER_ID}`, ownerOrder({ status }));
+        await view.answer('offers/received', page([ACCEPTED]));
+        if (status !== 'CANCELADO') {
+          await contact();
+        }
+      }
+
+      it('keeps the warning when the query fails, also on later attempts', async () => {
+        await loseAndUpdate();
+        await view.fail(WORKFLOW, 500, 'Fallo del servidor');
+        await view.answer(TIMELINE, timeline());
+
+        expect(notice()?.textContent).toContain(UNKNOWN);
+        expect(notice()?.getAttribute('role')).toBe('alert');
+        expect(cancelButton()).toBeNull();
+
+        await retry('failure');
+        expect(notice()?.textContent).toContain(UNKNOWN);
+        expect(view.content()).not.toContain('Verificamos el pedido');
+        expect(cancelButton()).toBeNull();
+        view.http.expectNone(CANCEL);
+      });
+
+      it('confirms the cancellation once the query answers it', async () => {
+        await loseAndUpdate();
+        await refreshed('CANCELADO');
+
+        expect(notice()?.textContent).toContain('consta como cancelado');
+        expect(notice()?.getAttribute('role')).toBe('status');
+        expect(view.content()).not.toContain(UNKNOWN);
+        expect(cancelButton()).toBeNull();
+      });
+
+      it('shows the real state and allows a new attempt when it is not cancelled', async () => {
+        await loseAndUpdate();
+        await view.fail(WORKFLOW, 500, 'Fallo del servidor');
+        await view.answer(TIMELINE, timeline());
+        await retry('EN_EJECUCION');
+
+        expect(view.content()).not.toContain(UNKNOWN);
+        expect(notice()?.textContent).toContain(NOT_REGISTERED);
+        expect(view.content()).toContain('En ejecución');
+        expect(cancelButton()?.disabled).toBe(false);
+      });
+
+      it('is not removed by another action on the same page', async () => {
+        await open('PRESUPUESTO_ADICIONAL_PENDIENTE', {
+          additionalBudgets: [
+            {
+              id: 'b1',
+              orderId: ORDER_ID,
+              amount: '10.00',
+              reason: 'r',
+              materials: 'm',
+              status: 'PENDIENTE',
+              respondedAt: null,
+              createdAt: '2026-11-21T15:00:00Z',
+            },
+          ],
+        });
+        await fail(await cancel(), 500, 'boom');
+
+        await view.click('.response__accept');
+        expect(notice()?.textContent).toContain(UNKNOWN);
+        await view.click('dialog[open] .dialog__cancel');
+        await view.fail(WORKFLOW, 500, 'Fallo del servidor');
+        await view.answer(TIMELINE, timeline());
+
+        expect(notice()?.textContent).toContain(UNKNOWN);
+      });
+    });
+
     it('closes the session on a 401', async () => {
       await open('ACORDADO');
       await fail(await cancel(), 401, 'Unauthorized');

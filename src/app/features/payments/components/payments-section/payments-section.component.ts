@@ -63,6 +63,8 @@ export class PaymentsSectionComponent {
 
   /** Del trabajador que mira: sin perfil aprobado no se ofrece confirmar el cobro. */
   readonly clearance = input<WorkerClearance>({ state: 'checking' });
+  /** La misma página muestra el resumen de la cancelación. */
+  readonly alongsideSummary = input(false);
 
   /** Una declaración cambió el pedido o lo mostrado quedó desactualizado. */
   readonly changed = output();
@@ -84,6 +86,12 @@ export class PaymentsSectionComponent {
 
   protected readonly current = computed(() =>
     this.overview.hasValue() ? this.overview.value() : null,
+  );
+  /** No se pudo consultar #99: aquí no se muestra ningún saldo. */
+  readonly failed = computed(() => this.overview.error() !== undefined);
+  /** En un cancelado, el resumen ya muestra el aviso del backend y las declaraciones. */
+  protected readonly inSummary = computed(
+    () => this.alongsideSummary() && this.current()?.orderStatus === 'CANCELADO',
   );
   protected readonly overviewError = computed(() => {
     const error = this.overview.error();
@@ -123,6 +131,10 @@ export class PaymentsSectionComponent {
       };
     });
   });
+
+  protected readonly declared = computed(() =>
+    this.cards().some((card) => card.payment.declarations.length > 0),
+  );
 
   protected readonly success = signal<string | null>(null);
   protected readonly errors = signal<string[]>([]);

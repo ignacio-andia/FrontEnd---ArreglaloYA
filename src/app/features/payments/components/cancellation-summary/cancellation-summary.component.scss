@@ -1,0 +1,12 @@
+@use 'tokens';
+
+// Adicionales aceptados: la misma forma que la lista de declaraciones, sin viñetas ni sangría.
+.summary__budgets {
+  display: grid;
+  gap: tokens.$space-1;
+  margin: 0;
+  padding: tokens.$space-2 0 0;
+  border-top: 1px solid var(--color-border);
+  list-style: none;
+  font-size: 0.9375rem;
+}

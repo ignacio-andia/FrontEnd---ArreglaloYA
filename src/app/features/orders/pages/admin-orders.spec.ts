@@ -1,6 +1,6 @@
 import { page, setupOfferPage, ORDER_ID } from '../../offers/testing/offers.fixtures';
-import { receipts } from '../../payments/testing/payments.fixtures';
-import { event, timeline } from '../../workflow/testing/workflow.fixtures';
+import { NOTICE, cancellationSummary, receipts } from '../../payments/testing/payments.fixtures';
+import { cancellation, dataRows, event, timeline } from '../../workflow/testing/workflow.fixtures';
 import { AdminOrder } from '../models/order.model';
 import { ADMIN_ORDERS_ROUTES } from '../orders.routes';
 
@@ -85,6 +85,72 @@ describe('administration of orders', () => {
     }
     expect(view.content()).not.toContain('Dirección');
     expect(view.element('a[href="/trabajadores/worker-1"]')).not.toBeNull();
+  });
+
+  describe('cancelled order', () => {
+    const textOf = (selector: string) =>
+      (view.element(selector)?.textContent ?? '').replace(/\s+/g, ' ');
+
+    async function open(): Promise<void> {
+      await view.visit(`/admin/pedidos/${ORDER_ID}`);
+      await view.answer(
+        `orders/admin/${ORDER_ID}`,
+        order({ status: 'CANCELADO', cancelledAt: '2026-11-22T14:00:00.000Z' }),
+      );
+      await view.answer(`orders/${ORDER_ID}/receipts`, receipts());
+      await view.answer(`orders/${ORDER_ID}/timeline`, timeline([event(), cancellation()]));
+    }
+
+    it('shows the cancellation card with role, date, previous status and reason (#112)', async () => {
+      await open();
+      await view.answer(`orders/${ORDER_ID}/cancellation-summary`, cancellationSummary());
+
+      expect(textOf('app-cancellation-record')).toContain('Cancelación');
+      // Solo el rol: el administrador no es ninguna de las partes.
+      expect(dataRows(view.element('app-cancellation-record'))).toEqual([
+        ['Cancelado por', 'Cliente'],
+        ['Fecha', '22/11/2026 10:00'],
+        ['Estado anterior', 'En ejecución'],
+        ['Motivo', 'Cambié de planes'],
+      ]);
+    });
+
+    it('shows the whole summary, balance included, since there is no payments section (#116)', async () => {
+      await open();
+      await view.answer(`orders/${ORDER_ID}/cancellation-summary`, cancellationSummary());
+
+      const summary = textOf('app-cancellation-summary');
+      expect(summary).toContain(NOTICE);
+      expect(dataRows(view.element('app-cancellation-summary'))).toContainEqual([
+        'Saldo pendiente',
+        'Bs 350.00',
+      ]);
+      expect(summary).toContain('declaró Bs 150.00');
+      expect(summary).not.toContain('«Pagos»');
+      expect(view.element('app-payments-section')).toBeNull();
+    });
+
+    it('keeps the card when the order has no recorded summary', async () => {
+      await open();
+      await view.fail(
+        `orders/${ORDER_ID}/cancellation-summary`,
+        404,
+        'El pedido se canceló sin resumen económico registrado.',
+      );
+
+      expect(textOf('app-cancellation-record')).toContain('Cambié de planes');
+      expect(textOf('app-cancellation-summary')).toContain('sin un resumen económico');
+    });
+  });
+
+  it('shows no cancellation card for an order that is not cancelled', async () => {
+    await view.visit(`/admin/pedidos/${ORDER_ID}`);
+    await view.answer(`orders/admin/${ORDER_ID}`, order());
+    await view.answer(`orders/${ORDER_ID}/receipts`, receipts());
+    await view.answer(`orders/${ORDER_ID}/timeline`, timeline());
+
+    expect(view.element('app-cancellation-record')).toBeNull();
+    expect(view.element('app-cancellation-summary')).toBeNull();
   });
 
   it('says when the order does not exist and asks nothing else', async () => {

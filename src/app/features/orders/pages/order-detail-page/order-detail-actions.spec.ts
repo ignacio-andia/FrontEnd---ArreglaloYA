@@ -295,4 +295,129 @@ describe('OrderDetailPageComponent (acciones)', () => {
     expect(cancelButton()?.disabled).toBe(false);
     httpTesting.expectNone(URL_CANCEL);
   });
+
+  describe('when the result of the cancellation is unknown', () => {
+    const UNKNOWN = 'No pudimos confirmar si se realizó la cancelación.';
+    const NOT_REGISTERED = 'Verificamos el pedido: no consta como cancelado.';
+    const alerts = () => element().querySelectorAll('[role="alert"]');
+    const actionAlert = () => element().querySelector('#order-action-error');
+    const occurrences = (fragment: string) => text().split(fragment).length - 1;
+
+    /** Pierde la conexión al cancelar y devuelve la consulta posterior, aún sin responder. */
+    async function lose(status = 0) {
+      await open();
+      send();
+      await fail(status, 'boom');
+      return vi.waitFor(() => httpTesting.expectOne(URL_DETAIL));
+    }
+
+    async function reload(order: OwnerOrder): Promise<void> {
+      click('.detail__alert button');
+      (await vi.waitFor(() => httpTesting.expectOne(URL_DETAIL))).flush(order);
+      await settle();
+    }
+
+    it.each([500, 0])(
+      'after a %i keeps the warning if the order cannot be loaded',
+      async (code) => {
+        (await lose(code)).error(new ProgressEvent('error'));
+        await settle();
+
+        expect(actionAlert()?.textContent).toContain(UNKNOWN);
+        expect(actionAlert()?.textContent).toContain('antes de volver a intentarlo');
+        expect(occurrences(UNKNOWN)).toBe(1);
+        expect(text()).toContain('No se pudo cargar el pedido.');
+        expect(document.activeElement).toBe(actionAlert());
+        // Sin el pedido verificado no hay forma de volver a cancelar.
+        expect(cancelButton()).toBeNull();
+        httpTesting.expectNone(URL_CANCEL);
+      },
+    );
+
+    it('keeps it while retrying and allows a new attempt only with the order loaded', async () => {
+      (await lose()).error(new ProgressEvent('error'));
+      await settle();
+
+      click('.detail__alert button');
+      const query = await vi.waitFor(() => httpTesting.expectOne(URL_DETAIL));
+      harness.detectChanges();
+      expect(actionAlert()?.textContent).toContain(UNKNOWN);
+      expect(cancelButton()).toBeNull();
+
+      query.flush(ORDER);
+      await settle();
+      expect(text()).not.toContain(UNKNOWN);
+      expect(occurrences(NOT_REGISTERED)).toBe(1);
+      expect(document.activeElement).toBe(actionAlert());
+      expect(cancelButton()?.disabled).toBe(false);
+    });
+
+    it('keeps the warning through every query that fails', async () => {
+      (await lose()).error(new ProgressEvent('error'));
+      await settle();
+
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        click('.detail__alert button');
+        (await vi.waitFor(() => httpTesting.expectOne(URL_DETAIL))).error(
+          new ProgressEvent('error'),
+        );
+        await settle();
+
+        expect(occurrences(UNKNOWN)).toBe(1);
+        expect(text()).not.toContain(NOT_REGISTERED);
+        expect(cancelButton()).toBeNull();
+      }
+      httpTesting.expectNone(URL_CANCEL);
+    });
+
+    it('shows the real state when the verified order is not cancelled', async () => {
+      (await lose()).error(new ProgressEvent('error'));
+      await settle();
+      click('.detail__alert button');
+      (await vi.waitFor(() => httpTesting.expectOne(URL_DETAIL))).flush(
+        ownerOrder({ status: 'ACORDADO', canEdit: false, canCancel: false, images: [] }),
+      );
+      await flushAssignedOffer();
+
+      expect(text()).not.toContain(UNKNOWN);
+      expect(text()).toContain(NOT_REGISTERED);
+      expect(text()).toContain('Este pedido tiene un acuerdo');
+      expect(cancelButton()).toBeNull();
+    });
+
+    it('replaces the warning when the order proves cancelled', async () => {
+      (await lose()).flush(CANCELLED);
+      await settle();
+
+      expect(text()).not.toContain(UNKNOWN);
+      expect(alerts()).toHaveLength(0);
+      const verified = element().querySelector('#order-cancelled');
+      expect(verified?.textContent).toContain('Verificamos el pedido: consta como cancelado.');
+      expect(document.activeElement).toBe(verified);
+    });
+
+    it('also replaces it when the order is verified after a failed query', async () => {
+      (await lose()).error(new ProgressEvent('error'));
+      await settle();
+      await reload(CANCELLED);
+
+      expect(text()).not.toContain(UNKNOWN);
+      expect(text()).toContain('consta como cancelado');
+      expect(cancelButton()).toBeNull();
+    });
+
+    it.each([403, 404])('does not repeat a %i when the order cannot be loaded', async (code) => {
+      await open();
+      send();
+      await fail(code, 'Respuesta del backend');
+      (await vi.waitFor(() => httpTesting.expectOne(URL_DETAIL))).flush(
+        { statusCode: code, message: 'Respuesta del backend' },
+        { status: code, statusText: 'Error' },
+      );
+      await settle();
+
+      expect(alerts().length).toBeLessThanOrEqual(1);
+      expect(actionAlert()).toBeNull();
+    });
+  });
 });

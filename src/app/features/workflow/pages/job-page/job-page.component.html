@@ -28,6 +28,7 @@
         viewer="TRABAJADOR"
         [orderId]="current.orderId"
         [version]="current"
+        [alongsidePayments]="paymentsShown()"
       />
     }
 
@@ -113,6 +114,7 @@
     <app-payments-section
       viewer="TRABAJADOR"
       [workflow]="current"
+      [alongsideSummary]="summaryShown()"
       [clearance]="clearance()"
       (changed)="store.refresh()"
       (retryClearance)="reloadEligibility()"

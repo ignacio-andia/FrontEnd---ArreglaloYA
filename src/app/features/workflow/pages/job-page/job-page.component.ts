@@ -1,5 +1,13 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, inject, linkedSignal, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  linkedSignal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
@@ -72,6 +80,12 @@ export class JobPageComponent {
   private readonly offersApi = inject(OffersApiService);
   private readonly workerApi = inject(WorkerProfileApiService);
   protected readonly store = inject(ServiceWorkStore);
+
+  private readonly cancellationSummary = viewChild(CancellationSummaryComponent);
+  private readonly paymentsSection = viewChild(PaymentsSectionComponent);
+  /** El resumen y «Pagos» se reparten los datos solo mientras ambos puedan mostrarlos. */
+  protected readonly summaryShown = computed(() => this.cancellationSummary()?.failed() === false);
+  protected readonly paymentsShown = computed(() => this.paymentsSection()?.failed() === false);
 
   protected readonly timezone = DISPLAY_TIMEZONE;
   protected readonly duration = formatDuration;

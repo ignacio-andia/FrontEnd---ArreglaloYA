@@ -5,6 +5,11 @@ import { actionErrorMessages } from '../../workflow/utils/action-error';
 export const CANCELLATION_UNCONFIRMED =
   'No pudimos confirmar si se realizó la cancelación. Revise el estado actualizado antes de volver a intentarlo.';
 
+/** Sustituyen al aviso anterior cuando la consulta posterior responde, según el estado recibido. */
+export const CANCELLATION_VERIFIED = 'Verificamos el pedido: consta como cancelado.';
+export const CANCELLATION_NOT_REGISTERED =
+  'Verificamos el pedido: no consta como cancelado. Se muestra su estado actual.';
+
 export type CancellationFailure =
   /** El backend rechazó el motivo: se corrige en el campo, sin cerrar la confirmación. */
   | { kind: 'reason' }

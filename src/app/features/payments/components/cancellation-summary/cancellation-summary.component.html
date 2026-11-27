@@ -29,8 +29,12 @@
         }
       </dl>
       <p class="offers__muted">
-        Solo el anticipo confirmado por el trabajador reduce el saldo. La visita se muestra aparte y
-        no suma al total.
+        @if (alongsidePayments()) {
+          El saldo pendiente al cancelar se muestra en «Pagos».
+        } @else {
+          Solo el anticipo confirmado por el trabajador reduce el saldo.
+        }
+        La visita se muestra aparte y no suma al total.
       </p>
 
       <ul class="pay__list">
@@ -63,7 +67,7 @@
         <li class="pay">
           <h3 class="pay__concept">Adicionales aceptados</h3>
           @if (data.additionalBudgets.length > 0) {
-            <ul>
+            <ul class="summary__budgets">
               @for (budget of data.additionalBudgets; track budget.id) {
                 <li>
                   <strong>Bs {{ budget.amount }}</strong>
@@ -130,7 +134,14 @@
         }
       </ul>
     } @else {
-      <p>El pedido se canceló sin acuerdo: no hay importes acordados, anticipo ni saldo.</p>
+      <p>
+        El pedido se canceló sin acuerdo:
+        @if (alongsidePayments()) {
+          no hay importes acordados ni anticipo.
+        } @else {
+          no hay importes acordados, anticipo ni saldo.
+        }
+      </p>
     }
 
     @if (data.declarationsAfterCancellation.length > 0) {

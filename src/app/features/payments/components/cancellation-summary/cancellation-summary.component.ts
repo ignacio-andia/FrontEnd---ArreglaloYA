@@ -30,6 +30,7 @@ interface TotalRow {
  * Fotografía económica de una cancelación (#116): importes, anticipo, adicionales aceptados,
  * visita (aparte) y declaraciones. Solo muestra lo que entrega el backend: no suma, resta ni
  * convierte importes. La pueden ver las partes y el administrador.
+ * Junto a «Pagos», el saldo y su explicación se presentan allí; las declaraciones, aquí.
  */
 @Component({
   selector: 'app-cancellation-summary',
@@ -45,6 +46,7 @@ interface TotalRow {
     '../../../offers/offer-pages.scss',
     // Mismas tarjetas de importes y de pagos que la sección «Pagos».
     '../payments-section/payments-section.component.scss',
+    './cancellation-summary.component.scss',
   ],
 })
 export class CancellationSummaryComponent {
@@ -54,6 +56,8 @@ export class CancellationSummaryComponent {
   readonly viewer = input.required<OfferParty | null>();
   /** Cuando cambia, la página volvió a consultar: pueden constar declaraciones posteriores. */
   readonly version = input<unknown>();
+  /** La misma página muestra el saldo en «Pagos»: no se repite aquí. */
+  readonly alongsidePayments = input(false);
 
   protected readonly timezone = DISPLAY_TIMEZONE;
   protected readonly concepts = CONCEPT_LABELS;
@@ -77,6 +81,8 @@ export class CancellationSummaryComponent {
     const messages = apiErrorMessages(this.summary.error(), '');
     return messages.includes(SUMMARY_NOT_RECORDED_MESSAGE) ? NOT_RECORDED : NOT_FOUND;
   });
+  /** No hay resumen que mostrar (sin registro, sin acceso o con error). */
+  readonly failed = computed(() => this.summary.error() !== undefined);
   protected readonly errorMessage = computed(() => {
     const error = this.summary.error();
     return error === undefined ? null : apiErrorMessages(error, SUMMARY_ERROR).join(' ');
@@ -88,7 +94,7 @@ export class CancellationSummaryComponent {
     if (totals === undefined) {
       return [];
     }
-    return [
+    const rows: TotalRow[] = [
       { label: 'Monto acordado', value: this.money(totals.agreedAmount) },
       { label: 'Adicionales aceptados', value: this.money(totals.acceptedAdditionalTotal) },
       { label: 'Total actualizado', value: this.money(totals.updatedTotal), highlight: 'total' },
@@ -97,8 +103,12 @@ export class CancellationSummaryComponent {
         label: 'Anticipo declarado sin confirmar',
         value: this.money(totals.unconfirmedAdvanceAmount, 'No aplica'),
       },
-      { label: 'Saldo pendiente', value: this.money(totals.pendingBalance), highlight: 'balance' },
     ];
+    if (!this.alongsidePayments()) {
+      const value = this.money(totals.pendingBalance);
+      rows.push({ label: 'Saldo pendiente', value, highlight: 'balance' });
+    }
+    return rows;
   });
 
   constructor() {
