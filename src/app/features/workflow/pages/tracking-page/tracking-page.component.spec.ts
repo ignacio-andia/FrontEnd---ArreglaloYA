@@ -2,9 +2,14 @@ import { ownerOrder } from '../../../orders/testing/order.fixtures';
 import { MY_ORDERS_ROUTES } from '../../../orders/orders.routes';
 import { ORDER_ID, page, received, setupOfferPage } from '../../../offers/testing/offers.fixtures';
 import { OrderStatus } from '../../../orders/models/order.model';
-import { overview, receipts } from '../../../payments/testing/payments.fixtures';
+import {
+  cancellationSummary,
+  overview,
+  receipts,
+} from '../../../payments/testing/payments.fixtures';
 import { event, timeline, workflow } from '../../testing/workflow.fixtures';
 
+const SUMMARY = `orders/${ORDER_ID}/cancellation-summary`;
 const ACCEPTED = received({ status: 'ACEPTADA' });
 
 describe('TrackingPageComponent', () => {
@@ -33,6 +38,9 @@ describe('TrackingPageComponent', () => {
     await view.answer('offers/received', page(accepted));
     await view.answer(`orders/${ORDER_ID}/payments`, overview({ payments: [] }));
     await view.answer(`orders/${ORDER_ID}/receipts`, receipts());
+    if (status === 'CANCELADO') {
+      await view.answer(SUMMARY, cancellationSummary());
+    }
   }
 
   it('shows the state, the assigned worker, the contact and the history', async () => {

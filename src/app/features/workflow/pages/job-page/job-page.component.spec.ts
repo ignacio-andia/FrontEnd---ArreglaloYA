@@ -2,7 +2,11 @@ import { apiUrl } from '../../../../core/http/api-url';
 import { ORDER_ID, offer, page, setupOfferPage } from '../../../offers/testing/offers.fixtures';
 import { OrderStatus } from '../../../orders/models/order.model';
 import { assignedOrder, event, timeline, workflow } from '../../testing/workflow.fixtures';
-import { overview, receipts } from '../../../payments/testing/payments.fixtures';
+import {
+  cancellationSummary,
+  overview,
+  receipts,
+} from '../../../payments/testing/payments.fixtures';
 import { ASSIGNED_JOBS_ROUTES } from '../../workflow.routes';
 
 const ACCEPTED = offer({ status: 'ACEPTADA' });
@@ -30,10 +34,16 @@ describe('JobPageComponent', () => {
 
   const timelinePath = `orders/${ORDER_ID}/timeline`;
 
-  /** La sección de pagos consulta el resumen y las constancias. */
-  async function payments(): Promise<void> {
+  /**
+   * La sección de pagos consulta los pagos y las constancias; con el pedido cancelado se consulta
+   * además el resumen de la cancelación.
+   */
+  async function payments(status?: OrderStatus): Promise<void> {
     await view.answer(`orders/${ORDER_ID}/payments`, overview({ payments: [] }));
     await view.answer(`orders/${ORDER_ID}/receipts`, receipts());
+    if (status === 'CANCELADO') {
+      await view.answer(`orders/${ORDER_ID}/cancellation-summary`, cancellationSummary());
+    }
   }
 
   async function open(status: OrderStatus, history = timeline()): Promise<void> {
@@ -41,7 +51,7 @@ describe('JobPageComponent', () => {
     await view.answer(`orders/${ORDER_ID}/workflow`, workflow(status));
     await view.answer(timelinePath, history);
     await view.answer('offers/me', page([ACCEPTED]));
-    await payments();
+    await payments(status);
     // Con el trabajo en curso se puede proponer un adicional: se comprueba el perfil.
     if (status === 'EN_EJECUCION') {
       await view.answer('worker-profile/me/eligibility', { eligible: true, message: '' });
@@ -192,7 +202,7 @@ describe('JobPageComponent', () => {
 
     await view.answer(`orders/${ORDER_ID}/workflow`, workflow('CANCELADO'));
     await view.answer(timelinePath, timeline([event({ summary: 'Trabajo cancelado' })]));
-    await payments();
+    await payments('CANCELADO');
     expect(view.content()).toContain('Cancelado');
     expect(entries()[0]).toContain('Trabajo cancelado');
   });

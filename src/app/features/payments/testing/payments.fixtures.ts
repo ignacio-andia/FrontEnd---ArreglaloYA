@@ -1,4 +1,5 @@
 import { ORDER_ID } from '../../offers/testing/offers.fixtures';
+import { CancellationSummary } from '../models/cancellation-summary.model';
 import { Payment, PaymentDeclaration, PaymentsOverview, Receipts } from '../models/payment.model';
 
 /**
@@ -66,4 +67,73 @@ export function receipts(overrides: Partial<Receipts> = {}): Receipts {
     payments: [],
     ...overrides,
   };
+}
+
+/** Resumen de una cancelación con acuerdo; `withoutAgreement()` da la forma sin acuerdo. */
+export function cancellationSummary(
+  overrides: Partial<CancellationSummary> = {},
+): CancellationSummary {
+  return {
+    orderId: ORDER_ID,
+    notice: NOTICE,
+    capturedAt: '2026-11-22T14:00:00.000Z',
+    hasAgreement: true,
+    agreement: { offerId: 'offer', agreedAt: '2026-11-20T15:00:00.000Z' },
+    totals: {
+      agreedAmount: '400.00',
+      acceptedAdditionalTotal: '50.00',
+      updatedTotal: '450.00',
+      confirmedAdvanceTotal: '100.00',
+      unconfirmedAdvanceAmount: null,
+      pendingBalance: '350.00',
+    },
+    advance: {
+      paymentId: 'p-advance',
+      expectedAmount: '100.00',
+      status: 'CONFIRMADO',
+      declarations: [
+        declaration({ id: 'a1', amount: '150.00' }),
+        declaration({ id: 'a2', declaredBy: 'TRABAJADOR', amount: '100.00', method: 'EFECTIVO' }),
+      ],
+    },
+    additionalBudgets: [
+      {
+        id: 'b1',
+        amount: '50.00',
+        respondedAt: '2026-11-21T15:00:00.000Z',
+        createdAt: '2026-11-21T14:00:00.000Z',
+      },
+    ],
+    visit: {
+      paymentId: 'p-visit',
+      expectedAmount: '30.00',
+      status: 'DECLARADO_SIN_CONFIRMAR',
+      declarations: [declaration({ id: 'v1', amount: '30.00', method: 'EFECTIVO' })],
+      agreedCost: '30.00',
+      performedAt: '2026-11-21T13:00:00.000Z',
+      registeredCost: '30.00',
+    },
+    otherPayments: [],
+    declarationsAfterCancellation: [],
+    schemaVersion: 1,
+    ...overrides,
+  };
+}
+
+export function withoutAgreement(): CancellationSummary {
+  return cancellationSummary({
+    hasAgreement: false,
+    agreement: null,
+    totals: {
+      agreedAmount: null,
+      acceptedAdditionalTotal: null,
+      updatedTotal: null,
+      confirmedAdvanceTotal: null,
+      unconfirmedAdvanceAmount: null,
+      pendingBalance: null,
+    },
+    advance: null,
+    additionalBudgets: [],
+    visit: null,
+  });
 }

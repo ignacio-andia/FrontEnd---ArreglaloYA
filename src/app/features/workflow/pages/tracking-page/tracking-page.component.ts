@@ -11,6 +11,7 @@ import { ClaimFormComponent } from '../../../claims/components/claim-form/claim-
 import { OffersApiService } from '../../../offers/services/offers-api.service';
 import { OrdersApiService } from '../../../orders/services/orders-api.service';
 import { ClaimPanelComponent } from '../../../claims/components/claim-panel/claim-panel.component';
+import { CancellationSummaryComponent } from '../../../payments/components/cancellation-summary/cancellation-summary.component';
 import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
 import {
   ActionNotice,
@@ -38,6 +39,7 @@ const WORKER_ERROR = 'No se pudo consultar el trabajador asignado.';
     RouterLink,
     ActionNoticeComponent,
     AdditionalBudgetListComponent,
+    CancellationSummaryComponent,
     ClaimFormComponent,
     ClientActionsComponent,
     ConformityPanelComponent,

@@ -77,20 +77,10 @@
             }
 
             @if (card.payment.declarations.length > 0) {
-              <ul class="pay__declarations">
-                @for (item of card.payment.declarations; track item.id) {
-                  <li>
-                    <strong>
-                      {{ parties[item.declaredBy] }}
-                      @if (item.declaredBy === viewer()) {
-                        (usted)
-                      }
-                    </strong>
-                    declaró Bs {{ item.amount }} · {{ methods[item.method] }} ·
-                    {{ item.createdAt | date: 'dd/MM/yyyy HH:mm' : timezone }}
-                  </li>
-                }
-              </ul>
+              <app-declaration-list
+                [declarations]="card.payment.declarations"
+                [viewer]="viewer()"
+              />
             }
 
             @if (card.visitToCollect; as amount) {

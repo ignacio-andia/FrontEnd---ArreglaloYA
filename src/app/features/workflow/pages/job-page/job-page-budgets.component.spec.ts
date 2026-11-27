@@ -4,11 +4,16 @@ import { SessionStore } from '../../../../core/auth/session.store';
 import { apiUrl } from '../../../../core/http/api-url';
 import { ORDER_ID, offer, page, setupOfferPage } from '../../../offers/testing/offers.fixtures';
 import { OrderStatus } from '../../../orders/models/order.model';
-import { overview, receipts } from '../../../payments/testing/payments.fixtures';
+import {
+  cancellationSummary,
+  overview,
+  receipts,
+} from '../../../payments/testing/payments.fixtures';
 import { AdditionalBudget } from '../../models/workflow.model';
 import { assignedOrder, event, timeline, workflow } from '../../testing/workflow.fixtures';
 import { ASSIGNED_JOBS_ROUTES } from '../../workflow.routes';
 
+const SUMMARY = `orders/${ORDER_ID}/cancellation-summary`;
 const ACCEPTED = offer({ status: 'ACEPTADA', requiresVisit: false, visitCost: null });
 const CONTACT = {
   available: false,
@@ -64,6 +69,9 @@ describe('JobPageComponent: additional budgets', () => {
     await view.answer('offers/me', page([ACCEPTED]));
     await view.answer(PAYMENTS, overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    if (status === 'CANCELADO') {
+      await view.answer(SUMMARY, cancellationSummary());
+    }
     if (status !== 'CERRADO' && status !== 'CANCELADO') {
       await view.answer(WHATSAPP, CONTACT);
       await view.answer(`orders/assigned/${ORDER_ID}`, assignedOrder(status));
@@ -111,6 +119,9 @@ describe('JobPageComponent: additional budgets', () => {
     await view.answer('offers/me', page([ACCEPTED]));
     await view.answer(PAYMENTS, overview({ orderStatus: status, payments: [] }));
     await view.answer(RECEIPTS, receipts());
+    if (status === 'CANCELADO') {
+      await view.answer(SUMMARY, cancellationSummary());
+    }
     await view.answer(WHATSAPP, CONTACT);
   }
 

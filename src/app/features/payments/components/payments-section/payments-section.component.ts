@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import {
   Component,
   ElementRef,
@@ -16,21 +15,19 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { ErrorAlertComponent } from '../../../../shared/components/error-alert/error-alert.component';
 import { LoadingStateComponent } from '../../../../shared/components/loading-state/loading-state.component';
 import { apiErrorMessages } from '../../../../shared/utils/api-error-message';
-import { DISPLAY_TIMEZONE } from '../../../../shared/utils/display-timezone';
 import { OfferParty } from '../../../offers/models/offer.model';
 import { Workflow, WorkerClearance, hasVisitCost } from '../../../workflow/models/workflow.model';
 import {
   COMPARISON_LABELS,
   CONCEPT_LABELS,
   DeclarationResult,
-  METHOD_LABELS,
-  PARTY_LABELS,
   Payment,
   PaymentsOverview,
   declarationAvailability,
 } from '../../models/payment.model';
 import { PaymentsApiService } from '../../services/payments-api.service';
 import { ConfirmVisitPaymentComponent } from '../confirm-visit-payment/confirm-visit-payment.component';
+import { DeclarationListComponent } from '../declaration-list/declaration-list.component';
 import { DeclarePaymentFormComponent } from '../declare-payment-form/declare-payment-form.component';
 import { ReceiptsListComponent } from '../receipts-list/receipts-list.component';
 
@@ -46,8 +43,8 @@ const RECEIPTS_ERROR = 'No se pudieron cargar las constancias.';
 @Component({
   selector: 'app-payments-section',
   imports: [
-    DatePipe,
     ConfirmVisitPaymentComponent,
+    DeclarationListComponent,
     DeclarePaymentFormComponent,
     ErrorAlertComponent,
     LoadingStateComponent,
@@ -71,10 +68,7 @@ export class PaymentsSectionComponent {
   readonly changed = output();
   readonly retryClearance = output();
 
-  protected readonly timezone = DISPLAY_TIMEZONE;
   protected readonly concepts = CONCEPT_LABELS;
-  protected readonly methods = METHOD_LABELS;
-  protected readonly parties = PARTY_LABELS;
   protected readonly comparisons = COMPARISON_LABELS;
 
   private readonly orderId = computed(() => this.workflow().orderId);

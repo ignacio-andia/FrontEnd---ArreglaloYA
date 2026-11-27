@@ -8,6 +8,7 @@ import { ErrorAlertComponent } from '../../../../shared/components/error-alert/e
 import { LoadingStateComponent } from '../../../../shared/components/loading-state/loading-state.component';
 import { apiErrorMessages, apiErrorStatus } from '../../../../shared/utils/api-error-message';
 import { DISPLAY_TIMEZONE } from '../../../../shared/utils/display-timezone';
+import { CancellationSummaryComponent } from '../../../payments/components/cancellation-summary/cancellation-summary.component';
 import { ReceiptsListComponent } from '../../../payments/components/receipts-list/receipts-list.component';
 import { PaymentsApiService } from '../../../payments/services/payments-api.service';
 import { ServiceHistoryComponent } from '../../../workflow/components/service-history/service-history.component';
@@ -19,14 +20,15 @@ const ORDER_ERROR = 'No se pudo cargar el pedido.';
 const RECEIPTS_ERROR = 'No se pudieron cargar las constancias.';
 
 /**
- * Pedido visto por el administrador: registro mínimo (#68), constancias (#100) y línea de tiempo
- * (#112). Solo lectura.
+ * Pedido visto por el administrador: registro mínimo (#68), resumen de cancelación (#116),
+ * constancias (#100) y línea de tiempo (#112). Solo lectura.
  */
 @Component({
   selector: 'app-admin-order-page',
   imports: [
     DatePipe,
     RouterLink,
+    CancellationSummaryComponent,
     EmptyStateComponent,
     ErrorAlertComponent,
     LoadingStateComponent,

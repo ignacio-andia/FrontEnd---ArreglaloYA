@@ -13,6 +13,7 @@ import { WhatsappContactComponent } from '../../../offers/components/whatsapp-co
 import { formatDuration } from '../../../offers/models/offer.model';
 import { OffersApiService } from '../../../offers/services/offers-api.service';
 import { ClaimPanelComponent } from '../../../claims/components/claim-panel/claim-panel.component';
+import { CancellationSummaryComponent } from '../../../payments/components/cancellation-summary/cancellation-summary.component';
 import { PaymentsSectionComponent } from '../../../payments/components/payments-section/payments-section.component';
 import { WorkerProfileApiService } from '../../../worker-profile/services/worker-profile-api.service';
 import {
@@ -50,6 +51,7 @@ const ELIGIBILITY_ERROR = 'No se pudo comprobar su perfil de trabajador.';
     AdditionalBudgetFormComponent,
     AdditionalBudgetListComponent,
     AssignedOrderComponent,
+    CancellationSummaryComponent,
     EmptyStateComponent,
     ClaimPanelComponent,
     ErrorAlertComponent,

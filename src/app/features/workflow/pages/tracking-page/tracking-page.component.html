@@ -27,6 +27,10 @@
 
     <app-work-summary [workflow]="current" />
 
+    @if (current.status === 'CANCELADO') {
+      <app-cancellation-summary viewer="CLIENTE" [orderId]="current.orderId" [version]="current" />
+    }
+
     <app-claim-panel viewer="CLIENTE" [workflow]="current" />
 
     @if (current.status === 'TERMINADO') {
